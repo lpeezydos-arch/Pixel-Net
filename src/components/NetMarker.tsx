@@ -16,6 +16,7 @@ interface NetMarkerProps {
 /** The selected pixel's point on the net. It springs from one position to the next. */
 export function NetMarker({ surface, size, selection }: NetMarkerProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const pulsed = useRef(false); // has the point pulsed since the selection was last cleared
   const reducedMotion = useReducedMotion();
   const targetX = useMotionValue(0);
   const targetY = useMotionValue(0);
@@ -27,15 +28,16 @@ export function NetMarker({ surface, size, selection }: NetMarkerProps) {
     if (!marker) return;
     const center = size / 2;
     const rim = center * NET_RIM;
-    let previous = -1;
 
     const place = (index: number) => {
       const plottable = index >= 0 && !surface.nodata[index] && !surface.flat[index];
       if (!plottable) {
         marker.dataset.visible = 'false';
         // Re-arm the pulse, so the next first selection plays it again.
-        if (index < 0) marker.dataset.pulse = 'false';
-        previous = index;
+        if (index < 0) {
+          marker.dataset.pulse = 'false';
+          pulsed.current = false;
+        }
         return;
       }
       const point = toNet(surface.slope[index], surface.aspect[index]);
@@ -54,10 +56,11 @@ export function NetMarker({ surface, size, selection }: NetMarkerProps) {
       }
       if (appearing) {
         marker.dataset.visible = 'true';
-        // One pulse on the first selection, not on return from a flat pixel.
-        marker.dataset.pulse = previous < 0 ? 'true' : 'false';
+        // One pulse on the first appearance after the selection was cleared,
+        // not on return from a flat pixel.
+        marker.dataset.pulse = pulsed.current ? 'false' : 'true';
+        pulsed.current = true;
       }
-      previous = index;
     };
 
     place(selection.get());

@@ -452,7 +452,7 @@ p {
   }
 }
 
-.net__info {
+.net .net__info {
   position: absolute;
   left: 0;
   top: 0;

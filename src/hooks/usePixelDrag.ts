@@ -75,7 +75,7 @@ export function usePixelDrag({ width, height, enabled, selection, onPress, onSet
       onPointerUp: release,
       onPointerCancel: release,
       onKeyDown(event: KeyboardEvent<HTMLElement>) {
-        if (!enabled) return;
+        if (!enabled || event.altKey || event.ctrlKey || event.metaKey) return;
         const current = selection.get();
         const next = stepPixel(
           current < 0 ? null : toPixel(current, width),

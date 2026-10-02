@@ -127,6 +127,41 @@ test('arrow keys step the selection one pixel, or ten with Shift', async ({ page
   await expect(elevation(page)).toHaveText('3,929 m');
 });
 
+test('arrow keys with a modifier are left to the browser', async ({ page }) => {
+  await openApp(page);
+  await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.up();
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+
+  await area(page).focus();
+  await page.keyboard.press('Control+ArrowRight');
+  await page.keyboard.press('Alt+ArrowDown');
+  await page.keyboard.press('Meta+ArrowUp');
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(elevation(page)).toHaveText(WEST_SLOPE.elevation);
+});
+
+test('the net point pulses when it first appears after starting on a flat pixel', async ({ page }) => {
+  await openApp(page);
+  await press(page, LAKE.col, LAKE.row);
+  await expect(marker(page)).toHaveAttribute('data-visible', 'false');
+  const target = await pointOf(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.move(target.x, target.y, { steps: 8 });
+  await expect(marker(page)).toHaveAttribute('data-visible', 'true');
+  await expect(marker(page)).toHaveAttribute('data-pulse', 'true');
+  await page.mouse.up();
+});
+
+test('the net info button sits at the top-left corner of the net', async ({ page }) => {
+  await openApp(page);
+  const button = page.getByRole('button', { name: 'How to read the net' });
+  expect(await button.evaluate((element) => getComputedStyle(element).position)).toBe('absolute');
+  const box = (await button.boundingBox())!;
+  const netBox = (await page.getByTestId('net').boundingBox())!;
+  expect(Math.abs(box.x - netBox.x)).toBeLessThan(1);
+  expect(Math.abs(box.y - netBox.y)).toBeLessThan(1);
+});
+
 test('dragging past the edge keeps the nearest edge pixel', async ({ page }) => {
   await openApp(page);
   await press(page, WEST_SLOPE.col, WEST_SLOPE.row);

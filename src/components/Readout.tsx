@@ -1,5 +1,5 @@
 import type { MotionValue } from 'motion/react';
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { EMPTY_READOUT, readoutFor } from '../terrain/format';
 import type { Dem, Surface } from '../terrain/types';
 import { InfoTip } from './InfoTip';
@@ -17,7 +17,7 @@ export function Readout({ dem, surface, selection }: ReadoutProps) {
   const aspectRef = useRef<HTMLElement>(null);
   const elevationRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const write = (index: number) => {
       const text = dem && surface ? readoutFor(dem, surface, index) : EMPTY_READOUT;
       if (slopeRef.current) slopeRef.current.textContent = text.slope;
