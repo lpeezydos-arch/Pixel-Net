@@ -86,13 +86,17 @@ installed app's name all come from it.
 
 ## Deploy
 
-`npm run build` and put `dist/` on any static host that serves HTTPS. Offline
-install only works over HTTPS.
+Every push to `main` builds and deploys to GitHub Pages at
+https://lpeezydos-arch.github.io/Pixel-Net/ through
+`.github/workflows/deploy.yml`. The unit tests run first; a failing test stops
+the deploy.
 
-For a host that serves from a sub-path, such as GitHub Pages:
+To host it anywhere else, `npm run build` and put `dist/` on any static host
+that serves HTTPS. Offline install only works over HTTPS. For a host that
+serves from a sub-path, set `BASE_PATH` to that path:
 
 ```bash
-BASE_PATH=/pixel-net/ npm run build
+BASE_PATH=/Pixel-Net/ npm run build
 ```
 
 ## Design system
