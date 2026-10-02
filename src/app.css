@@ -550,3 +550,92 @@ p {
     inset: -14px;
   }
 }
+
+/* ---------- Sun ---------- */
+
+.sun {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 1; /* below the selected point */
+}
+
+/* A 44px touch target around a 30px disc. */
+.sun__handle {
+  position: absolute;
+  left: -22px;
+  top: -22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-900);
+  cursor: grab;
+  touch-action: none;
+}
+
+.sun__handle[data-dragging='true'] {
+  cursor: grabbing;
+}
+
+.sun__handle:focus-visible {
+  box-shadow: none; /* the ring goes on the disc, which is what is seen */
+}
+
+.sun__disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-pill);
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+  transition: box-shadow var(--t-fast) var(--ease-out);
+}
+
+.sun__handle:hover .sun__disc,
+.sun__handle[data-dragging='true'] .sun__disc {
+  box-shadow: var(--shadow-2);
+}
+
+.sun__handle:focus-visible .sun__disc {
+  box-shadow: var(--shadow-1), var(--ring);
+}
+
+.sun__label {
+  position: absolute;
+  top: -14px;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--ink-900);
+  color: var(--paper);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--t-fast) var(--ease-out);
+}
+
+.sun__label[data-visible='true'] {
+  opacity: 1;
+}
+
+.sun__label[data-side='left'] {
+  right: 24px;
+}
+
+.sun__label[data-side='right'] {
+  left: 24px;
+}

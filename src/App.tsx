@@ -76,6 +76,8 @@ export function App() {
             surface={surface}
             loading={state.status === 'loading'}
             selection={selection}
+            sunAzimuth={sunAzimuth}
+            sunAltitude={sunAltitude}
           />
           <div className="terrain-col">
             <TerrainCard

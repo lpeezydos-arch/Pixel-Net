@@ -7,6 +7,7 @@ import { NetCanvas } from './NetCanvas';
 import { NetFrame, NetLabels } from './NetFrame';
 import { NetMarker } from './NetMarker';
 import { Readout } from './Readout';
+import { SunHandle } from './SunHandle';
 
 interface NetCardProps {
   layout: Layout;
@@ -16,9 +17,19 @@ interface NetCardProps {
   loading: boolean;
   /** Index of the selected pixel, or −1. */
   selection: MotionValue<number>;
+  sunAzimuth: MotionValue<number>;
+  sunAltitude: MotionValue<number>;
 }
 
-export function NetCard({ layout, dem, surface, loading, selection }: NetCardProps) {
+export function NetCard({
+  layout,
+  dem,
+  surface,
+  loading,
+  selection,
+  sunAzimuth,
+  sunAltitude,
+}: NetCardProps) {
   const style = {
     width: layout.netCardWidth,
     height: layout.netCardHeight,
@@ -44,6 +55,7 @@ export function NetCard({ layout, dem, surface, loading, selection }: NetCardPro
           label="How to read the net"
           text="Each dot is one pixel: its direction from the center is the way the slope faces, and its distance from the center is how steep it is."
         />
+        {surface && <SunHandle size={layout.netSize} azimuth={sunAzimuth} altitude={sunAltitude} />}
         {surface && <NetMarker surface={surface} size={layout.netSize} selection={selection} />}
       </div>
       <Readout dem={dem} surface={surface} selection={selection} />
