@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { writeArrayBuffer } from 'geotiff';
 import {
+  APP_NAME,
   GORE,
   SECOND,
   caption,
@@ -15,7 +16,7 @@ import {
 
 test('shows the terrain, the net and a hint', async ({ page }) => {
   await openApp(page);
-  await expect(page.getByRole('heading', { name: 'Pixel Net' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: APP_NAME })).toBeVisible();
   await expect(caption(page)).toHaveText('Drag on the terrain to inspect a pixel');
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
   expect(await fingerprint(terrainImage(page))).not.toBe(0);

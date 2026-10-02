@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openApp, stage } from './helpers';
+import { APP_NAME, openApp, stage } from './helpers';
 
 // The other tests block service workers so they can fake responses.
 test.use({ serviceWorkers: 'allow' });
@@ -42,7 +42,7 @@ test('can be installed: manifest, icons and a white status bar', async ({ page, 
   const href = await page.locator('link[rel="manifest"]').getAttribute('href');
   const manifest = await (await request.get(new URL(href!, page.url()).toString())).json();
 
-  expect(manifest.name).toBe('Pixel Net');
+  expect(manifest.name).toBe(APP_NAME);
   expect(manifest.display).toBe('standalone');
   expect(manifest.theme_color).toBe('#ffffff');
   expect(manifest.background_color).toBe('#f7f5f1');
@@ -55,5 +55,5 @@ test('can be installed: manifest, icons and a white status bar', async ({ page, 
 
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#ffffff');
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
-  await expect(page).toHaveTitle('Pixel Net');
+  await expect(page).toHaveTitle(APP_NAME);
 });

@@ -1,5 +1,9 @@
 import { type Locator, type Page, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { writeArrayBuffer } from 'geotiff';
+
+/** The app's name, from the `VITE_APP_NAME` line of `.env`. */
+export const APP_NAME = readFileSync('.env', 'utf8').match(/^VITE_APP_NAME=(.*)$/m)![1].trim();
 
 /** Pixel dimensions of the bundled Gore Range DEM. */
 export const GORE = { width: 288, height: 294 };
@@ -42,15 +46,25 @@ export async function inkedPixels(canvas: Locator): Promise<number> {
 /** Pixel dimensions of the synthetic DEM served by `serveTwoDems`. */
 export const SECOND = { width: 60, height: 40 };
 
+/** The block of no-data pixels in the second DEM when `serveTwoDems` is asked for one. */
+export const NODATA_BLOCK = { col: 20, row: 10, width: 10, height: 10 };
+
 /**
  * Adds a second DEM to the list: a small uniform slope, 36° steep and facing
- * northwest, served after `delay` milliseconds.
+ * northwest, served after `delay` milliseconds. With `withNoData`, a block of
+ * `NODATA_BLOCK` pixels in it has no data.
  */
-export async function serveTwoDems(page: Page, delay = 0): Promise<void> {
+export async function serveTwoDems(page: Page, delay = 0, withNoData = false): Promise<void> {
   const values = Float32Array.from({ length: SECOND.width * SECOND.height }, (_, i) => {
     const col = i % SECOND.width;
     const row = Math.floor(i / SECOND.width);
-    return 1000 + 3 * col + 2 * row;
+    const hole =
+      withNoData &&
+      col >= NODATA_BLOCK.col &&
+      col < NODATA_BLOCK.col + NODATA_BLOCK.width &&
+      row >= NODATA_BLOCK.row &&
+      row < NODATA_BLOCK.row + NODATA_BLOCK.height;
+    return hole ? -9999 : 1000 + 3 * col + 2 * row;
   });
   // Declared apart from the call because geotiff's types omit some GeoKeys.
   const metadata = {
@@ -61,6 +75,7 @@ export async function serveTwoDems(page: Page, delay = 0): Promise<void> {
     ProjLinearUnitsGeoKey: 9001,
     ModelPixelScale: [5, 5, 0],
     ModelTiepoint: [0, 0, 0, 500000, 4400000, 0],
+    ...(withNoData ? { GDAL_NODATA: '-9999' } : {}),
   };
   const second = writeArrayBuffer(values, metadata);
   await page.route('**/dems/dems.json', (route) =>

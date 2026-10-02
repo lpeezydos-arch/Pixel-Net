@@ -1,5 +1,5 @@
 import { type Page, expect, test } from '@playwright/test';
-import { GORE, caption, openApp, serveTwoDems, stage, terrainImage } from './helpers';
+import { GORE, NODATA_BLOCK, SECOND, caption, openApp, serveTwoDems, stage, terrainImage } from './helpers';
 
 // Values of the bundled Gore Range DEM, by Horn's method.
 const WEST_SLOPE = { col: 150, row: 210, slope: '36.0°', aspect: '259° W', elevation: '3,874 m' };
@@ -224,13 +224,12 @@ test('keeps the selection on its pixel when the screen changes size', async ({ p
   await expect.poll(async () => Math.abs((await anchorOf(page, 'selection-ring')).y - pixel.y)).toBeLessThan(1);
   await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
 
+  // The west slope pixel plots at east −0.430, north −0.081 of the rim.
   const net = (await page.getByTestId('net').boundingBox())!;
-  await expect
-    .poll(async () => {
-      const at = await anchorOf(page, 'net-marker');
-      return at.x > net.x && at.x < net.x + net.width && at.y > net.y && at.y < net.y + net.height;
-    })
-    .toBe(true);
+  const rim = (net.width / 2) * NET_RIM;
+  const expected = { x: net.x + net.width / 2 - 0.43 * rim, y: net.y + net.height / 2 + 0.081 * rim };
+  await expect.poll(async () => Math.abs((await anchorOf(page, 'net-marker')).x - expected.x)).toBeLessThan(1.5);
+  await expect.poll(async () => Math.abs((await anchorOf(page, 'net-marker')).y - expected.y)).toBeLessThan(1.5);
 });
 
 test('switching DEMs clears the selection', async ({ page }) => {
@@ -279,6 +278,30 @@ test('choosing the DEM that is already shown changes nothing', async ({ page }) 
   await expect(aspect(page)).toHaveText(WEST_SLOPE.aspect);
   await expect(elevation(page)).toHaveText(WEST_SLOPE.elevation);
   await expect(ring(page)).toHaveAttribute('data-visible', 'true');
+});
+
+test('a pixel with no data reads "No data", has no point and is transparent', async ({ page }) => {
+  await serveTwoDems(page, 0, true);
+  await openApp(page);
+  await page.getByRole('tab', { name: 'Second' }).click();
+  await expect(terrainImage(page)).toHaveJSProperty('width', 60);
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+
+  const col = NODATA_BLOCK.col + 4;
+  const row = NODATA_BLOCK.row + 4;
+  const point = await pointOf(page, col, row, SECOND);
+  await page.mouse.click(point.x, point.y);
+
+  await expect(slope(page)).toHaveText('No data');
+  await expect(aspect(page)).toHaveText('No data');
+  await expect(elevation(page)).toHaveText('No data');
+  await expect(marker(page)).toHaveAttribute('data-visible', 'false');
+  const alpha = await terrainImage(page).evaluate(
+    (element, at) =>
+      (element as HTMLCanvasElement).getContext('2d')!.getImageData(at.col, at.row, 1, 1).data[3],
+    { col, row },
+  );
+  expect(alpha).toBe(0);
 });
 
 test('the net point pulses again on the first selection after a DEM switch', async ({ page }) => {

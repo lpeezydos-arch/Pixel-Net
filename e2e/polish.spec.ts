@@ -55,6 +55,18 @@ for (const screen of SCREENS) {
 
     const netBox = (await page.getByTestId('net').boundingBox())!;
     expect(netBox.width).toBeGreaterThanOrEqual(180);
+    // The page clips what overflows, so check that the net and its readout
+    // lie inside the Net region itself.
+    const inside = (box: { x: number; y: number; width: number; height: number }) => {
+      expect(box.x).toBeGreaterThanOrEqual(a.x - 1);
+      expect(box.y).toBeGreaterThanOrEqual(a.y - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(a.x + a.width + 1);
+      expect(box.y + box.height).toBeLessThanOrEqual(a.y + a.height + 1);
+    };
+    inside(netBox);
+    for (const id of ['slope', 'aspect', 'elevation']) {
+      inside((await page.getByTestId(id).boundingBox())!);
+    }
     expect(b.width / b.height).toBeCloseTo(288 / 294, 1);
   });
 }
@@ -206,7 +218,7 @@ test('with reduced motion the point jumps and nothing animates', async ({ page }
   await page.mouse.up();
 });
 
-test('uses one self-hosted typeface and no images from other sites', async ({ page }) => {
+test('makes every request to its own origin and uses the self-hosted typeface', async ({ page }) => {
   const origins = new Set<string>();
   page.on('request', (request) => origins.add(new URL(request.url()).origin));
   await openApp(page);

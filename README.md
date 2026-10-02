@@ -10,6 +10,8 @@ The design is in `docs/superpowers/specs/2026-10-01-pixel-net-design.md`.
 
 ## Run it
 
+Needs Node 22.12 or later.
+
 ```bash
 npm install
 npm run dev        # http://localhost:5173
@@ -97,6 +99,8 @@ BASE_PATH=/pixel-net/ npm run build
 
 Styles follow the `lauren-frontend-design` skill. `src/styles/tokens.css` is
 that skill's `assets/tokens.css` with only the accent changed to rust
-(`--accent: #b84a00`, `--accent-strong: #8f3900`). Two deliberate departures:
-there is no USGS VID chrome, because this is not an official USGS app, and the
-phone status bar is white so that rust stays reserved for the selection.
+(`--accent: #b84a00`, `--accent-strong: #8f3900`). Three deliberate departures:
+there is no USGS VID chrome, because this is not an official USGS app, the
+phone status bar is white so that rust stays reserved for the selection, and
+the focus ring is the accent at 80% (set in `src/app.css`), because at the
+design system's 60% a rust ring is under 3:1.
