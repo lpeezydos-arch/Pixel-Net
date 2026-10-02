@@ -71,6 +71,20 @@ describe('parseDem', () => {
     expect(Array.from(dem.nodata)).toEqual([0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0]);
   });
 
+  it('recognizes a no-data tag that is not exactly a float32 value', async () => {
+    const values = Float32Array.from({ length: 12 }, (_, i) => 100 + i);
+    values[3] = Math.fround(-9999.9);
+    values[9] = Math.fround(-9999.9);
+    const dem = await parseDem(fixture({ GDAL_NODATA: '-9999.9' }, values));
+    expect(Array.from(dem.nodata)).toEqual([0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0]);
+  });
+
+  it('does not flag zeros when there is no no-data tag', async () => {
+    const values = Float32Array.from({ length: 12 }, (_, i) => i);
+    const dem = await parseDem(fixture({}, values));
+    expect(Array.from(dem.nodata)).toEqual(new Array(12).fill(0));
+  });
+
   it('rejects a DEM in degrees', async () => {
     const buffer = fixture({
       GTModelTypeGeoKey: 2,

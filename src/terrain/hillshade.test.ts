@@ -25,6 +25,13 @@ describe('shade', () => {
     ]);
   });
 
+  it('lights a north-facing slope from the north and darkens it from the south', () => {
+    expect(grayAt(tiltedPlane(45, 0), 0, 45, CENTER)).toEqual([255, 255, 255, 255]);
+    expect(grayAt(tiltedPlane(45, 0), 180, 45, CENTER)).toEqual([
+      SHADE_FLOOR, SHADE_FLOOR, SHADE_FLOOR, 255,
+    ]);
+  });
+
   it('lights level ground by the height of the sun alone', () => {
     const level = demFrom(5, 5, 5, () => 100);
     const [low] = grayAt(level, 0, 30, 12);

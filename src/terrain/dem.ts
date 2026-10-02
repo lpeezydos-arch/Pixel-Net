@@ -42,16 +42,19 @@ export async function parseDem(buffer: ArrayBuffer): Promise<Dem> {
   }
   const cellX = Math.abs(resolution[0]);
   const cellY = Math.abs(resolution[1]);
-  if (!(cellX > 0) || Math.abs(cellX - cellY) / cellX > SQUARE_TOLERANCE) {
+  const valid = Number.isFinite(cellX) && Number.isFinite(cellY) && cellX > 0 && cellY > 0;
+  if (!valid || !(Math.abs(cellX - cellY) / cellX <= SQUARE_TOLERANCE)) {
     throw new DemError('units', 'The DEM does not have square cells.');
   }
 
   const elevation =
     raster instanceof Float32Array ? raster : Float32Array.from(raster as ArrayLike<number>);
-  const missing = image.getGDALNoData();
+  const tag = image.getGDALNoData();
+  // The pixels are float32, so compare with the float32 nearest to the tag.
+  const missing = tag === null ? null : Math.fround(tag);
   const nodata = new Uint8Array(elevation.length);
   for (let i = 0; i < elevation.length; i++) {
-    if (Number.isNaN(elevation[i]) || elevation[i] === missing) nodata[i] = 1;
+    if (Number.isNaN(elevation[i]) || (missing !== null && elevation[i] === missing)) nodata[i] = 1;
   }
 
   return {

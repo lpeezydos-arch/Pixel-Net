@@ -54,7 +54,10 @@ describe('computeSurface', () => {
     expect(surface.nodata[CENTER]).toBe(1);
     expect(surface.nodata[CENTER + 1]).toBe(0);
     expect(Number.isFinite(surface.slope[CENTER + 1])).toBe(true);
-    expect(surface.slope[CENTER + 1]).toBeLessThan(45);
+    // Its west neighbor is missing, so it is replaced by the pixel's own value
+    // and the west-east difference is three quarters of the full one.
+    const expected = (Math.atan(0.75 * Math.tan((30 * Math.PI) / 180)) * 180) / Math.PI;
+    expect(surface.slope[CENTER + 1]).toBeCloseTo(expected, 2);
   });
 
   it('handles a one-pixel DEM', () => {
