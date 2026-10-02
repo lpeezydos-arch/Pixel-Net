@@ -33,6 +33,8 @@ export function NetMarker({ surface, size, selection }: NetMarkerProps) {
       const plottable = index >= 0 && !surface.nodata[index] && !surface.flat[index];
       if (!plottable) {
         marker.dataset.visible = 'false';
+        // Re-arm the pulse, so the next first selection plays it again.
+        if (index < 0) marker.dataset.pulse = 'false';
         previous = index;
         return;
       }

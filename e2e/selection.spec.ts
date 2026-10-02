@@ -220,6 +220,24 @@ test('switching DEMs clears the selection', async ({ page }) => {
   await expect(aspect(page)).toHaveText('304° NW');
 });
 
+test('the net point pulses again on the first selection after a DEM switch', async ({ page }) => {
+  await serveTwoDems(page);
+  await openApp(page);
+  await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.up();
+  await expect(marker(page)).toHaveAttribute('data-pulse', 'true');
+
+  await page.getByRole('tab', { name: 'Second' }).click();
+  await expect(terrainImage(page)).toHaveJSProperty('width', 60);
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  // Clearing the selection re-arms the pulse.
+  await expect(marker(page)).toHaveAttribute('data-pulse', 'false');
+
+  const box = (await area(page).boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(marker(page)).toHaveAttribute('data-pulse', 'true');
+});
+
 test('explains each value from its info button', async ({ page }) => {
   await openApp(page);
   const tips: Array<[string, string]> = [
