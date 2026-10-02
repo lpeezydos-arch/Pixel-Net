@@ -60,6 +60,13 @@ describe('computeLayout', () => {
     expect(computeLayout(720, 1000, GORE).mode).toBe('wide');
   });
 
+  it('judges landscape by the viewport, not by the area under the title bar', () => {
+    // A 400 × 450 window is portrait; under a 56px title bar its stage is 400 × 394.
+    expect(computeLayout(400, 394, GORE).mode).toBe('portrait');
+    // A phone on its side is still wide.
+    expect(computeLayout(844, 334, GORE).mode).toBe('wide');
+  });
+
   it('never needs more room than it was given', () => {
     const sizes = [
       [320, 480], [360, 684], [375, 591], [390, 763], [412, 783], [430, 870],

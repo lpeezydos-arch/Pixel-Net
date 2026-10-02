@@ -17,6 +17,7 @@ export interface Layout {
 
 export const CAPTION_HEIGHT = 18;
 export const CAPTION_GAP = 8;
+export const HEADER_HEIGHT = 56; // --header-h: the title bar above the stage
 const MIN_NET = 180;
 const MAX_COLUMN = 520;
 const READOUT_SIDE = 76; // width of the readout column beside the net
@@ -27,11 +28,11 @@ const whole = (value: number) => Math.max(0, Math.floor(value));
 
 /**
  * Sizes that make the net card, the terrain card and the caption fill a
- * `width` × `height` area without scrolling. `aspect` is the DEM's width
+ * `width` × `height` area (the viewport minus the title bar) without scrolling. `aspect` is the DEM's width
  * divided by its height.
  */
 export function computeLayout(width: number, height: number, aspect: number): Layout {
-  if (width >= WIDE_FROM || width > height) return wideLayout(width, height, aspect);
+  if (width >= WIDE_FROM || width > height + HEADER_HEIGHT) return wideLayout(width, height, aspect);
 
   const pad = 12;
   const gap = 12;

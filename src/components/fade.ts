@@ -1,5 +1,3 @@
-const EASE_OUT = 'cubic-bezier(0.22, 0.61, 0.36, 1)'; // --ease-out
-
 /** Milliseconds of a duration token such as `--t-base`, as it applies to `element`. */
 export function tokenMs(element: Element, token: string): number {
   const raw = getComputedStyle(element).getPropertyValue(token).trim();
@@ -8,11 +6,16 @@ export function tokenMs(element: Element, token: string): number {
   return raw.endsWith('ms') ? value : value * 1000;
 }
 
+/** The `--ease-out` token as it applies to `element`. */
+function easeOut(element: Element): string {
+  return getComputedStyle(element).getPropertyValue('--ease-out').trim() || 'ease-out';
+}
+
 /** Fades `element` in over a duration token. Does nothing under reduced motion. */
 export function fadeIn(element: HTMLElement, token: string): void {
   const duration = tokenMs(element, token);
   if (duration > 0) {
-    element.animate([{ opacity: 0 }, { opacity: 1 }], { duration, easing: EASE_OUT });
+    element.animate([{ opacity: 0 }, { opacity: 1 }], { duration, easing: easeOut(element) });
   }
 }
 
@@ -30,7 +33,7 @@ export function leaveGhost(canvas: HTMLCanvasElement, ghost: HTMLCanvasElement, 
   const clear = () => context.clearRect(0, 0, ghost.width, ghost.height);
   const duration = tokenMs(ghost, token);
   if (duration > 0) {
-    ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration, easing: EASE_OUT }).onfinish = clear;
+    ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration, easing: easeOut(ghost) }).onfinish = clear;
   } else {
     clear();
   }

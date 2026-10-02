@@ -59,7 +59,9 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--gap, 12px);
+  --caption-height: 18px; /* one line of --fs-xs; layout.ts reserves the same */
+  --caption-gap: var(--sp-2);
+  gap: var(--gap, var(--sp-3));
   min-height: 0;
   padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   overflow: hidden;
@@ -75,22 +77,22 @@ p {
 
 /* Line the net card up with the terrain card, not with the caption under it. */
 .stage[data-mode='wide'] .net-card {
-  margin-bottom: 26px;
+  margin-bottom: calc(var(--caption-height) + var(--caption-gap));
 }
 
 .terrain-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--caption-gap);
 }
 
 .caption {
   max-width: 100%;
-  height: 18px;
+  height: var(--caption-height);
   overflow: hidden;
   font-size: var(--fs-xs);
-  line-height: 18px;
+  line-height: var(--caption-height);
   color: var(--ink-500);
   text-align: center;
   text-overflow: ellipsis;
@@ -110,7 +112,7 @@ p {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--inner, 12px);
+  padding: var(--inner, var(--sp-3));
 }
 
 .net-card[data-readout='below'] {
@@ -219,6 +221,10 @@ p {
   background: var(--paper);
   color: var(--ink-900);
   box-shadow: var(--shadow-1);
+}
+
+.segmented__seg:focus-visible {
+  box-shadow: var(--ring);
 }
 
 .btn {

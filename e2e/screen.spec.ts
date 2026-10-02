@@ -106,3 +106,18 @@ test('keeps the DEM chosen last when an earlier choice loads slowly', async ({ p
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
 });
+
+test('the selected DEM tab shows a focus ring', async ({ page }) => {
+  await serveTwoDems(page);
+  await openApp(page);
+  await page.keyboard.press('Tab');
+  const focused = () =>
+    page.evaluate(() => {
+      const element = document.activeElement as HTMLElement;
+      return { name: element.textContent, shadow: getComputedStyle(element).boxShadow };
+    });
+  expect((await focused()).name).toBe('Gore Range');
+  // The ring is a 3px spread with no offset or blur; the tab's resting shadow
+  // is not. The shadow animates to the ring, so wait for it to arrive.
+  await expect.poll(async () => (await focused()).shadow).toMatch(/0px 0px 0px 3px/);
+});
