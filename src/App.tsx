@@ -1,11 +1,13 @@
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { useMotionValue } from 'motion/react';
-import { type CSSProperties, useRef } from 'react';
+import { type CSSProperties, useCallback, useRef, useState } from 'react';
 import { NetCard } from './components/NetCard';
 import { TerrainCard } from './components/TerrainCard';
 import { TitleBar } from './components/TitleBar';
 import { useElementSize } from './hooks/useElementSize';
 import { computeLayout } from './layout';
 import { useDems } from './state/useDems';
+import { describeReadout, readoutFor } from './terrain/format';
 import { DEFAULT_SUN } from './terrain/net';
 
 const HINT = 'Drag on the terrain to inspect a pixel';
@@ -14,8 +16,11 @@ export function App() {
   const { entries, active, state, select, retry } = useDems();
   const stageRef = useRef<HTMLElement>(null);
   const stage = useElementSize(stageRef);
+  const selection = useMotionValue(-1); // index of the selected pixel, or −1
   const sunAzimuth = useMotionValue(DEFAULT_SUN.azimuth);
   const sunAltitude = useMotionValue(DEFAULT_SUN.altitude);
+  const [hasSelection, setHasSelection] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
 
   // While another DEM loads, the one before it stays on screen.
   const shown =
@@ -27,35 +32,74 @@ export function App() {
   const aspect = sized?.width && sized.height ? sized.width / sized.height : 1;
   const layout = computeLayout(stage.width, stage.height, aspect);
 
-  const caption = state.status === 'ready' ? HINT : '';
+  const facts =
+    state.status === 'ready' && active
+      ? `${active.place} · ${Number(state.dem.cellSize.toFixed(2))} m pixels · ${state.dem.width} × ${state.dem.height}`
+      : '';
+  const caption = state.status !== 'ready' ? '' : hasSelection ? facts : HINT;
+
+  const selectDem = useCallback(
+    (id: string) => {
+      selection.set(-1);
+      setHasSelection(false);
+      setAnnouncement('');
+      select(id);
+    },
+    [selection, select],
+  );
+
+  const handlePress = useCallback(() => setHasSelection(true), []);
+
+  // Announce where a drag ended or a key press landed, not every pixel on the way.
+  const handleSettle = useCallback(() => {
+    setHasSelection(true);
+    if (state.status === 'ready') {
+      setAnnouncement(describeReadout(readoutFor(state.dem, state.surface, selection.get())));
+    }
+  }, [state, selection]);
 
   return (
-    <div className="app">
-      <TitleBar entries={entries} activeId={active?.id ?? null} onSelect={select} />
-      <main
-        ref={stageRef}
-        className="stage"
-        data-mode={layout.mode}
-        data-status={state.status}
-        data-dem={active?.id}
-        style={{ '--gap': `${layout.gap}px` } as CSSProperties}
-      >
-        <NetCard layout={layout} surface={surface} loading={state.status === 'loading'} />
-        <div className="terrain-col">
-          <TerrainCard
-            width={layout.terrainWidth}
-            height={layout.terrainHeight}
+    <Tooltip.Provider delayDuration={300}>
+      <div className="app">
+        <TitleBar entries={entries} activeId={active?.id ?? null} onSelect={selectDem} />
+        <main
+          ref={stageRef}
+          className="stage"
+          data-mode={layout.mode}
+          data-status={state.status}
+          data-dem={active?.id}
+          style={{ '--gap': `${layout.gap}px` } as CSSProperties}
+        >
+          <NetCard
+            layout={layout}
+            dem={shown?.dem ?? null}
             surface={surface}
-            error={state.status === 'error' ? state.reason : null}
-            onRetry={retry}
-            sunAzimuth={sunAzimuth}
-            sunAltitude={sunAltitude}
+            loading={state.status === 'loading'}
+            selection={selection}
           />
-          <p className="caption" data-testid="caption">
-            {caption}
-          </p>
-        </div>
-      </main>
-    </div>
+          <div className="terrain-col">
+            <TerrainCard
+              width={layout.terrainWidth}
+              height={layout.terrainHeight}
+              surface={surface}
+              error={state.status === 'error' ? state.reason : null}
+              onRetry={retry}
+              sunAzimuth={sunAzimuth}
+              sunAltitude={sunAltitude}
+              selection={selection}
+              interactive={state.status === 'ready'}
+              onPress={handlePress}
+              onSettle={handleSettle}
+            />
+            <p className="caption" data-testid="caption">
+              {caption}
+            </p>
+          </div>
+        </main>
+        <p className="visually-hidden" aria-live="polite" data-testid="announcement">
+          {announcement}
+        </p>
+      </div>
+    </Tooltip.Provider>
   );
 }
