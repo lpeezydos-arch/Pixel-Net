@@ -121,6 +121,22 @@ test('nothing moves when the DEM arrives', async ({ page }) => {
   expect(await terrain(page).boundingBox()).toEqual(before.terrain);
 });
 
+test('the loading shimmer is a circle on the net and follows the terrain card corners', async ({ page }) => {
+  await page.route('**/dems/gore.tif', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await page.goto('/');
+  await expect(page.locator('.skeleton')).toHaveCount(2);
+  const radius = (selector: string) =>
+    page.locator(selector).evaluate((element) => getComputedStyle(element).borderTopLeftRadius);
+
+  // A circle: the corner radius is at least half the box.
+  const shimmer = (await page.locator('.net__skeleton').boundingBox())!;
+  expect(parseFloat(await radius('.net__skeleton'))).toBeGreaterThanOrEqual(shimmer.width / 2);
+  expect(await radius('.terrain__skeleton')).toBe(await radius('.terrain'));
+});
+
 test('touch targets are at least 44px', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'phone', 'touch sizes apply to touch screens');
   await serveTwoDems(page);

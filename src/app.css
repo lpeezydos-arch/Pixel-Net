@@ -179,7 +179,9 @@ p {
   text-anchor: start;
 }
 
-.net__skeleton {
+/* `.net` and `.terrain` in these selectors outrank the `.skeleton` recipe's
+   own corner radius, which comes later in this file. */
+.net .net__skeleton {
   position: absolute;
   inset: 3.125%; /* the rim circle: (1 − 0.9375) / 2 */
   border-radius: var(--r-pill);
@@ -190,7 +192,7 @@ p {
 }
 
 .terrain__image,
-.terrain__skeleton {
+.terrain .terrain__skeleton {
   position: absolute;
   inset: 0;
   width: 100%;

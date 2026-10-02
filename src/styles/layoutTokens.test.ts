@@ -48,6 +48,6 @@ describe('sizes shared by layout.ts and the stylesheets', () => {
   });
 
   it('insets the net skeleton by the share the rim leaves free', () => {
-    expect(parseFloat(declared('.net__skeleton', 'inset'))).toBeCloseTo(((1 - NET_RIM) / 2) * 100, 6);
+    expect(parseFloat(declared('.net .net__skeleton', 'inset'))).toBeCloseTo(((1 - NET_RIM) / 2) * 100, 6);
   });
 });
