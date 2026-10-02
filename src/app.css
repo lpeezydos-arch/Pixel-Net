@@ -1,6 +1,12 @@
 /* Layout and components for Pixel Net. Colors, type, radii, shadows, spacing
    and durations all come from styles/tokens.css. */
 
+/* The design system's ring is the accent at 60%, which is under 3:1 on
+   --paper, --surface and --sunken with the rust accent. 80% reaches 3:1. */
+:root {
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
 *,
 *::before,
 *::after {

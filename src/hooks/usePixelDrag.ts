@@ -74,6 +74,8 @@ export function usePixelDrag({ width, height, enabled, selection, onPress, onSet
       },
       onPointerUp: release,
       onPointerCancel: release,
+      // A pointer-up that never arrives ends the press too.
+      onLostPointerCapture: release,
       onKeyDown(event: KeyboardEvent<HTMLElement>) {
         if (!enabled || event.altKey || event.ctrlKey || event.metaKey) return;
         const current = selection.get();

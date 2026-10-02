@@ -150,6 +150,15 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     }
   };
 
+  // A pointer-up that never arrives must not leave the sun undraggable. This
+  // also fires after a normal release, when the drag has already ended.
+  const onLostPointerCapture = (event: PointerEvent<HTMLButtonElement>) => {
+    if (drag.current?.pointer !== event.pointerId) return;
+    drag.current = null;
+    lastTap.current = 0;
+    setDragging(false);
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const turn = event.key === 'ArrowRight' ? KEY_STEP : event.key === 'ArrowLeft' ? -KEY_STEP : 0;
     const lift = event.key === 'ArrowUp' ? KEY_STEP : event.key === 'ArrowDown' ? -KEY_STEP : 0;
@@ -179,6 +188,7 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
+            onLostPointerCapture={onLostPointerCapture}
             onKeyDown={onKeyDown}
           >
             <span className="sun__disc">

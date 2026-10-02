@@ -38,6 +38,20 @@ test('the sun starts in the northwest, 45° high', async ({ page }) => {
   expect(Math.abs(actual.y - expected.y)).toBeLessThan(1);
 });
 
+test('the sun can be dragged again after its pointer is lost', async ({ page }) => {
+  await openApp(page);
+  await sun(page).evaluate((element) => {
+    const init = { pointerId: 7, pointerType: 'touch', bubbles: true };
+    element.dispatchEvent(new PointerEvent('pointerdown', { ...init, clientX: 1, clientY: 1 }));
+    element.dispatchEvent(new PointerEvent('lostpointercapture', init));
+  });
+  await expect(label(page)).toHaveAttribute('data-visible', 'false');
+
+  await dragSunTo(page, R45, 0);
+  await expect(label(page)).toHaveText('E · 45° high');
+  await page.mouse.up();
+});
+
 test('dragging the sun re-lights the terrain and leaves the net and the readout alone', async ({ page }) => {
   await openApp(page);
   const area = (await page.getByTestId('terrain-area').boundingBox())!;
