@@ -373,7 +373,9 @@ Home-screen icon: a net circle with a rust dot on `--surface`, in 192px,
 
 ## 7. Motion
 
-Only `transform` and `opacity` animate.
+Movement animates only `transform` and `opacity`; nothing animates width,
+height or position. Color, background and shadow transitions on controls, and
+the skeleton shimmer, follow the design system's recipes as written.
 
 | Piece | Behavior |
 |---|---|
@@ -512,3 +514,15 @@ found by running the code.
   "Overhead" at the center and replaces the tooltip while dragging.
 - Section 8: the precache size limit is raised to 25 MB per file.
 - Section 10: browser tests can run without root.
+
+Made on 2026-10-02 during implementation, from review findings.
+
+- Section 7: "only `transform` and `opacity` animate" is reworded to cover
+  movement. The design system's own segmented-control, button and skeleton
+  recipes transition color, background and shadow, and section 6 requires
+  those recipes.
+- Section 6: values that are part of a copied recipe (the 40px button, the
+  1.4s shimmer) stay as the design system wrote them. Sizes specific to this
+  app use tokens, and the sizes that `layout.ts` and the stylesheet share are
+  tied together by a test.
+- Section 3: "landscape" is judged on the whole viewport, title bar included.
