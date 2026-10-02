@@ -362,11 +362,14 @@ From `lauren-frontend-design`:
 - Touch targets at least `--touch` (44px): picker segments, sun marker.
 - Light theme only.
 
-Deviations from the skill, both deliberate:
+Deviations from the skill, all deliberate:
 
 - No USGS VID chrome; this is not an official USGS app.
 - `theme-color` is white, not the accent, so rust stays reserved for the
   selection.
+- The focus ring is the accent at 80%, set in `src/app.css`. The design
+  system's ring is the accent at 60%, which reaches the required 3:1 only
+  with a dark accent; with rust it is about 2.5:1. `tokens.css` is untouched.
 
 Home-screen icon: a net circle with a rust dot on `--surface`, in 192px,
 512px and maskable sizes, plus an Apple touch icon.
@@ -526,3 +529,20 @@ Made on 2026-10-02 during implementation, from review findings.
   app use tokens, and the sizes that `layout.ts` and the stylesheet share are
   tied together by a test.
 - Section 3: "landscape" is judged on the whole viewport, title bar included.
+
+Made on 2026-10-02 from the whole-branch review.
+
+- Section 6: the focus ring is overridden to the accent at 80% (see the
+  deviations list). A test checks its contrast on every ground it appears on.
+- Section 4: the no-data value is compared as the float32 the file stores, so
+  a tag such as `-9999.9` or a short float32 minimum is recognized.
+- Section 3: selecting the DEM already shown does nothing. Arrow keys held
+  with Alt, Ctrl or Meta are left to the browser. A drag whose pointer is lost
+  ends cleanly, on the terrain and on the sun. The net point pulses on its
+  first appearance after the selection was cleared, even if the first pixel
+  pressed was flat.
+- Section 3, known limit: on a phone the picker stays inside the screen with
+  up to four DEMs, but with three or four the names, and the app name, are
+  cut short with an ellipsis. Two DEMs fit in full.
+- Section 10, known limit: the automated browser tests run in Chromium only.
+  Safari and Firefox are checked by hand.
