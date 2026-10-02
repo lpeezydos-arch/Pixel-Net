@@ -1,0 +1,106 @@
+/* lauren-frontend-design — house design tokens + minimal base.
+   Copy this file verbatim into the project (src/styles/tokens.css); import it
+   before all other styles. Per-app customization: ONLY values marked [PER-APP]. */
+
+:root {
+  /* ---------- Typography ---------- */
+  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', 'Source Sans Pro',
+               -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --fs-xs: 0.75rem;    /* 12px — micro labels, uppercase captions */
+  --fs-sm: 0.875rem;   /* 14px — secondary text, table body */
+  --fs-md: 1rem;       /* 16px — body default */
+  --fs-lg: 1.125rem;   /* 18px — emphasized body, card titles */
+  --fs-xl: clamp(1.25rem, 1.1rem + 0.8vw, 1.5rem);   /* section headings */
+  --fs-2xl: clamp(1.5rem, 1.25rem + 1.4vw, 2rem);    /* page headings */
+
+  --lh-body: 1.5;
+  --lh-snug: 1.35;
+  --lh-tight: 1.15;
+  /* Weights: 400 body, 600 headings/buttons/emphasis. Nothing heavier. */
+
+  /* ---------- Neutrals (warm: ink leans brown, grounds lean cream) ---------- */
+  --ink-900: #1c1a17;   /* primary text */
+  --ink-700: #4a4640;   /* secondary text */
+  --ink-500: #6f6a62;   /* muted, captions, inactive icons */
+  --ink-400: #979189;   /* placeholder, disabled — never body text */
+
+  --paper: #ffffff;     /* cards & floating surfaces */
+  --surface: #f7f5f1;   /* page background — cards float on this */
+  --sunken: #efece6;    /* wells, inset areas, skeleton base */
+  --line: #e8e4dd;      /* hairline dividers (in-flow surfaces only) */
+  --line-strong: #d3cdc3;
+
+  /* ---------- Accent [PER-APP] ---------- */
+  --accent: #b84a00;         /* Pixel Net: rust */
+  --accent-strong: #8f3900;  /* hover/active, accent-as-text on light */
+  --on-accent: #ffffff;
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, white);
+  --accent-softer: color-mix(in srgb, var(--accent) 5%, white);
+
+  /* ---------- Semantic ---------- */
+  --ok: #1b6b34;      --ok-bg: #e6f4ea;
+  --warn: #8a5a00;    --warn-bg: #fff4e5;
+  --danger: #b3261e;  --danger-bg: #fdecea;
+
+  /* ---------- Data viz (Okabe-Ito, color-blind safe) [PER-APP order/subset] ---------- */
+  --viz-1: #0072b2;  --viz-2: #e69f00;  --viz-3: #009e73;  --viz-4: #cc79a7;
+  --viz-5: #d55e00;  --viz-6: #56b4e9;  --viz-7: #f0e442;  --viz-8: #000000;
+
+  /* ---------- Radii ---------- */
+  --r-sm: 8px;     /* inputs, small controls, tooltips */
+  --r-md: 12px;    /* cards, popups, menus */
+  --r-lg: 16px;    /* sheets, modals, large panels */
+  --r-pill: 999px; /* buttons, chips, search, segmented controls */
+
+  /* ---------- Elevation ---------- */
+  /* Rule: floating surface = shadow, no border. In-flow surface = hairline, no shadow. */
+  --shadow-1: 0 1px 2px rgb(28 26 23 / 0.10), 0 1px 6px rgb(28 26 23 / 0.06);
+  --shadow-2: 0 2px 8px rgb(28 26 23 / 0.12), 0 8px 24px rgb(28 26 23 / 0.10);
+  --shadow-3: 0 4px 16px rgb(28 26 23 / 0.14), 0 16px 48px rgb(28 26 23 / 0.18);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent); /* >=3:1 on white with a dark accent */
+
+  /* ---------- Spacing ---------- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;  --sp-8: 64px;
+
+  /* ---------- Motion ---------- */
+  --t-fast: 150ms;   /* hover, press, small fades */
+  --t-base: 240ms;   /* accordions, popups, card enters */
+  --t-slow: 400ms;   /* sheets, panel slides, page-level */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-inout: cubic-bezier(0.45, 0.05, 0.25, 1);
+
+  /* ---------- Layout ---------- */
+  --header-h: 56px;
+  --panel-w: 360px;
+  --touch: 44px;    /* minimum touch target */
+  --z-map-controls: 10;
+  --z-panel: 20;
+  --z-sheet: 30;
+  --z-toast: 40;
+  --z-modal: 50;
+  --z-tooltip: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-base: 0ms; --t-slow: 0ms; }
+}
+
+/* ---------- Minimal base ---------- */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  color: var(--ink-900);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-weight: 600; line-height: var(--lh-tight); margin: 0 0 var(--sp-3); }
+h1 { font-size: var(--fs-2xl); }
+h2 { font-size: var(--fs-xl); }
+:focus-visible { outline: none; box-shadow: var(--ring); } /* ring follows each element's own radius */
+::selection { background: var(--accent-soft); }
+button, input, select, textarea { font: inherit; }
