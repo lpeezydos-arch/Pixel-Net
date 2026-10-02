@@ -1,3 +1,6 @@
+/* Layout and components for Pixel Net. Colors, type, radii, shadows, spacing
+   and durations all come from styles/tokens.css. */
+
 *,
 *::before,
 *::after {
@@ -8,4 +11,290 @@ html,
 body,
 #root {
   height: 100%;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+p {
+  margin: 0;
+}
+
+/* ---------- Page ---------- */
+
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  height: calc(var(--header-h) + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) calc(var(--sp-3) + env(safe-area-inset-right)) 0
+    calc(var(--sp-4) + env(safe-area-inset-left));
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+.titlebar__name {
+  margin: 0;
+  font-size: var(--fs-lg);
+  white-space: nowrap;
+}
+
+.titlebar__dem {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap, 12px);
+  min-height: 0;
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow: hidden;
+}
+
+.stage[data-mode='portrait'] {
+  flex-direction: column;
+}
+
+.stage[data-mode='wide'] .terrain-col {
+  order: -1;
+}
+
+/* Line the net card up with the terrain card, not with the caption under it. */
+.stage[data-mode='wide'] .net-card {
+  margin-bottom: 26px;
+}
+
+.terrain-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.caption {
+  max-width: 100%;
+  height: 18px;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  line-height: 18px;
+  color: var(--ink-500);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  flex: none;
+  background: var(--paper);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-1);
+}
+
+.net-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--inner, 12px);
+}
+
+.net-card[data-readout='below'] {
+  flex-direction: column;
+}
+
+.net {
+  position: relative;
+  flex: none;
+}
+
+.net-frame,
+.net-labels,
+.net__cloud {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.net-labels {
+  pointer-events: none;
+}
+
+.net__cloud {
+  color: var(--ink-900); /* read by NetCanvas as the color of the points */
+}
+
+.net-frame__rim {
+  fill: var(--paper);
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+
+.net-frame__line {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.net-labels text {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  fill: var(--ink-500);
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.net-labels .net-labels__ring {
+  font-weight: 400;
+  text-anchor: start;
+}
+
+.net__skeleton {
+  position: absolute;
+  inset: 3.125%; /* the rim circle: (1 − 0.9375) / 2 */
+  border-radius: var(--r-pill);
+}
+
+.terrain {
+  position: relative;
+}
+
+.terrain__image,
+.terrain__skeleton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.terrain__error {
+  height: 100%;
+  justify-content: center;
+}
+
+/* ---------- Recipes from lauren-frontend-design ---------- */
+
+.segmented {
+  display: inline-flex;
+  padding: var(--sp-1);
+  background: var(--sunken);
+  border-radius: var(--r-pill);
+}
+
+.segmented__seg {
+  padding: var(--sp-1) var(--sp-4);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-700);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--t-base) var(--ease-out),
+    color var(--t-base) var(--ease-out),
+    box-shadow var(--t-base) var(--ease-out);
+}
+
+.segmented__seg[aria-selected='true'] {
+  background: var(--paper);
+  color: var(--ink-900);
+  box-shadow: var(--shadow-1);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 40px;
+  padding: 0 var(--sp-5);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out);
+}
+
+.btn:hover {
+  background: var(--accent-strong);
+}
+
+.btn--tonal {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.btn--tonal:hover {
+  background: color-mix(in srgb, var(--accent) 16%, white);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  text-align: center;
+}
+
+.empty__text {
+  color: var(--ink-700);
+}
+
+.skeleton {
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--sunken) 25%, var(--surface) 37%, var(--sunken) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--sunken);
+  }
+}
+
+/* Touch layouts: 44px targets. */
+@media (pointer: coarse) {
+  .segmented__seg {
+    min-height: var(--touch);
+  }
+
+  .btn {
+    height: var(--touch);
+  }
 }
