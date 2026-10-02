@@ -30,6 +30,8 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
   const [tipOpen, setTipOpen] = useState(false);
   const drag = useRef<{ pointer: number; dx: number; dy: number; startX: number; startY: number } | null>(null);
   const lastTap = useRef(0);
+  // The reset glide in progress, if any. Any new input from the user stops it.
+  const glide = useRef<{ stop: () => void } | null>(null);
 
   const center = size / 2;
   const rim = center * NET_RIM;
@@ -62,7 +64,16 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     altitude.set(sun.altitude);
   };
 
+  const stopGlide = () => {
+    glide.current?.stop();
+    glide.current = null;
+  };
+
+  // A glide must not outlive the marker.
+  useEffect(() => () => glide.current?.stop(), []);
+
   const reset = () => {
+    stopGlide();
     const from = sunToNet({ azimuth: azimuth.get(), altitude: altitude.get() });
     const to = sunToNet(DEFAULT_SUN);
     const finish = () => {
@@ -74,16 +85,30 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
       return;
     }
     // Glide across the net in a straight line; the terrain re-lights on the way.
-    animate(0, 1, {
+    let live = true;
+    const controls = animate(0, 1, {
       type: 'spring',
       ...POINT_SPRING,
-      onUpdate: (t) => setSun(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t),
-      onComplete: finish,
+      onUpdate: (t) => {
+        if (live) setSun(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t);
+      },
+      onComplete: () => {
+        if (!live) return;
+        glide.current = null;
+        finish();
+      },
     });
+    glide.current = {
+      stop: () => {
+        live = false;
+        controls.stop();
+      },
+    };
   };
 
   const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
     if (drag.current || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    stopGlide();
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
     } catch {
@@ -133,6 +158,7 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
       reset();
     } else if (turn || lift) {
       event.preventDefault();
+      stopGlide();
       azimuth.set((azimuth.get() + turn + 360) % 360);
       altitude.set(Math.min(90, Math.max(MIN_SUN_ALTITUDE, altitude.get() + lift)));
     }

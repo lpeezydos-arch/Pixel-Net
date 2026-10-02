@@ -139,3 +139,20 @@ test('explains the sun from its tooltip', async ({ page }) => {
   await sun(page).focus();
   await expect(page.locator('.tooltip')).toHaveText('Drag to move the light, or double-tap to reset it.');
 });
+
+test('moving the sun during a reset keeps it where the user put it', async ({ page }) => {
+  await openApp(page);
+  await sun(page).focus();
+  for (let i = 0; i < 9; i++) await page.keyboard.press('ArrowRight');
+  await expect(label(page)).toHaveText('N · 45° high');
+
+  await page.keyboard.press('Home'); // the sun starts gliding back to the northwest
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  const interrupted = await label(page).textContent();
+  expect(interrupted).not.toBe('NW · 45° high');
+
+  // Long enough for the abandoned glide to have finished, had it kept running.
+  await page.waitForTimeout(1200);
+  await expect(label(page)).toHaveText(interrupted!);
+});
