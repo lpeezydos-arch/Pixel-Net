@@ -40,12 +40,13 @@ export function App() {
 
   const selectDem = useCallback(
     (id: string) => {
+      if (id === active?.id) return;
       selection.set(-1);
       setHasSelection(false);
       setAnnouncement('');
       select(id);
     },
-    [selection, select],
+    [active?.id, selection, select],
   );
 
   const handlePress = useCallback(() => setHasSelection(true), []);

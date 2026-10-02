@@ -28,6 +28,7 @@ p {
 .app {
   height: 100dvh;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
 }
 
@@ -44,8 +45,11 @@ p {
 }
 
 .titlebar__name {
+  min-width: 0;
   margin: 0;
+  overflow: hidden;
   font-size: var(--fs-lg);
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -197,13 +201,19 @@ p {
 
 .segmented {
   display: inline-flex;
+  min-width: 0;
   padding: var(--sp-1);
   background: var(--sunken);
   border-radius: var(--r-pill);
 }
 
 .segmented__seg {
+  flex: 0 1 auto;
+  min-width: 0;
   padding: var(--sp-1) var(--sp-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   border: 0;
   border-radius: var(--r-pill);
   background: transparent;

@@ -59,6 +59,37 @@ for (const screen of SCREENS) {
   });
 }
 
+test('four DEMs with two-word names stay inside a phone screen', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const names = ['Gore Range', 'Second Peak', 'Third Basin', 'Fourth Ridge'];
+  await page.route('**/dems/dems.json', (route) =>
+    route.fulfill({
+      json: names.map((name, i) => ({
+        id: `dem-${i}`,
+        name,
+        place: `${name}, Colorado`,
+        file: 'gore.tif',
+      })),
+    }),
+  );
+  await openApp(page);
+
+  const width = 360;
+  expect(Math.round((await page.getByRole('banner').boundingBox())!.width)).toBeLessThanOrEqual(width);
+  const tabs = await page.getByRole('tab').all();
+  expect(tabs).toHaveLength(4);
+  for (const tab of tabs) {
+    const box = (await tab.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    if (testInfo.project.name === 'phone') expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+  }
+  for (const region of [net(page), terrain(page)]) {
+    const box = (await region.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+  }
+});
+
 test('nothing moves when the DEM arrives', async ({ page }) => {
   await page.route('**/dems/gore.tif', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 500));

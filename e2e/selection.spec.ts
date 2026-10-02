@@ -220,6 +220,32 @@ test('switching DEMs clears the selection', async ({ page }) => {
   await expect(aspect(page)).toHaveText('304° NW');
 });
 
+test('choosing the DEM that is already shown changes nothing', async ({ page }) => {
+  await serveTwoDems(page);
+  await openApp(page);
+  await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.up();
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+
+  const statuses: string[] = [];
+  await stage(page).evaluate((main, sink) => {
+    new MutationObserver(() => {
+      (window as unknown as Record<string, string[]>)[sink].push(main.getAttribute('data-status')!);
+    }).observe(main, { attributes: true, attributeFilter: ['data-status'] });
+    (window as unknown as Record<string, string[]>)[sink] = [];
+  }, '__statuses');
+
+  await page.getByRole('tab', { name: 'Gore Range' }).click();
+  await page.waitForTimeout(300);
+  statuses.push(...(await page.evaluate(() => (window as unknown as Record<string, string[]>).__statuses)));
+  expect(statuses).toEqual([]);
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(aspect(page)).toHaveText(WEST_SLOPE.aspect);
+  await expect(elevation(page)).toHaveText(WEST_SLOPE.elevation);
+  await expect(ring(page)).toHaveAttribute('data-visible', 'true');
+});
+
 test('the net point pulses again on the first selection after a DEM switch', async ({ page }) => {
   await serveTwoDems(page);
   await openApp(page);
