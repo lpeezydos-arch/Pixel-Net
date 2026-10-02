@@ -1,7 +1,8 @@
 # Pixel Net — design
 
 Date: 2026-10-01
-Status: awaiting review
+Status: approved 2026-10-01; amended the same day while writing the
+implementation plan (see section 12)
 
 "Pixel Net" is a working title. The name is set in one place (the web app
 manifest and the title bar) so it can change without touching anything else.
@@ -74,8 +75,8 @@ stacked on the right. The terrain card sits lowest, in thumb reach, so the
 hand never covers the net or the readout while dragging on the terrain.
 
 Wide (viewport at least 720px wide, or landscape): the terrain card on the
-left and the net card on the right, equal width; the readout runs as a row
-under the net.
+left and the net card on the right; the readout runs as a row under the net,
+or beside the net when the screen is under 480px tall (a phone on its side).
 
 The screen never scrolls. Both cards scale to fit the viewport height
 (`100dvh`), keeping the terrain at the DEM's aspect ratio and the net square.
@@ -130,7 +131,8 @@ release and for keyboard selection.
   the selected pixel centered and outlined in the accent.
 - Sits 82px above the touch point. If that would leave the terrain card's top
   edge, it sits to the left or right of the touch point instead, on whichever
-  side has room. It never overlaps the net card and is never clipped.
+  side has room. It is kept inside the card's left and right edges. It never
+  overlaps the net card and is never clipped.
 
 ### Readout
 
@@ -166,7 +168,8 @@ on focus, tap to toggle on touch).
 - Default: light from azimuth 315° (northwest), 45° above the horizon.
 - Dragging the marker re-lights the terrain every frame. A small dark label
   beside the marker shows direction and height while dragging, for example
-  "ENE · 35° high".
+  "ENE · 35° high", or "Overhead" at the center. The label replaces the
+  tooltip while dragging.
 - Height is limited to 10°–90°. Dragging to the center of the net puts the sun
   overhead; dragging past the 10° limit holds the marker at the limit.
 - Only the marker is draggable. Pressing elsewhere on the net does nothing.
@@ -190,8 +193,11 @@ All of this lives in plain functions with no screen code.
 A DEM is accepted when its GeoTIFF keys say it is projected
 (`GTModelTypeGeoKey` = 1) with linear units of meters
 (`ProjLinearUnitsGeoKey` = 9001), and its pixel scale is equal in x and y to
-within 0.1%. Anything else produces the wrong-units error card. Elevation is
-assumed to be in meters. The no-data value comes from the GDAL no-data tag.
+within 0.1%. Anything else produces the wrong-units error card, including a
+projected file that omits the units key: the app cannot tell meters from
+feet. Elevation is assumed to be in meters. The no-data value comes from the
+GDAL no-data tag; NaN also counts as no data. Integer elevations are
+accepted.
 
 `GORE_DEM_5m.tif` meets this: 288 × 294, 5 m cells, float32, projected Albers
 NAD83 in meters, no-data −9999 with no such pixels present. Grid north is
@@ -218,7 +224,9 @@ aspect = atan2( −dz/dx, −dz/dy ), in degrees clockwise from north, 0–360
 
 Aspect is the downhill direction.
 
-- Edge pixels: missing neighbors take the value of the nearest edge pixel.
+- Edge pixels: beyond an edge the surface is continued in a straight line
+  from the two pixels nearest that edge, so a uniform slope measures the same
+  at the edge as in the middle.
 - A no-data neighbor takes the center pixel's value. A no-data center makes
   the pixel no-data.
 - A pixel is flat when the gradient magnitude is below 1e-6. Flat pixels have
@@ -301,9 +309,12 @@ React state changes only on DEM load, DEM switch, and selection start and end.
 - Terrain canvas: backing store at DEM resolution, scaled by CSS with
   smoothing.
 - Loupe: a small canvas drawn from the same gray buffer with smoothing off.
-- Net canvas: backing store at CSS size × device pixel ratio. Each plotted
-  pixel adds to a per-cell count `k`; the cell is drawn in `--ink-900` with
-  alpha `1 − 0.7^k`, so overlapping points darken.
+- Net canvas: backing store at CSS size × device pixel ratio, and never less
+  than 2×. Each plotted pixel adds to a per-cell count `k`; the cell is drawn
+  in `--ink-900` with alpha `1 − 0.7^k`, so overlapping points darken. That
+  formula holds for a 640px image; at other sizes each point counts in
+  proportion to the area of a cell, so the cloud is equally dark on every
+  screen.
 - The cloud is never redrawn during a drag.
 
 ### Size limit
@@ -322,6 +333,10 @@ scope.
   { "id": "gore", "name": "Gore Range", "place": "Gore Range, Colorado", "file": "gore.tif" }
 ]
 ```
+
+Each entry may also give the DEM's `width` and `height` in pixels, which lets
+the layout settle before the file loads. The picker shows the first four
+entries.
 
 Adding a DEM is one file and one entry. The app ships with GORE alone until
 the second sample is added. The source `data/` folder stays as it is;
@@ -381,7 +396,8 @@ shimmer is static.
 `vite-plugin-pwa`:
 
 - Precache the app shell, the font, `dems.json` and every `.tif`, so any
-  bundled DEM opens offline after the first visit.
+  bundled DEM opens offline after the first visit. The precache size limit is
+  raised from 2 MB to 25 MB per file so that a larger DEM is not left out.
 - `registerType: 'autoUpdate'`: a new version downloads in the background and
   applies the next time the app opens. No prompt.
 - Web app manifest: name, short name, `display: standalone`,
@@ -448,7 +464,9 @@ Versions and advisories are re-checked at install time.
 - With the network disabled after a first load, the app reloads and works.
 
 Playwright's Chromium does not run on the current development machine until
-its system libraries are installed (`sudo npx playwright install-deps`).
+three system libraries are available: either installed with
+`sudo npx playwright install-deps chromium`, or unpacked without root and
+found through `LD_LIBRARY_PATH` (the plan and the README give the commands).
 
 ### By eye and by hand
 
@@ -471,3 +489,26 @@ None of these blocks implementation.
 - The real app name.
 - The second sample DEM file and its manifest entry.
 - The host, needed before testing installation on a phone.
+
+## 12. Amendments after approval
+
+Made on 2026-10-01 while writing and test-running the implementation plan.
+None changes what the user sees in the approved design; each fixes something
+found by running the code.
+
+- Section 4: slopes at the edge of the DEM are measured by continuing the
+  surface past the edge, not by repeating the edge pixel. Repeating it halved
+  the gradient there, which drew a visible strip on the hillshade and a ring
+  of wrong points on the net.
+- Section 5: the cloud is drawn at no less than 2× and its darkness is scaled
+  to the image size. Without this the cloud was much heavier on a desktop
+  screen than on a phone.
+- Section 4: a projected DEM that omits its units key is rejected; NaN counts
+  as no data; integer elevations are accepted.
+- Section 5: manifest entries may carry `width` and `height`; the picker shows
+  the first four entries.
+- Section 3: on a phone turned sideways the readout sits beside the net; the
+  loupe is kept inside the card's side edges; the sun's label reads
+  "Overhead" at the center and replaces the tooltip while dragging.
+- Section 8: the precache size limit is raised to 25 MB per file.
+- Section 10: browser tests can run without root.
