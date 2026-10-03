@@ -12,7 +12,7 @@ import { useDems } from './state/useDems';
 import { useViewPersistence } from './state/useViewPersistence';
 import { decodeView } from './state/view';
 import { readFragment, readSaved } from './state/viewStore';
-import { describeReadout, readoutFor } from './terrain/format';
+import { demFacts, describeReadout, pixelSize, readoutFor } from './terrain/format';
 
 // The hint names the gesture the screen has, and the keys once the terrain
 // has keyboard focus. A touch screen is told how to let go of a selection
@@ -48,8 +48,8 @@ export function App() {
   const layout = computeLayout(stage.width, stage.height, aspect);
 
   const ready = state.status === 'ready' && active ? { place: active.place, dem: state.dem } : null;
-  const cell = ready ? `${Number(ready.dem.cellSize.toFixed(2))} m pixels` : '';
-  const facts = ready ? `${ready.place} · ${cell} · ${ready.dem.width} × ${ready.dem.height}` : '';
+  const cell = ready ? pixelSize(ready.dem) : '';
+  const facts = ready ? demFacts(ready.place, ready.dem) : '';
   // The clear hint takes the place of the dimensions, so the line still fits a phone.
   const factsWithClearHint = ready ? `${CLEAR_HINT} · ${ready.place} · ${cell}` : '';
   const hint = terrainFocused ? KEYBOARD_HINT : coarse ? TOUCH_HINT : POINTER_HINT;

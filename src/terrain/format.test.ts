@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_READOUT, describeReadout, describeSun, readoutFor } from './format';
+import { EMPTY_READOUT, demFacts, describeReadout, describeSun, pixelSize, readoutFor } from './format';
 import { computeSurface } from './surface';
 import { demFrom, tiltedPlane } from './testing';
 
@@ -77,5 +77,19 @@ describe('describeSun', () => {
 
   it('says overhead when the sun is overhead', () => {
     expect(describeSun({ azimuth: 0, altitude: 90 })).toBe('Sun overhead');
+  });
+});
+
+describe('demFacts', () => {
+  it('writes the place, the pixel size and the dimensions', () => {
+    const dem = demFrom(288, 294, 5, () => 0);
+    expect(pixelSize(dem)).toBe('5 m pixels');
+    expect(demFacts('Gore Range, Colorado', dem)).toBe('Gore Range, Colorado · 5 m pixels · 288 × 294');
+  });
+
+  it('keeps two decimals of an uneven pixel size and drops trailing zeros', () => {
+    expect(pixelSize(demFrom(2, 2, 4.99712, () => 0))).toBe('5 m pixels');
+    expect(pixelSize(demFrom(2, 2, 0.5, () => 0))).toBe('0.5 m pixels');
+    expect(pixelSize(demFrom(2, 2, 9.144, () => 0))).toBe('9.14 m pixels');
   });
 });

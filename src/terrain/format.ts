@@ -8,7 +8,7 @@ export interface ReadoutText {
 }
 
 export const EMPTY_READOUT: ReadoutText = { slope: '–', aspect: '–', elevation: '–' };
-const NO_DATA: ReadoutText = { slope: 'No data', aspect: 'No data', elevation: 'No data' };
+export const NO_DATA: ReadoutText = { slope: 'No data', aspect: 'No data', elevation: 'No data' };
 
 const wholeNumber = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
@@ -37,4 +37,14 @@ export function describeReadout(readout: ReadoutText): string {
 export function describeSun(sun: Sun): string {
   const text = formatSun(sun);
   return text === 'Overhead' ? 'Sun overhead' : `Sun ${text.replace(' · ', ', ')}`;
+}
+
+/** The DEM's pixel size, as the caption writes it. */
+export function pixelSize(dem: Dem): string {
+  return `${Number(dem.cellSize.toFixed(2))} m pixels`;
+}
+
+/** The DEM's facts, as the caption writes them. */
+export function demFacts(place: string, dem: Dem): string {
+  return `${place} · ${pixelSize(dem)} · ${dem.width} × ${dem.height}`;
 }
