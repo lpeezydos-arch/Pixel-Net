@@ -15,6 +15,8 @@ export interface DemEntry {
 }
 
 export interface LoadedDem {
+  /** The `id` of the entry this DEM was loaded from. */
+  id: string;
   dem: Dem;
   surface: Surface;
 }
@@ -45,10 +47,14 @@ async function fetchEntries(): Promise<DemEntry[]> {
   return list.slice(0, MAX_DEMS) as DemEntry[];
 }
 
-/** Loads the DEM list and the selected DEM, and reloads when the selection changes. */
-export function useDems() {
+/**
+ * Loads the DEM list and the selected DEM, and reloads when the selection
+ * changes. `firstId` is the DEM to open on; null, or an id that is not in
+ * the list, opens the first.
+ */
+export function useDems(firstId: string | null = null) {
   const [entries, setEntries] = useState<DemEntry[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(firstId);
   const [state, setState] = useState<DemState>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
 
@@ -60,7 +66,7 @@ export function useDems() {
       status: 'loading',
       previous:
         current.status === 'ready'
-          ? { dem: current.dem, surface: current.surface }
+          ? { id: current.id, dem: current.dem, surface: current.surface }
           : current.status === 'loading'
             ? current.previous
             : undefined,
@@ -77,7 +83,7 @@ export function useDems() {
         const entry = list.find((item) => item.id === activeId) ?? list[0];
         const dem = await loadDem(DEM_FOLDER + entry.file);
         const surface = computeSurface(dem);
-        if (!cancelled) setState({ status: 'ready', dem, surface });
+        if (!cancelled) setState({ status: 'ready', id: entry.id, dem, surface });
       } catch (error) {
         if (cancelled) return;
         setState({ status: 'error', reason: error instanceof DemError ? error.reason : 'load' });

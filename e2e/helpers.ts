@@ -38,6 +38,26 @@ export async function openApp(page: Page): Promise<void> {
   await expect(terrainImage(page)).toBeVisible();
 }
 
+/**
+ * Opens the app at a link and waits until the DEM is drawn. It must be the
+ * page's first navigation, or follow `page.goto('about:blank')`: going from
+ * one fragment to another does not load the page again.
+ */
+export async function openLink(page: Page, fragment: string): Promise<void> {
+  await page.goto(`/#${fragment}`);
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  await expect(terrainImage(page)).toBeVisible();
+}
+
+/** Clicks the center of a DEM pixel on the terrain: a press and a release. */
+export async function clickPixel(page: Page, col: number, row: number, dem = GORE): Promise<void> {
+  const box = (await page.getByTestId('terrain-area').boundingBox())!;
+  await page.mouse.click(
+    box.x + ((col + 0.5) / dem.width) * box.width,
+    box.y + ((row + 0.5) / dem.height) * box.height,
+  );
+}
+
 /** A number that changes when the canvas's pixels change. */
 export async function fingerprint(canvas: Locator): Promise<number> {
   return canvas.evaluate((element) => {

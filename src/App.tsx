@@ -1,6 +1,6 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { useMotionValue } from 'motion/react';
-import { type CSSProperties, useCallback, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useMemo, useRef, useState } from 'react';
 import { NetCard } from './components/NetCard';
 import { TerrainCard } from './components/TerrainCard';
 import { TitleBar } from './components/TitleBar';
@@ -9,8 +9,10 @@ import { useCoarsePointer } from './hooks/useCoarsePointer';
 import { useElementSize } from './hooks/useElementSize';
 import { computeLayout } from './layout';
 import { useDems } from './state/useDems';
+import { useViewPersistence } from './state/useViewPersistence';
+import { decodeView } from './state/view';
+import { readFragment, readSaved } from './state/viewStore';
 import { describeReadout, readoutFor } from './terrain/format';
-import { DEFAULT_SUN } from './terrain/net';
 
 // The hint names the gesture the screen has, and the keys once the terrain
 // has keyboard focus. A touch screen is told how to let go of a selection
@@ -21,13 +23,15 @@ const KEYBOARD_HINT = 'Arrow keys choose a pixel · Shift moves ten';
 const CLEAR_HINT = 'Double-tap to clear';
 
 export function App() {
-  const { entries, active, state, select, retry } = useDems();
+  // The view to open on: the one in the link, or else the one saved on this device.
+  const [start] = useState(() => decodeView(readFragment() || readSaved()));
+  const { entries, active, state, select, retry } = useDems(start.dem);
   const stageRef = useRef<HTMLElement>(null);
   const stage = useElementSize(stageRef);
   const coarse = useCoarsePointer();
   const selection = useMotionValue(-1); // index of the selected pixel, or −1
-  const sunAzimuth = useMotionValue(DEFAULT_SUN.azimuth);
-  const sunAltitude = useMotionValue(DEFAULT_SUN.altitude);
+  const sunAzimuth = useMotionValue(start.sun.azimuth);
+  const sunAltitude = useMotionValue(start.sun.altitude);
   const [hasSelection, setHasSelection] = useState(false);
   const [clearedOnce, setClearedOnce] = useState(false);
   const [terrainFocused, setTerrainFocused] = useState(false);
@@ -77,6 +81,20 @@ export function App() {
     setClearedOnce(true);
     announce(announceRef.current, 'Selection cleared');
   }, []);
+
+  // A pixel from a link, or from the saved view, is selected once its DEM has loaded.
+  const loaded = useMemo(
+    () => (state.status === 'ready' ? { id: state.id, width: state.dem.width, height: state.dem.height } : null),
+    [state],
+  );
+  useViewPersistence({
+    start,
+    entries,
+    activeId: active?.id ?? null,
+    loaded,
+    selection,
+    onRestore: setHasSelection,
+  });
 
   const netCard = (
     <NetCard
