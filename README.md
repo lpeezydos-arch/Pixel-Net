@@ -5,7 +5,8 @@ every pixel in it. Press or drag on the terrain and that pixel's point is
 highlighted on the net, with its slope, aspect and elevation. Drag the sun on
 the net to change the lighting. It installs to a phone's home screen and works
 with no signal after the first visit. It reopens where it was left, and the
-share button sends a picture of the view with a link that restores it.
+share button sends a link that restores the view, with a picture of it where
+the share sheet takes one.
 
 The design is in `docs/superpowers/specs/2026-10-01-pixel-net-design.md`;
 sharing and restoring are in
@@ -27,7 +28,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Type-check and build into `dist/` |
 | `npm run preview` | Serve `dist/` at http://localhost:4173 |
 | `npm run icons` | Redraw the app icons in `public/icons/` |
-| `npm run preview-image` | Redraw the link-preview image, `public/preview.png`. Builds the app and needs Chromium, as the browser tests do |
+| `npm run preview-image` | Redraw the link-preview image, `public/preview.png`; needs Chromium |
 
 ### Browser tests need Chromium's system libraries
 
@@ -94,10 +95,12 @@ The address always holds the view, for example
 `#dem=gore&px=150,210&sun=120,35`: the DEM's `id`, the selected pixel's column
 and row, and the sun's azimuth and height. Opening such a link opens that
 view. The pixel is left out when nothing is selected, and the sun when it is
-at its default, so a bare address is the default view: the first DEM, nothing
-selected, the sun in the northwest. The same string is saved on the device
-under `pixel-net:view`, so the app reopens where it was left; a link wins over
-the saved view.
+at its default. At the default view (the first DEM, nothing selected, the sun
+in the northwest) nothing is written and the address is bare.
+
+The same string is saved on the device under `pixel-net:view`, so the app
+reopens where it was left. A link that names a view wins over the saved view.
+A bare address names none, so it opens the saved view if there is one.
 
 The share button sends a picture of the view with its link. Where the share
 sheet takes no files, the link goes alone; where there is no share sheet, the
