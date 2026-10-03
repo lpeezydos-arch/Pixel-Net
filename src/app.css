@@ -65,6 +65,14 @@ p {
   color: var(--ink-500);
 }
 
+/* The DEM's name or the picker, then the share button. */
+.titlebar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
 .stage {
   display: flex;
   align-items: center;
@@ -273,6 +281,36 @@ p {
   background: color-mix(in srgb, var(--accent) 16%, white);
 }
 
+/* An icon alone, on the ground it sits on. Not accent-colored: rust is for
+   the selection. */
+.icon-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-700);
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out);
+}
+
+.icon-btn:hover {
+  background: var(--sunken);
+}
+
+.icon-btn:disabled {
+  background: transparent;
+  color: var(--ink-400);
+  cursor: default;
+}
+
 .empty {
   display: flex;
   flex-direction: column;
@@ -316,6 +354,11 @@ p {
   }
 
   .btn {
+    height: var(--touch);
+  }
+
+  .icon-btn {
+    width: var(--touch);
     height: var(--touch);
   }
 }

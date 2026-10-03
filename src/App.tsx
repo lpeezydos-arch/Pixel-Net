@@ -8,10 +8,12 @@ import { announce } from './components/announce';
 import { useCoarsePointer } from './hooks/useCoarsePointer';
 import { useElementSize } from './hooks/useElementSize';
 import { computeLayout } from './layout';
+import { type ShareOutcome, shareView } from './share/share';
+import { shareText } from './share/text';
 import { useDems } from './state/useDems';
 import { useViewPersistence } from './state/useViewPersistence';
 import { decodeView } from './state/view';
-import { readFragment, readSaved } from './state/viewStore';
+import { linkTo, readFragment, readSaved } from './state/viewStore';
 import { demFacts, describeReadout, pixelSize, readoutFor } from './terrain/format';
 
 // The hint names the gesture the screen has, and the keys once the terrain
@@ -87,7 +89,7 @@ export function App() {
     () => (state.status === 'ready' ? { id: state.id, width: state.dem.width, height: state.dem.height } : null),
     [state],
   );
-  useViewPersistence({
+  const viewText = useViewPersistence({
     start,
     entries,
     activeId: active?.id ?? null,
@@ -98,6 +100,18 @@ export function App() {
     onSelectDem: selectDem,
     onRestore: setHasSelection,
   });
+
+  // Called inside the press on the share button: browsers refuse a share that starts later.
+  const handleShare = useCallback((): Promise<ShareOutcome> => {
+    if (state.status !== 'ready' || !active) return Promise.resolve<ShareOutcome>('failed');
+    const readout = readoutFor(state.dem, state.surface, selection.get());
+    const words = {
+      title: import.meta.env.VITE_APP_NAME,
+      text: shareText(active.place, readout),
+      url: linkTo(viewText() ?? ''),
+    };
+    return shareView(words, null);
+  }, [state, active, selection, viewText]);
 
   const netCard = (
     <NetCard
@@ -137,7 +151,13 @@ export function App() {
   return (
     <Tooltip.Provider delayDuration={300}>
       <div className="app">
-        <TitleBar entries={entries} activeId={active?.id ?? null} onSelect={selectDem} />
+        <TitleBar
+          entries={entries}
+          activeId={active?.id ?? null}
+          onSelect={selectDem}
+          shareDisabled={state.status !== 'ready'}
+          onShare={handleShare}
+        />
         <main
           ref={stageRef}
           className="stage"
