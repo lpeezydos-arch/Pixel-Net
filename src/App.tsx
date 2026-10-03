@@ -13,10 +13,12 @@ import { describeReadout, readoutFor } from './terrain/format';
 import { DEFAULT_SUN } from './terrain/net';
 
 // The hint names the gesture the screen has, and the keys once the terrain
-// has keyboard focus.
+// has keyboard focus. A touch screen is told how to let go of a selection
+// until it has done so once.
 const TOUCH_HINT = 'Drag on the terrain to inspect a pixel';
 const POINTER_HINT = 'Click or drag on the terrain to inspect a pixel';
 const KEYBOARD_HINT = 'Arrow keys choose a pixel · Shift moves ten';
+const CLEAR_HINT = 'Double-tap to clear';
 
 export function App() {
   const { entries, active, state, select, retry } = useDems();
@@ -27,6 +29,7 @@ export function App() {
   const sunAzimuth = useMotionValue(DEFAULT_SUN.azimuth);
   const sunAltitude = useMotionValue(DEFAULT_SUN.altitude);
   const [hasSelection, setHasSelection] = useState(false);
+  const [clearedOnce, setClearedOnce] = useState(false);
   const [terrainFocused, setTerrainFocused] = useState(false);
   const announceRef = useRef<HTMLParagraphElement>(null);
 
@@ -40,12 +43,13 @@ export function App() {
   const aspect = sized?.width && sized.height ? sized.width / sized.height : 1;
   const layout = computeLayout(stage.width, stage.height, aspect);
 
-  const facts =
-    state.status === 'ready' && active
-      ? `${active.place} · ${Number(state.dem.cellSize.toFixed(2))} m pixels · ${state.dem.width} × ${state.dem.height}`
-      : '';
+  const ready = state.status === 'ready' && active ? { place: active.place, dem: state.dem } : null;
+  const cell = ready ? `${Number(ready.dem.cellSize.toFixed(2))} m pixels` : '';
+  const facts = ready ? `${ready.place} · ${cell} · ${ready.dem.width} × ${ready.dem.height}` : '';
+  // The clear hint takes the place of the dimensions, so the line still fits a phone.
+  const factsWithClearHint = ready ? `${CLEAR_HINT} · ${ready.place} · ${cell}` : '';
   const hint = terrainFocused ? KEYBOARD_HINT : coarse ? TOUCH_HINT : POINTER_HINT;
-  const caption = state.status !== 'ready' ? '' : hasSelection ? facts : hint;
+  const caption = !ready ? '' : hasSelection ? (coarse && !clearedOnce ? factsWithClearHint : facts) : hint;
 
   const selectDem = useCallback(
     (id: string) => {
@@ -70,6 +74,7 @@ export function App() {
 
   const handleClear = useCallback(() => {
     setHasSelection(false);
+    setClearedOnce(true);
     announce(announceRef.current, 'Selection cleared');
   }, []);
 

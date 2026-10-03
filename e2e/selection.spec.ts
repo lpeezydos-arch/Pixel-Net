@@ -1,10 +1,12 @@
 import { type Page, expect, test } from '@playwright/test';
 import {
+  FACTS,
   GORE,
   NET_HELP,
   NODATA_BLOCK,
   SECOND,
   caption,
+  firstFacts,
   hint,
   openApp,
   serveTwoDems,
@@ -56,7 +58,7 @@ test('shows dashes until a pixel is chosen', async ({ page }) => {
   await expect(marker(page)).toHaveAttribute('data-visible', 'false');
 });
 
-test('pressing a pixel shows its slope, aspect and elevation', async ({ page }) => {
+test('pressing a pixel shows its slope, aspect and elevation', async ({ page }, testInfo) => {
   await openApp(page);
   await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
 
@@ -71,7 +73,7 @@ test('pressing a pixel shows its slope, aspect and elevation', async ({ page }) 
   await expect(loupe(page)).toHaveAttribute('data-visible', 'false');
   await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
   await expect(ring(page)).toHaveAttribute('data-visible', 'true');
-  await expect(caption(page)).toHaveText('Gore Range, Colorado · 5 m pixels · 288 × 294');
+  await expect(caption(page)).toHaveText(firstFacts(testInfo.project.name));
   await expect(page.getByTestId('announcement')).toHaveText(
     `Slope ${WEST_SLOPE.slope}, aspect ${WEST_SLOPE.aspect}, elevation ${WEST_SLOPE.elevation}`,
   );
@@ -139,6 +141,39 @@ test('Escape clears the selection and says so', async ({ page }, testInfo) => {
   await expect(marker(page)).toHaveAttribute('data-visible', 'false');
   await expect(caption(page)).toHaveText(hint(testInfo.project.name));
   await expect(page.getByTestId('announcement')).toHaveText('Selection cleared');
+});
+
+test('a double-tap on the terrain clears the selection, and the caption says so once', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone', 'needs a touch screen');
+  await openApp(page);
+  const point = await pointOf(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.touchscreen.tap(point.x, point.y);
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(caption(page)).toHaveText('Double-tap to clear · Gore Range, Colorado · 5 m pixels');
+
+  // Long enough that the selecting tap and the pair below are not themselves a double-tap.
+  await page.waitForTimeout(400);
+  await page.touchscreen.tap(point.x, point.y);
+  await page.touchscreen.tap(point.x, point.y);
+  await expect(slope(page)).toHaveText('–');
+  await expect(ring(page)).toHaveAttribute('data-visible', 'false');
+  await expect(marker(page)).toHaveAttribute('data-visible', 'false');
+  await expect(page.getByTestId('announcement')).toHaveText('Selection cleared');
+  await expect(caption(page)).toHaveText(hint('phone'));
+
+  // Once the gesture has been used, the caption is all facts.
+  await page.touchscreen.tap(point.x, point.y);
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(caption(page)).toHaveText(FACTS);
+});
+
+test('a double-click with a mouse selects, as any click does', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'phone', 'a mouse gesture');
+  await openApp(page);
+  const point = await pointOf(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(ring(page)).toHaveAttribute('data-visible', 'true');
 });
 
 test('pressing the same pixel again is announced again', async ({ page }) => {

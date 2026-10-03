@@ -11,11 +11,11 @@ each item is met. "Test" names a test that fails if the item regresses.
 | 4 | Copy-link button for linkable state | Not applicable | The app has no linkable state |
 | 5 | Legends | Not applicable | No legend |
 | 6 | Map controls never overlap | Not applicable | No map controls |
-| 7 | 44px hit targets; selection visible | Met | Test: "touch targets are at least 44px". The selected point has a 3px halo. |
+| 7 | 44px hit targets; selection visible | Met | Test: "touch targets are at least 44px". The selected point has a 3px halo. A finger can let go of it: "a double-tap on the terrain clears the selection, and the caption says so once". |
 | 8 | Popups never clipped | Not applicable | No popups. The loupe is kept inside the terrain: test "is never clipped by the top of the box". |
 | 9 | Mobile: safe areas respected | Pending phone check | `env(safe-area-inset-*)` on the title bar and stage. Check on a phone with a notch. The footer, sheet and datepicker parts do not apply. |
 | 10 | Touch targets 44px; inputs 16px | Met | Test: "touch targets are at least 44px". No text inputs. |
-| 11 | Spacing on the scale; nothing accidentally full-width | Met | Tests: "fits a … without scrolling or overlap" at seven sizes; `src/layout.test.ts` for the readout moving under the net on a tall phone, the shared column on an upright tablet, and sixteen sizes that must fit |
+| 11 | Spacing on the scale; nothing accidentally full-width | Met | Tests: "fits a … without scrolling or overlap" at seven sizes; `src/layout.test.ts` for the readout moving under the net on a tall phone, the shared column on an upright tablet with both cards the same width, the cards growing to 760px on a monitor, and nineteen sizes that must fit; "the readout columns hold still while the values change"; "the resting label stays inside the net and clear of the ring labels" |
 | 12 | Empty, error and loading states | Met | Tests: "shows dashes until a pixel is chosen", "shows an error card…", "nothing moves when the DEM arrives", "a flat pixel plots at the center of the net as a hollow point", "Escape clears the selection and says so" |
 | 13 | One monochrome icon family; no emoji | Met | lucide-react `Sun` and `Info` only |
 | 14 | Favicon, title, theme-color | Met | Test: "can be installed: manifest, icons and a white status bar" |

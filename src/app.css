@@ -483,11 +483,16 @@ p {
 
 .net-card[data-readout='below'] .readout {
   flex-direction: row;
-  justify-content: space-between;
   gap: var(--sp-4);
   width: 100%;
   padding-top: var(--sp-3);
   border-top: 1px solid var(--line);
+}
+
+/* Three fixed columns, so a value changing width never moves its neighbors. */
+.net-card[data-readout='below'] .stat {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .stat {
@@ -657,12 +662,16 @@ p {
   }
 }
 
-/* The sun's position, written beside the disc. At rest it speaks in the net
-   labels' voice, haloed in paper the way N, E, S and W are so it reads over
-   the cloud; while the sun moves it is raised into a dark label. */
+/* The sun's position. At rest it is a caption under the disc (over it in
+   the south, where there is no room below), in the net labels' voice and
+   haloed in paper the way N, E, S and W are so it reads over the cloud,
+   and kept inside the net square by --label-x. While the sun moves it is
+   raised into a dark label beside the disc. The two forms swap at once: a
+   fade between them would pass through gray. */
 .sun__label {
   position: absolute;
-  top: -10px;
+  top: 20px;
+  left: var(--label-x, -40px);
   color: var(--ink-500);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -672,10 +681,16 @@ p {
   pointer-events: none;
   paint-order: stroke fill;
   -webkit-text-stroke: 4px var(--paper); /* a dense arc still reads through 3px */
-  transition:
-    background var(--t-fast) var(--ease-out),
-    color var(--t-fast) var(--ease-out),
-    box-shadow var(--t-fast) var(--ease-out);
+  transition: box-shadow var(--t-fast) var(--ease-out);
+}
+
+.sun__label[data-vertical='above'] {
+  top: auto;
+  bottom: 20px;
+}
+
+.sun__label[data-quiet-hidden='true'] {
+  opacity: 0;
 }
 
 @supports not (paint-order: stroke fill) {
@@ -692,20 +707,24 @@ p {
 
 .sun__label[data-active='true'] {
   top: -14px;
+  bottom: auto;
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-sm);
   background: var(--ink-900);
   color: var(--paper);
   font-size: var(--fs-sm);
   box-shadow: var(--shadow-2);
+  opacity: 1;
   -webkit-text-stroke: 0;
   text-shadow: none;
 }
 
-.sun__label[data-side='left'] {
+.sun__label[data-active='true'][data-side='left'] {
+  left: auto;
   right: 24px;
 }
 
-.sun__label[data-side='right'] {
+.sun__label[data-active='true'][data-side='right'] {
   left: 24px;
+  right: auto;
 }

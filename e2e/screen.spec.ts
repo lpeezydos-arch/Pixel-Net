@@ -6,6 +6,7 @@ import {
   SECOND,
   caption,
   fingerprint,
+  firstFacts,
   hint,
   inkedPixels,
   netCloud,
@@ -24,7 +25,7 @@ test('shows the terrain, the net and a hint for the pointer the screen has', asy
   expect(await inkedPixels(netCloud(page))).toBeGreaterThan(10_000);
 });
 
-test('tells a keyboard user how to choose a pixel while the terrain has focus', async ({ page }) => {
+test('tells a keyboard user how to choose a pixel while the terrain has focus', async ({ page }, testInfo) => {
   await openApp(page);
   const area = page.getByTestId('terrain-area');
   for (let i = 0; i < 6; i++) {
@@ -33,7 +34,30 @@ test('tells a keyboard user how to choose a pixel while the terrain has focus', 
   }
   await expect(caption(page)).toHaveText('Arrow keys choose a pixel · Shift moves ten');
   await page.keyboard.press('ArrowDown');
-  await expect(caption(page)).toHaveText('Gore Range, Colorado · 5 m pixels · 288 × 294');
+  await expect(caption(page)).toHaveText(firstFacts(testInfo.project.name));
+});
+
+test('the readout columns hold still while the values change', async ({ page }) => {
+  // Tall enough that the readout sits in a row under the net on the phone too.
+  await page.setViewportSize({ width: 412, height: 915 });
+  await openApp(page);
+  const aspectLabel = page.locator('.stat__label', { hasText: 'Aspect' });
+  const columnX = async () => (await aspectLabel.boundingBox())!.x;
+  const at = async (col: number, row: number) => {
+    const box = (await page.getByTestId('terrain-area').boundingBox())!;
+    return { x: box.x + ((col + 0.5) / 288) * box.width, y: box.y + ((row + 0.5) / 294) * box.height };
+  };
+  const before = await columnX();
+  const west = await at(150, 210);
+  await page.mouse.move(west.x, west.y);
+  await page.mouse.down();
+  await expect(page.getByTestId('aspect')).toHaveText('259° W');
+  expect(Math.abs((await columnX()) - before)).toBeLessThan(0.5);
+  const lake = await at(230, 70);
+  await page.mouse.move(lake.x, lake.y, { steps: 6 });
+  await expect(page.getByTestId('aspect')).toHaveText('Flat');
+  expect(Math.abs((await columnX()) - before)).toBeLessThan(0.5);
+  await page.mouse.up();
 });
 
 test('names the only DEM in the title bar quietly, without a picker', async ({ page }) => {

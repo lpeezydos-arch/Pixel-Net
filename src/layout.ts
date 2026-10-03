@@ -59,10 +59,13 @@ function portraitLayout(width: number, height: number, aspect: number): Layout {
   const free = height - 2 * pad - gap - CAPTION_GAP - CAPTION_HEIGHT - 2 * inner;
 
   let readout: Layout['readout'] = 'side';
-  const netBeside = whole(cardWidth - 2 * inner - gap - READOUT_SIDE);
-  let terrainWidth = spans ? cardWidth : sharedTerrainWidth(cardWidth, free, aspect, netBeside);
+  const beside = 2 * inner + gap + READOUT_SIDE; // what the net card adds around the net
+  const netBeside = whole(cardWidth - beside);
+  let terrainWidth = spans ? cardWidth : sharedTerrainWidth(cardWidth, free, aspect, beside);
   let terrainHeight = whole(terrainWidth / aspect);
   let netSize = Math.min(netBeside, whole(free - terrainHeight));
+  // In a shared column the net card is exactly as wide as the terrain.
+  if (!spans) netSize = Math.min(netSize, terrainWidth - beside);
 
   // The readout moves under the net when leaving it beside the net would
   // leave more than half a readout row of the screen empty; the net grows
@@ -98,14 +101,12 @@ function portraitLayout(width: number, height: number, aspect: number): Layout {
 }
 
 /**
- * The widest terrain that still lets the net be as large as it can: the net
- * grows to its width limit `netMax` if the height allows, and otherwise the
- * two cards come out the same size.
+ * The terrain width that makes the two cards the same width in a shared
+ * column: the net card is the net plus `beside` (its padding and the readout
+ * next to it), and the two cards together fill the `free` height.
  */
-function sharedTerrainWidth(cardWidth: number, free: number, aspect: number, netMax: number): number {
-  const equal = whole((free * aspect) / (aspect + 1));
-  const shared = netMax < equal ? whole((free - netMax) * aspect) : equal;
-  return Math.min(cardWidth, shared);
+function sharedTerrainWidth(cardWidth: number, free: number, aspect: number, beside: number): number {
+  return Math.min(cardWidth, whole(((free + beside) * aspect) / (aspect + 1)));
 }
 
 function wideLayout(width: number, height: number, aspect: number): Layout {

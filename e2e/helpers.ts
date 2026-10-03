@@ -14,6 +14,13 @@ export const hint = (project: string) =>
     ? 'Drag on the terrain to inspect a pixel'
     : 'Click or drag on the terrain to inspect a pixel';
 
+/** The caption once a pixel is selected: the DEM's facts. */
+export const FACTS = 'Gore Range, Colorado · 5 m pixels · 288 × 294';
+
+/** The caption after the first selection: a touch screen is told how to clear it. */
+export const firstFacts = (project: string) =>
+  project === 'phone' ? 'Double-tap to clear · Gore Range, Colorado · 5 m pixels' : FACTS;
+
 /** The one tooltip that explains the net and the three values read off it. */
 export const NET_HELP =
   'Each dot is one pixel. Its direction from the center is its aspect, the way the slope faces looking downhill; its distance from the center is its slope, from 0° at the center to 90° at the rim. Elevation is the height the DEM stores for the pixel.';

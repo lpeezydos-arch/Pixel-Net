@@ -30,6 +30,7 @@ const KEY_STEP = 5; // degrees per arrow key press
 const RAISED_AFTER_KEY_MS = 1500; // how long the label stays raised after a key press
 const RAISED_FOR_HINT_MS = 2000; // how long a tap's hint stays
 const ANNOUNCE_AFTER_MS = 400; // quiet time after a key press before the new position is announced
+const SMALL_NET = 220; // below this the resting label is hidden
 const MOVE_HINT = 'Drag to move the light';
 const RESET_HINT = 'Double-tap to reset';
 const NAME_SUFFIX = 'Arrow keys move the light; Home resets it.';
@@ -82,10 +83,18 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     const label = labelRef.current;
     if (label) {
       label.textContent = hint.current ?? formatSun(sun);
+      // Raised, the label sits beside the disc on the side toward the center.
       label.dataset.side = point.x > 0 ? 'left' : 'right';
+      // At rest it is a caption under the disc, or over it in the south where
+      // there is no room below, kept inside the net square.
+      label.dataset.vertical = point.y < -0.5 ? 'above' : 'below';
+      const sunX = center + point.x * rim;
+      const width = label.offsetWidth;
+      const left = Math.max(-sunX, Math.min(-width / 2, size - sunX - width));
+      label.style.setProperty('--label-x', `${left}px`);
     }
     buttonRef.current?.setAttribute('aria-label', accessibleName(sun));
-  }, [currentSun, x, y, center, rim]);
+  }, [currentSun, x, y, center, rim, size]);
 
   useEffect(() => {
     place();
@@ -291,11 +300,14 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
-      {/* The button's name carries the position for assistive technology. */}
+      {/* The button's name carries the position for assistive technology. On
+          a small net the resting label would cover half of it, so it waits
+          until the sun moves. */}
       <span
         ref={labelRef}
         className="sun__label"
         data-active={dragging || raised}
+        data-quiet-hidden={size < SMALL_NET}
         data-testid="sun-label"
         aria-hidden="true"
       />

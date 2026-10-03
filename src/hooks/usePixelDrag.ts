@@ -21,6 +21,10 @@ interface PixelDragOptions {
  * Turns pointer and arrow-key events on the terrain into a selected pixel.
  * Spread `handlers` onto the element that shows the whole DEM.
  */
+const TAP_SLOP = 6; // pixels a finger may move and still count as a tap
+const DOUBLE_TAP_MS = 300;
+const DOUBLE_TAP_NEAR = 24; // pixels between two taps that are "the same place"
+
 export function usePixelDrag({
   width,
   height,
@@ -32,6 +36,8 @@ export function usePixelDrag({
 }: PixelDragOptions) {
   // The pointer that started the drag. A second finger does not take over.
   const pointer = useRef<number | null>(null);
+  const pressedAt = useRef<{ x: number; y: number } | null>(null);
+  const lastTap = useRef<{ time: number; x: number; y: number } | null>(null);
   const [pressed, setPressed] = useState(false);
 
   useEffect(() => {
@@ -58,6 +64,29 @@ export function usePixelDrag({
     if (pointer.current !== event.pointerId) return;
     pointer.current = null;
     setPressed(false);
+    const start = pressedAt.current;
+    pressedAt.current = null;
+
+    // A finger has no Escape key: a second quick tap in the same place lets
+    // go of the selection. A mouse's double click selects, like any click.
+    const tapped =
+      event.type === 'pointerup' &&
+      event.pointerType === 'touch' &&
+      start !== null &&
+      Math.hypot(event.clientX - start.x, event.clientY - start.y) <= TAP_SLOP;
+    const last = lastTap.current;
+    lastTap.current = tapped ? { time: event.timeStamp, x: event.clientX, y: event.clientY } : null;
+    if (
+      tapped &&
+      last &&
+      event.timeStamp - last.time < DOUBLE_TAP_MS &&
+      Math.hypot(event.clientX - last.x, event.clientY - last.y) <= DOUBLE_TAP_NEAR
+    ) {
+      lastTap.current = null;
+      selection.set(-1);
+      onClear();
+      return;
+    }
     onSettle();
   };
 
@@ -69,6 +98,7 @@ export function usePixelDrag({
         if (!enabled || pointer.current !== null) return;
         if (event.pointerType === 'mouse' && event.button !== 0) return;
         pointer.current = event.pointerId;
+        pressedAt.current = { x: event.clientX, y: event.clientY };
         try {
           // Keeps the drag alive when the pointer leaves the terrain.
           event.currentTarget.setPointerCapture(event.pointerId);

@@ -89,21 +89,22 @@ describe('computeLayout', () => {
     expect(l.netSize).toBe(276);
   });
 
-  it('shares the column on a tablet held upright, so the net and the terrain match', () => {
+  it('shares the column on a tablet held upright, with the two cards the same width', () => {
     const l = computeLayout(768, 968, GORE);
     expect(l.mode).toBe('portrait');
     expect(l.readout).toBe('side');
-    expect(Math.abs(l.netSize - l.terrainWidth)).toBeLessThanOrEqual(2);
-    expect(l.terrainWidth).toBeGreaterThan(420);
-    expect(l.netCardWidth).toBeGreaterThanOrEqual(l.terrainWidth);
-    expect(l.netCardWidth).toBeLessThanOrEqual(744);
+    expect(l.netCardWidth).toBe(l.terrainWidth);
+    expect(l.terrainWidth).toBeGreaterThan(480);
+    expect(l.netSize).toBeGreaterThan(360);
+    expect(contentHeight(768, 968)).toBeLessThanOrEqual(968);
   });
 
-  it('makes the two cards the same size in a narrow upright window', () => {
+  it('keeps the two cards the same width in a narrow upright window', () => {
     const l = computeLayout(720, 844, GORE);
     expect(l.mode).toBe('portrait');
-    expect(Math.abs(l.netSize - l.terrainWidth)).toBeLessThanOrEqual(2);
-    expect(l.terrainWidth).toBeGreaterThan(360);
+    expect(l.netCardWidth).toBe(l.terrainWidth);
+    expect(l.terrainWidth).toBeGreaterThan(400);
+    expect(l.netSize).toBeGreaterThan(300);
   });
 
   it('keeps the terrain across the whole screen of a phone', () => {

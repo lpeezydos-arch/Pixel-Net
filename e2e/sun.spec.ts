@@ -86,6 +86,49 @@ test('key presses raise the label for a moment and announce where the sun ended 
   await expect(label(page)).toHaveAttribute('data-active', 'false', { timeout: 3000 });
 });
 
+test('the resting label stays inside the net and clear of the ring labels', async ({ page }) => {
+  await openApp(page);
+  const net = (await page.getByTestId('net').boundingBox())!;
+  const within = async () => {
+    const box = (await label(page).boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(net.x - 1);
+    expect(box.x + box.width).toBeLessThanOrEqual(net.x + net.width + 1);
+    return box;
+  };
+
+  // At the east rim, where the 30° and 60° labels sit beside the axis: below the disc.
+  await dragSunTo(page, 1.6, 0);
+  await page.mouse.up();
+  await expect(label(page)).toHaveAttribute('data-active', 'false');
+  const east = await within();
+  expect(east.y).toBeGreaterThanOrEqual((await sunCenter(page)).y + 12);
+
+  // At the south rim there is no room below: above the disc.
+  await dragSunTo(page, 0, -1.6);
+  await page.mouse.up();
+  await expect(label(page)).toHaveAttribute('data-active', 'false');
+  const south = await within();
+  expect(south.y + south.height).toBeLessThanOrEqual((await sunCenter(page)).y - 12);
+});
+
+test('the resting label gives way on a small net, and the name does not', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await openApp(page);
+  expect((await page.getByTestId('net').boundingBox())!.width).toBeLessThan(220);
+  expect(await label(page).evaluate((element) => getComputedStyle(element).opacity)).toBe('0');
+  await expect(sun(page)).toHaveAttribute('aria-label', /^Sun, 315° NW · 45° high/);
+  await dragSunTo(page, R45, 0);
+  await expect(label(page)).toHaveAttribute('data-active', 'true');
+  expect(await label(page).evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
+  await page.mouse.up();
+});
+
+test('the label changes form without fading through gray', async ({ page }) => {
+  await openApp(page);
+  const transition = await label(page).evaluate((element) => getComputedStyle(element).transitionProperty);
+  expect(transition).not.toMatch(/color|background/);
+});
+
 test('a tap on the sun at its default says how to move it', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'phone', 'needs a touch screen');
   await openApp(page);

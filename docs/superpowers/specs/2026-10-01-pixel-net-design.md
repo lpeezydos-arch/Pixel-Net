@@ -609,3 +609,32 @@ cards stopping at 520px on a monitor.
   screen 520px wide or narrower is still a phone: its cards span it.
 - Section 6: the resting sun label's paper stroke is 4px, so it reads over
   the dense arcs of the cloud.
+
+Made on 2026-10-03 from the third critique (33/40), which found the net
+card wider than the terrain in a shared column, the readout's middle
+column shifting under the finger, no way to clear a selection by touch,
+the resting sun label crossing the ring labels, and a gray flash when the
+label is raised.
+
+- Section 3, selecting a pixel: on a touch screen a double-tap on the
+  terrain (two taps within 300 ms and 24 px of each other) clears the
+  selection and announces "Selection cleared", the finger's Escape. A
+  mouse's double click selects, like any click. Until the gesture has been
+  used once, the caption after a selection on a touch screen reads
+  "Double-tap to clear · <place> · <pixel size>" in place of the full facts,
+  so it still fits a phone.
+- Section 3, layout: in a shared column (an upright window wider than a
+  phone) the two cards are the same width: the terrain is sized so that the
+  net plus its padding and the readout beside it come to the terrain's
+  width, and the two share the height. On a screen too short for both, the
+  net keeps its 180px minimum and its card may be the wider; that is the
+  one exception.
+- Section 3, readout: in a row under the net the three values are fixed
+  thirds, so a value changing width never moves its neighbors.
+- Section 3, sun: at rest the label is a caption under the disc, or over it
+  when the sun is in the southern half of the net, kept inside the net
+  square; raised, it sits beside the disc toward the center as before. On a
+  net under 220px the resting label is not shown; the accessible name
+  still carries the position.
+- Section 7: the two forms of the sun label swap at once rather than
+  fading, because a fade between them passes through gray.
