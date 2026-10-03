@@ -93,18 +93,19 @@ describe('decodeView', () => {
   });
 
   it('drops a pixel that is not two whole numbers', () => {
-    for (const px of ['', '150', '150,', ',210', '1.5,2', '-1,2', 'a,b', '1,2,3']) {
+    for (const px of ['', '150', '150,', ',210', '1.5,2', '-1,2', 'a,b', '1,2,3', '1234567,1']) {
       expect(decodeView(`dem=gore&px=${px}`).pixel, `px=${px}`).toBeNull();
     }
   });
 
   it('falls back to the default sun when the sun is not two numbers', () => {
-    for (const sun of ['', '120', '120,', ',35', 'a,b', '1,2,3']) {
+    for (const sun of ['', '120', '120,', ',35', 'a,b', '1,2,3', 'Infinity,35']) {
       expect(decodeView(`sun=${sun}`).sun, `sun=${sun}`).toEqual(DEFAULT_SUN);
     }
   });
 
   it('wraps the azimuth, limits the height and rounds both', () => {
+    expect(decodeView('sun=360,35').sun).toEqual({ azimuth: 0, altitude: 35 });
     expect(decodeView('sun=480,35').sun).toEqual({ azimuth: 120, altitude: 35 });
     expect(decodeView('sun=-45,35').sun).toEqual({ azimuth: 315, altitude: 35 });
     expect(decodeView('sun=120,2').sun).toEqual({ azimuth: 120, altitude: 10 });

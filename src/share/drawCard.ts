@@ -1,7 +1,7 @@
 import { NET_RIM, cloudAlpha } from '../terrain/cloud';
 import { readoutFor } from '../terrain/format';
 import { shade } from '../terrain/hillshade';
-import { sunToNet, toNet } from '../terrain/net';
+import { RING_30, RING_60, sunToNet, toNet } from '../terrain/net';
 import { toPixel } from '../terrain/pick';
 import type { Dem, Sun, Surface } from '../terrain/types';
 import { type Box, type CardLayout, cardLayout } from './cardLayout';
@@ -10,8 +10,6 @@ import { type CaptionLine, captionLines, fileName, siteName } from './text';
 /** The picture's lines, dots and letters are the screen's, this much larger. */
 const K = 1.5;
 const TURN = 2 * Math.PI;
-const RING_30 = toNet(30, 0).y;
-const RING_60 = toNet(60, 0).y;
 const SMALLEST_TYPE = 12; // a caption line is not set smaller than this
 /** The rays of lucide's sun, in its 24-unit box. The disc is drawn as a circle. */
 const SUN_RAYS =

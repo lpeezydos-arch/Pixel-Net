@@ -1,8 +1,5 @@
 import { NET_RIM } from '../terrain/cloud';
-import { toNet } from '../terrain/net';
-
-const RING_30 = toNet(30, 0).y;
-const RING_60 = toNet(60, 0).y;
+import { RING_30, RING_60 } from '../terrain/net';
 
 interface NetLayerProps {
   /** Side of the square the net is drawn in, in CSS pixels. */

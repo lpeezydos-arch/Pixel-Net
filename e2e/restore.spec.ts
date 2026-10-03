@@ -42,6 +42,7 @@ test('a link opens its pixel and its sun', async ({ page }, testInfo) => {
   expect(await fingerprint(terrainImage(page))).not.toBe(underDefaultSun);
   await expect(caption(page)).toHaveText(firstFacts(testInfo.project.name));
   // No one asked for it to be spoken.
+  await page.waitForTimeout(100); // the announcer writes its words 60 ms late
   await expect(page.getByTestId('announcement')).toHaveText('');
 });
 
@@ -218,6 +219,23 @@ test('a pasted link to another DEM switches to it', async ({ page }) => {
   await expect.poll(() => saved(page)).toBe('dem=second&px=30,20');
 });
 
+test('a link pasted while another DEM is loading goes to its own DEM', async ({ page }) => {
+  await serveTwoDems(page, 600);
+  await openApp(page);
+  await page.getByRole('tab', { name: 'Second' }).click();
+  await expect(stage(page)).toHaveAttribute('data-status', 'loading');
+  await page.evaluate(() => {
+    window.location.hash = 'dem=gore&px=150,210';
+  });
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
+  await expect(page.getByRole('tab', { name: 'Gore Range' })).toHaveAttribute('aria-selected', 'true');
+  // Long enough for the abandoned DEM to have arrived, had it been waited for.
+  await page.waitForTimeout(800);
+  await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+});
+
 test('an address emptied by hand is left alone and filled in at the next change', async ({ page }) => {
   await openLink(page, 'dem=gore&px=150,210');
   await page.evaluate(() => {
@@ -225,6 +243,7 @@ test('an address emptied by hand is left alone and filled in at the next change'
   });
   await page.waitForTimeout(600); // longer than the write delay
   await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  expect(await fragment(page)).toBe('');
 
   await clickPixel(page, 200, 230);
   await expect.poll(() => fragment(page)).toBe('#dem=gore&px=200,230');
