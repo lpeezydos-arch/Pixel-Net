@@ -102,6 +102,9 @@ The same string is saved on the device under `pixel-net:view`, so the app
 reopens where it was left. A link that names a view wins over the saved view.
 A bare address names none, so it opens the saved view if there is one.
 
+A shared link always names its DEM, and leaves out any query, so it opens the
+view it was shared from.
+
 The share button sends a picture of the view with its link. Where the share
 sheet takes no files, the link goes alone; where there is no share sheet, the
 link is copied.

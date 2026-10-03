@@ -23,7 +23,7 @@ each item is met. "Test" names a test that fails if the item regresses.
 | 16 | Contrast 4.5:1 text, 3:1 controls | Met | The focus ring is the accent at 80%, overridden in `src/app.css`, because the design system's 60% ring only reaches 3:1 with a dark accent. Test: `src/styles/contrast.test.ts` tests it, along with the text and control colors; the sun's resting label and the DEM's name are `--ink-500` on `--paper`, which it covers. |
 | 17 | Reduced motion honored, springs included | Met | Test: "with reduced motion the point jumps and nothing animates" |
 | 18 | VID chrome intact | Not applicable | Not an official USGS app |
-| 19 | Buttons are pills with verb labels | Met | The one button reads "Try again" |
+| 19 | Buttons are pills with verb labels | Met | The one text button reads "Try again" (the picker's segments are tabs); the share button is an icon in a pill, named "Share this view" |
 | 20 | Accent only on the primary action and selection | Met | Accent appears on the selection ring, the net point, the loupe outline, the focus ring and the retry button |
 
 ## Checked by hand on a phone
@@ -42,3 +42,5 @@ each item is met. "Test" names a test that fails if the item regresses.
 - [ ] The share button opens the share sheet with the picture and the link.
 - [ ] The installed app reopens on the pixel and the sun it was left on.
 - [ ] A link sent to another phone opens the same view there.
+- [ ] Share, close the share sheet, and share again: the button still works.
+- [ ] After a tap, the share button's ground does not stay shaded.

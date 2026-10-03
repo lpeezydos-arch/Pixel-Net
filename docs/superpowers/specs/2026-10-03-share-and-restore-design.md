@@ -97,7 +97,7 @@ in that order.
 
 | View | String |
 |---|---|
-| First DEM, nothing selected, default sun | (empty) |
+| First DEM, nothing selected, default sun | (empty); `dem=<id>` in a shared link (section 4) |
 | Gore, pixel 150, 210 | `dem=gore&px=150,210` |
 | Gore, pixel 150, 210, sun from 120° at 35° | `dem=gore&px=150,210&sun=120,35` |
 | Gore, nothing selected, sun from 120° at 35° | `dem=gore&sun=120,35` |
@@ -140,8 +140,8 @@ limit), the failure is ignored and the app carries on.
 
 ### Opening
 
-1. If the address has a fragment, it is the view. Otherwise the saved string
-   is. Otherwise the defaults.
+1. If the address has a fragment that names any of `dem`, `px` and `sun`, it
+   is the view. Otherwise the saved string is. Otherwise the defaults.
 2. The sun and the DEM take their values before the first paint, so the
    terrain is lit correctly from the first frame and nothing moves.
 3. The pixel is selected when its DEM has loaded. The ring, the point and the
@@ -159,8 +159,9 @@ saved view.
 - Changing the fragment of an open tab, by pasting another link or editing
   the address, applies that view: the DEM switches if it differs, the pixel
   is selected once its DEM has loaded, and the sun moves without a glide.
-- A fragment that is emptied by hand is ignored; the address is filled in
-  again at the next change.
+- A fragment that is emptied by hand, or that names none of `dem`, `px` and
+  `sun` (such as `#top`), is ignored; the address is filled in again at the
+  next change.
 - Switching DEMs with the picker still clears the selection and keeps the
   sun, as in the first spec.
 
@@ -208,7 +209,9 @@ link is copied. If the picture cannot be made, the link is shared without it.
 - Text with a pixel selected: "Gore Range, Colorado: slope 36.0°, aspect
   259° W, elevation 3,874 m". On a no-data pixel: "Gore Range, Colorado: no
   data at this pixel". With nothing selected: "Gore Range, Colorado".
-- Link: the page's address with the view as its fragment.
+- Link: the page's address, without any query, with the view as its
+  fragment. A link always names its DEM, so the default view is written
+  `dem=<id>` here rather than left empty.
 
 ## 5. The picture
 
@@ -233,8 +236,9 @@ or under, the net. For Gore Range, with a pixel selected, the picture is
 
 On white (`--paper`):
 
-- The terrain: the hillshade under the current sun, with rounded corners, and
-  the selection ring if a pixel is selected.
+- The terrain: the hillshade under the current sun, with rounded corners
+  (square where the canvas has no `roundRect`), and the selection ring if a
+  pixel is selected.
 - The net: rim, rings, cross, compass letters and ring labels; the cloud; the
   sun marker; the selected pixel's point, drawn over the sun. A flat pixel's
   point is hollow at the center, and a no-data pixel has none, as on screen.
@@ -284,8 +288,8 @@ large-image card.
 
 | Unit | Job | Interface | Depends on |
 |---|---|---|---|
-| `state/view` | The view and its string | `encodeView(view, firstDemId) → string`, `decodeView(string) → View`, `pixelInside(pixel, width, height) → boolean` | `terrain/net` for the default sun |
-| `state/viewStore` | Read and write the string in the address bar and on the device | `readFragment() → string`, `readSaved() → string`, `writeView(string)`, `linkTo(string) → string` | the browser |
+| `state/view` | The view and its string | `encodeView(view, firstDemId) → string`, `encodeSharedView(view, firstDemId) → string`, `decodeView(string) → View`, `namesView(string) → boolean`, `pixelInside(pixel, width, height) → boolean` | `terrain/net` for the default sun |
+| `state/viewStore` | Read and write the string in the address bar and on the device | `readFragment() → string`, `readSaved() → string`, `writeView(string)`, `shareLink(string) → string` | the browser |
 | `state/useViewPersistence` | Apply a view to the app; write the view when it settles | a hook given the DEM list, the loaded DEM, the motion values and a way to switch DEMs | `state/view`, `state/viewStore` |
 | `share/cardLayout` | Where everything goes in the picture | `cardLayout({ mode, aspect, lines }) → boxes and size` | nothing |
 | `share/text` | The share text, the caption lines and the file name | plain functions of the place, the readout, the DEM and the sun | `terrain/format`, `terrain/net` |
@@ -310,17 +314,19 @@ Playwright.
 
 ### Data flow
 
-1. On open, `App` reads the fragment, or else the saved string, and decodes
-   it.
+1. On open, `App` reads the fragment if it names a view, or else the saved
+   string, and decodes it.
 2. The sun and the starting DEM come from it. The pixel waits.
 3. When a DEM finishes loading, a waiting pixel that belongs to it and lies
    inside it is selected.
 4. Any change to the DEM, the selection or the sun starts a 400 ms timer.
    When it ends, the view is encoded and written to the address bar and the
    device.
-5. A `hashchange` event decodes the new fragment and goes to step 2.
-6. A press on the share button encodes the view, draws the picture, and
-   hands both to `share/share`.
+5. A `hashchange` event whose fragment names a view decodes it and goes to
+   step 2.
+6. A press on the share button encodes the view as a shared link writes it,
+   draws the picture if the share sheet says it takes a PNG, and hands both
+   to `share/share`.
 
 Per-frame values stay in motion values, as in the first spec. The hook
 listens to them; nothing here re-renders during a drag.
@@ -421,3 +427,25 @@ listens to them; nothing here re-renders during a drag.
   `npm run preview-image`.
 - `docs/polish-pass.md`: item 4 met, with its tests; item 13's icon list;
   the hand checks above.
+
+## 12. Amendments
+
+Made on 2026-10-03 from the whole-branch review.
+
+- Sections 3 and 4: a shared link always names its DEM. The default view is
+  shared as `#dem=<id>`, so it opens as the default view on a device that
+  has a saved view. The address bar and the saved string are still empty at
+  the default view. Without this, section 1's "a link made on one device
+  opens the same DEM, pixel and sun on another" did not hold for the default
+  view.
+- Section 4: a shared link leaves out any query the address arrived with.
+  The address bar keeps it.
+- Section 3: a fragment that names none of `dem`, `px` and `sun` is not a
+  view. It is ignored on opening and when pasted into an open tab, as an
+  emptied fragment is.
+- Section 3: a view applied from a link empties the live region, so nothing
+  said before it stays behind.
+- Section 4: the picture is drawn only where the share sheet says it takes a
+  PNG; a file check that throws counts as no.
+- Section 5: where the canvas has no `roundRect` (older Safari) the terrain
+  has square corners; a picture that cannot be made logs a warning.

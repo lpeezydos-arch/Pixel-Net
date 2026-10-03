@@ -60,7 +60,9 @@ finger.
   pixels at 5 m.
 - Deployed to GitHub Pages at https://lpeezydos-arch.github.io/Pixel-Net/ on
   every push to `main` (`.github/workflows/deploy.yml`); unit tests gate the
-  deploy. Any static HTTPS host works with `BASE_PATH` set.
+  deploy. Any static HTTPS host works with `BASE_PATH` set and
+  `VITE_SITE_URL` changed to the new address, so the link-preview tags point
+  at it.
 - Development: `npm run dev` on :5173. Vitest covers terrain math, layout and
   formatting; Playwright runs at phone and desktop sizes against a production
   build, Chromium only. Safari and Firefox are checked by hand.
@@ -93,7 +95,9 @@ Confirmed functionality (spec §2–3):
   view (`docs/superpowers/specs/2026-10-03-share-and-restore-design.md`).
 - Share: one button in the title bar opens the share sheet with a picture of
   the view and its link; a share sheet that takes no files gets the link alone,
-  and where there is no share sheet the link is copied.
+  and where there is no share sheet the link is copied. A shared link always
+  names its DEM, so even the default view opens as itself on a device with a
+  saved view.
 
 Technical constraints:
 
