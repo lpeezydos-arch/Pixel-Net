@@ -93,11 +93,14 @@ installed app's name all come from it.
 The address always holds the view, for example
 `#dem=gore&px=150,210&sun=120,35`: the DEM's `id`, the selected pixel's column
 and row, and the sun's azimuth and height. Opening such a link opens that
-view. The same string is saved on the device under `pixel-net:view`, so the
-app reopens where it was left; a link wins over the saved view.
+view. A part at its default is left out, so a bare address is the default
+view: the first DEM, nothing selected, the sun in the northwest. The same
+string is saved on the device under `pixel-net:view`, so the app reopens where
+it was left; a link wins over the saved view.
 
-The share button sends a picture of the view with its link. Where the browser
-has no share sheet, it copies the link.
+The share button sends a picture of the view with its link. Where the share
+sheet takes no files, the link goes alone; where there is no share sheet, the
+link is copied.
 
 A link pasted into a message shows a preview card. Its tags are in
 `index.html` and need the site's whole address, which is `VITE_SITE_URL` in

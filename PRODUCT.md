@@ -87,11 +87,12 @@ Confirmed functionality (spec §2–3):
 - Offline: the shell, font, manifest and every `.tif` are precached (25 MB per
   file); new versions apply on the next open with no prompt.
 - View: the DEM, the selected pixel and the sun are written into the address
-  (`#dem=gore&px=150,210&sun=120,35`) and saved on the device; the app reopens
-  on them, and a link wins over the saved view
-  (`docs/superpowers/specs/2026-10-03-share-and-restore-design.md`).
+  (`#dem=gore&px=150,210&sun=120,35`, with a part at its default left out) and
+  saved on the device; the app reopens on them, and a link wins over the saved
+  view (`docs/superpowers/specs/2026-10-03-share-and-restore-design.md`).
 - Share: one button in the title bar opens the share sheet with a picture of
-  the view and its link; where there is no share sheet it copies the link.
+  the view and its link; a share sheet that takes no files gets the link alone,
+  and where there is no share sheet the link is copied.
 
 Technical constraints:
 
