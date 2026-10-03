@@ -9,6 +9,10 @@ import { NetMarker } from './NetMarker';
 import { Readout } from './Readout';
 import { SunHandle } from './SunHandle';
 
+/** The one explanation of the net and of the three values read off it. */
+export const NET_HELP =
+  'Each dot is one pixel. Its direction from the center is its aspect, the way the slope faces looking downhill; its distance from the center is its slope, from 0° at the center to 90° at the rim. Elevation is the height the DEM stores for the pixel.';
+
 interface NetCardProps {
   layout: Layout;
   /** The DEM to show, or null while the first DEM loads or after a failure. */
@@ -37,7 +41,13 @@ export function NetCard({
   } as CSSProperties;
 
   return (
-    <section className="card net-card" data-readout={layout.readout} style={style} aria-label="Net">
+    <section
+      className="card net-card"
+      data-readout={layout.readout}
+      style={style}
+      aria-label="Net"
+      aria-describedby="net-help"
+    >
       <div
         className="net"
         data-testid="net"
@@ -50,15 +60,15 @@ export function NetCard({
           <div className="skeleton net__skeleton" aria-busy="true" />
         ) : null}
         <NetLabels size={layout.netSize} />
-        <InfoTip
-          className="net__info"
-          label="How to read the net"
-          text="Each dot is one pixel: its direction from the center is the way the slope faces, and its distance from the center is how steep it is."
-        />
+        {/* Below, so it never covers the app name on a phone. */}
+        <InfoTip className="net__info" label="How to read the net" text={NET_HELP} side="bottom" />
         {surface && <SunHandle size={layout.netSize} azimuth={sunAzimuth} altitude={sunAltitude} />}
         {surface && <NetMarker surface={surface} size={layout.netSize} selection={selection} />}
       </div>
       <Readout dem={dem} surface={surface} selection={selection} />
+      <p id="net-help" className="visually-hidden">
+        {NET_HELP}
+      </p>
     </section>
   );
 }

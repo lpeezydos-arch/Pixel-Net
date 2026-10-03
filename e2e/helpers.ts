@@ -8,6 +8,16 @@ export const APP_NAME = readFileSync('.env', 'utf8').match(/^VITE_APP_NAME=(.*)$
 /** Pixel dimensions of the bundled Gore Range DEM. */
 export const GORE = { width: 288, height: 294 };
 
+/** The caption's hint before anything is selected, which names the pointer the screen has. */
+export const hint = (project: string) =>
+  project === 'phone'
+    ? 'Drag on the terrain to inspect a pixel'
+    : 'Click or drag on the terrain to inspect a pixel';
+
+/** The one tooltip that explains the net and the three values read off it. */
+export const NET_HELP =
+  'Each dot is one pixel. Its direction from the center is its aspect, the way the slope faces looking downhill; its distance from the center is its slope, from 0° at the center to 90° at the rim. Elevation is the height the DEM stores for the pixel.';
+
 export const terrainImage = (page: Page) => page.getByTestId('terrain-image');
 export const netCloud = (page: Page) => page.getByTestId('net-cloud');
 export const caption = (page: Page) => page.getByTestId('caption');

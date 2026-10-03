@@ -55,9 +55,55 @@ describe('computeLayout', () => {
     expect(l.netSize).toBeGreaterThanOrEqual(180);
   });
 
-  it('switches to side by side at 720px wide even when taller than wide', () => {
-    expect(computeLayout(719, 1000, GORE).mode).toBe('portrait');
-    expect(computeLayout(720, 1000, GORE).mode).toBe('wide');
+  it('stays stacked on a tablet or a narrow window when stacking gives the larger cards', () => {
+    expect(computeLayout(719, 944, GORE).mode).toBe('portrait');
+    expect(computeLayout(720, 944, GORE).mode).toBe('portrait');
+    expect(computeLayout(768, 968, GORE).mode).toBe('portrait');
+    // A short, wide window is still side by side.
+    expect(computeLayout(720, 500, GORE).mode).toBe('wide');
+  });
+
+  it('moves the readout under the net on a tall phone instead of leaving empty bands', () => {
+    const l = computeLayout(412, 859, GORE);
+    expect(l.mode).toBe('portrait');
+    expect(l.readout).toBe('below');
+    expect(l.terrainWidth).toBe(388);
+    expect(l.netSize).toBe(299);
+    expect(contentHeight(412, 859)).toBe(859);
+  });
+
+  it('keeps the readout beside the net when moving it would not fill the screen', () => {
+    const l = computeLayout(412, 783, GORE);
+    expect(l.readout).toBe('side');
+    expect(l.netSize).toBe(276);
+  });
+
+  it('shares the column on a tablet held upright, so the net fills its card', () => {
+    const l = computeLayout(768, 968, GORE);
+    expect(l.mode).toBe('portrait');
+    expect(l.readout).toBe('side');
+    expect(l.terrainWidth).toBe(464);
+    expect(l.netSize).toBe(408);
+    expect(l.netCardWidth).toBe(520);
+  });
+
+  it('makes the two cards the same size in a narrow upright window', () => {
+    const l = computeLayout(720, 844, GORE);
+    expect(l.mode).toBe('portrait');
+    expect(Math.abs(l.netSize - l.terrainWidth)).toBeLessThanOrEqual(2);
+    expect(l.terrainWidth).toBeGreaterThan(360);
+  });
+
+  it('keeps the terrain across the whole screen of a phone', () => {
+    for (const [width, height] of [[360, 684], [412, 783], [412, 859]]) {
+      expect(computeLayout(width, height, GORE).terrainWidth, `${width}×${height}`).toBe(width - 24);
+    }
+  });
+
+  it('keeps the net card and the terrain the same width when the terrain has shrunk', () => {
+    const l = computeLayout(375, 591, GORE);
+    expect(l.terrainWidth).toBeLessThan(351);
+    expect(l.netCardWidth).toBe(l.terrainWidth);
   });
 
   it('judges landscape by the viewport, not by the area under the title bar', () => {
@@ -69,8 +115,9 @@ describe('computeLayout', () => {
 
   it('never needs more room than it was given', () => {
     const sizes = [
-      [320, 480], [360, 684], [375, 591], [390, 763], [412, 783], [430, 870],
-      [667, 319], [844, 334], [720, 1000], [768, 968], [1024, 712], [1280, 744], [1920, 1024],
+      [320, 480], [360, 684], [375, 591], [390, 763], [412, 783], [412, 859], [430, 870],
+      [600, 900], [667, 319], [844, 334], [720, 944], [720, 1000], [768, 968], [1024, 712],
+      [1280, 744], [1920, 1024],
     ];
     for (const [width, height] of sizes) {
       for (const aspect of [GORE, 0.5, 1, 2]) {

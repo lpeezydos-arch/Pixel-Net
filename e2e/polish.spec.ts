@@ -1,5 +1,5 @@
 import { type Locator, type Page, expect, test } from '@playwright/test';
-import { openApp, serveTwoDems, stage } from './helpers';
+import { NET_HELP, openApp, serveTwoDems, stage } from './helpers';
 
 const net = (page: Page) => page.getByRole('region', { name: 'Net' });
 const terrain = (page: Page) => page.getByRole('region', { name: 'Terrain' });
@@ -149,13 +149,29 @@ test('touch targets are at least 44px', async ({ page }, testInfo) => {
   expect(Math.round(sun.width)).toBeGreaterThanOrEqual(44);
   expect(Math.round(sun.height)).toBeGreaterThanOrEqual(44);
 
-  // The info icons are 16px with an invisible 44px target around them.
-  for (const name of ['About slope', 'About aspect', 'About elevation', 'How to read the net']) {
-    const button = page.getByRole('button', { name });
-    for (const [dx, dy] of [[21, 0], [-21, 0], [0, 21], [0, -21]]) {
-      expect(await hitAt(button, dx, dy), `${name} at ${dx},${dy}`).toBe(true);
-    }
+  // The info icon is 16px with an invisible 44px target around it.
+  const button = page.getByRole('button', { name: 'How to read the net' });
+  for (const [dx, dy] of [[21, 0], [-21, 0], [0, 21], [0, -21]]) {
+    expect(await hitAt(button, dx, dy), `info dot at ${dx},${dy}`).toBe(true);
   }
+});
+
+test('the info dot is help for the net, not a tab stop', async ({ page }) => {
+  await openApp(page);
+  await expect(page.getByRole('button', { name: 'How to read the net' })).toHaveAttribute('tabindex', '-1');
+  await expect(page.getByRole('region', { name: 'Net' })).toHaveAccessibleDescription(NET_HELP);
+});
+
+test('the loading shimmer shows the net frame through it', async ({ page }) => {
+  await page.route('**/dems/gore.tif', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await page.goto('/');
+  const shimmer = page.locator('.net__skeleton');
+  await expect(shimmer).toBeVisible();
+  expect(await shimmer.evaluate((element) => getComputedStyle(element).mixBlendMode)).toBe('multiply');
+  await expect(page.locator('.net-frame circle')).toHaveCount(3);
 });
 
 test('the retry button is a 44px target on a phone', async ({ page }, testInfo) => {
@@ -166,9 +182,17 @@ test('the retry button is a 44px target on a phone', async ({ page }, testInfo) 
   expect(Math.round((await retry.boundingBox())!.height)).toBeGreaterThanOrEqual(44);
 });
 
-test('every control can be reached by keyboard and shows a focus ring', async ({ page }) => {
+test('every control can be reached by keyboard, in reading order, and shows a focus ring', async ({ page }, testInfo) => {
   await serveTwoDems(page);
   await openApp(page);
+  const sunName = 'Sun, NW · 45° high. Arrow keys move the light; Home resets it.';
+  const terrainName = 'Terrain. Drag, or use the arrow keys, to inspect a pixel.';
+  // Tab follows the eye: the net sits above the terrain on a phone and to the
+  // right of it on a desktop. The info dot is help, not a stop.
+  const expected =
+    testInfo.project.name === 'phone'
+      ? ['Gore Range', 'Second', sunName, terrainName]
+      : ['Gore Range', 'Second', terrainName, sunName];
 
   const focused = () =>
     page.evaluate(() => {
@@ -182,7 +206,7 @@ test('every control can be reached by keyboard and shows a focus ring', async ({
     });
 
   const seen: string[] = [];
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < expected.length; i++) {
     await page.keyboard.press('Tab');
     const { name } = await focused();
     seen.push(name);
@@ -192,16 +216,7 @@ test('every control can be reached by keyboard and shows a focus ring', async ({
       .poll(async () => (await focused()).shadow, { message: `focus ring on "${name}"` })
       .toMatch(/0px 0px 0px 3px/);
   }
-  expect(seen).toEqual([
-    'Gore Range',
-    'Second',
-    'How to read the net',
-    'Sun. Arrow keys move the light; Home resets it.',
-    'About slope',
-    'About aspect',
-    'About elevation',
-    'Terrain. Drag, or use the arrow keys, to inspect a pixel.',
-  ]);
+  expect(seen).toEqual(expected);
 });
 
 test('with reduced motion the point jumps and nothing animates', async ({ page }) => {

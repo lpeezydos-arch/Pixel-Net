@@ -45,11 +45,60 @@ test('the sun can be dragged again after its pointer is lost', async ({ page }) 
     element.dispatchEvent(new PointerEvent('pointerdown', { ...init, clientX: 1, clientY: 1 }));
     element.dispatchEvent(new PointerEvent('lostpointercapture', init));
   });
-  await expect(label(page)).toHaveAttribute('data-visible', 'false');
+  await expect(label(page)).toHaveAttribute('data-active', 'false');
 
   await dragSunTo(page, R45, 0);
   await expect(label(page)).toHaveText('E · 45° high');
   await page.mouse.up();
+});
+
+test('the sun states its position at rest, and keeps stating it after a drag', async ({ page }) => {
+  await openApp(page);
+  await expect(label(page)).toHaveText('NW · 45° high');
+  await expect(label(page)).toBeVisible();
+  await expect(label(page)).toHaveAttribute('data-active', 'false');
+  await expect(sun(page)).toHaveAttribute(
+    'aria-label',
+    'Sun, NW · 45° high. Arrow keys move the light; Home resets it.',
+  );
+
+  await dragSunTo(page, R45, 0);
+  await page.mouse.up();
+  await expect(label(page)).toHaveText('E · 45° high');
+  await expect(label(page)).toBeVisible();
+  await expect(label(page)).toHaveAttribute('data-active', 'false');
+  await expect(sun(page)).toHaveAttribute(
+    'aria-label',
+    'Sun, E · 45° high. Arrow keys move the light; Home resets it.',
+  );
+  await expect(page.getByTestId('sun-announcement')).toHaveText('Sun E, 45° high');
+});
+
+test('key presses raise the label for a moment and announce where the sun ended up', async ({ page }) => {
+  await openApp(page);
+  await sun(page).focus();
+  // Three steps of 5° take the sun from NW (315°) into NNW.
+  for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
+  await expect(label(page)).toHaveAttribute('data-active', 'true');
+  await expect(label(page)).toHaveText('NNW · 45° high');
+  // One announcement for the run of presses, not one per press.
+  await expect(page.getByTestId('sun-announcement')).toHaveText('Sun NNW, 45° high');
+  await expect(label(page)).toHaveAttribute('data-active', 'false', { timeout: 3000 });
+});
+
+test('a tap on a moved sun says how to put it back', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone', 'needs a touch screen');
+  await openApp(page);
+  await dragSunTo(page, 0, -R45);
+  await page.mouse.up();
+  await expect(label(page)).toHaveText('S · 45° high');
+
+  await sun(page).tap();
+  await expect(label(page)).toHaveText('Double-tap to reset');
+  await expect(label(page)).toHaveAttribute('data-active', 'true');
+  // The hint gives way to the position again.
+  await expect(label(page)).toHaveText('S · 45° high', { timeout: 3500 });
+  await expect(label(page)).toHaveAttribute('data-active', 'false');
 });
 
 test('dragging the sun re-lights the terrain and leaves the net and the readout alone', async ({ page }) => {
@@ -62,12 +111,12 @@ test('dragging the sun re-lights the terrain and leaves the net and the readout 
 
   await dragSunTo(page, R45, 0);
   await expect(label(page)).toHaveText('E · 45° high');
-  await expect(label(page)).toHaveAttribute('data-visible', 'true');
+  await expect(label(page)).toHaveAttribute('data-active', 'true');
   await expect(page.locator('.tooltip')).toHaveCount(0); // the label replaces the tooltip
   await expect.poll(() => fingerprint(terrainImage(page))).not.toBe(terrainBefore);
 
   await page.mouse.up();
-  await expect(label(page)).toHaveAttribute('data-visible', 'false');
+  await expect(label(page)).toHaveAttribute('data-active', 'false');
   expect(await fingerprint(netCloud(page))).toBe(netBefore);
   await expect(page.getByTestId('slope')).toHaveText('36.0°');
   await expect(page.getByTestId('aspect')).toHaveText('259° W');
@@ -151,7 +200,9 @@ test('the selected point is drawn above the sun', async ({ page }) => {
 test('explains the sun from its tooltip', async ({ page }) => {
   await openApp(page);
   await sun(page).focus();
-  await expect(page.locator('.tooltip')).toHaveText('Drag to move the light, or double-tap to reset it.');
+  await expect(page.locator('.tooltip')).toHaveText(
+    'Drag, or use the arrow keys, to move the light. Double-click or Home resets it.',
+  );
 });
 
 test('moving the sun during a reset keeps it where the user put it', async ({ page }) => {

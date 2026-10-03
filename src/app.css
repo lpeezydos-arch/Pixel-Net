@@ -59,10 +59,10 @@ p {
   white-space: nowrap;
 }
 
+/* The only DEM's name: a fact, not a control, so it does not dress like the picker. */
 .titlebar__dem {
   font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--ink-700);
+  color: var(--ink-500);
 }
 
 .stage {
@@ -79,10 +79,6 @@ p {
 
 .stage[data-mode='portrait'] {
   flex-direction: column;
-}
-
-.stage[data-mode='wide'] .terrain-col {
-  order: -1;
 }
 
 /* Line the net card up with the terrain card, not with the caption under it. */
@@ -185,6 +181,7 @@ p {
   position: absolute;
   inset: 3.125%; /* the rim circle: (1 − 0.9375) / 2 */
   border-radius: var(--r-pill);
+  mix-blend-mode: multiply; /* the rings and the cross show through the shimmer */
 }
 
 .terrain {
@@ -628,26 +625,49 @@ p {
   box-shadow: var(--shadow-1), var(--ring);
 }
 
+/* The sun's position, written beside the disc. At rest it speaks in the net
+   labels' voice, haloed in paper the way N, E, S and W are so it reads over
+   the cloud; while the sun moves it is raised into a dark label. */
 .sun__label {
   position: absolute;
+  top: -10px;
+  color: var(--ink-500);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--paper);
+  transition:
+    background var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out);
+}
+
+@supports not (paint-order: stroke fill) {
+  .sun__label {
+    -webkit-text-stroke: 0;
+    text-shadow:
+      0 0 2px var(--paper),
+      0 0 2px var(--paper),
+      0 0 3px var(--paper),
+      0 0 3px var(--paper),
+      0 0 5px var(--paper);
+  }
+}
+
+.sun__label[data-active='true'] {
   top: -14px;
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-sm);
   background: var(--ink-900);
   color: var(--paper);
   font-size: var(--fs-sm);
-  font-weight: 600;
-  line-height: 20px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
   box-shadow: var(--shadow-2);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--t-fast) var(--ease-out);
-}
-
-.sun__label[data-visible='true'] {
-  opacity: 1;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
 }
 
 .sun__label[data-side='left'] {

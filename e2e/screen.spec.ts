@@ -6,6 +6,7 @@ import {
   SECOND,
   caption,
   fingerprint,
+  hint,
   inkedPixels,
   netCloud,
   openApp,
@@ -14,19 +15,52 @@ import {
   terrainImage,
 } from './helpers';
 
-test('shows the terrain, the net and a hint', async ({ page }) => {
+test('shows the terrain, the net and a hint for the pointer the screen has', async ({ page }, testInfo) => {
   await openApp(page);
   await expect(page.getByRole('heading', { name: APP_NAME })).toBeVisible();
-  await expect(caption(page)).toHaveText('Drag on the terrain to inspect a pixel');
+  await expect(caption(page)).toHaveText(hint(testInfo.project.name));
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
   expect(await fingerprint(terrainImage(page))).not.toBe(0);
   expect(await inkedPixels(netCloud(page))).toBeGreaterThan(10_000);
 });
 
-test('names the only DEM in the title bar without a picker', async ({ page }) => {
+test('tells a keyboard user how to choose a pixel while the terrain has focus', async ({ page }) => {
+  await openApp(page);
+  const area = page.getByTestId('terrain-area');
+  for (let i = 0; i < 6; i++) {
+    await page.keyboard.press('Tab');
+    if (await area.evaluate((element) => element === document.activeElement)) break;
+  }
+  await expect(caption(page)).toHaveText('Arrow keys choose a pixel · Shift moves ten');
+  await page.keyboard.press('ArrowDown');
+  await expect(caption(page)).toHaveText('Gore Range, Colorado · 5 m pixels · 288 × 294');
+});
+
+test('names the only DEM in the title bar quietly, without a picker', async ({ page }) => {
   await openApp(page);
   await expect(page.getByRole('banner')).toContainText('Gore Range');
   await expect(page.getByRole('tablist')).toHaveCount(0);
+  // Plain text, not something that looks like a control.
+  expect(await page.locator('.titlebar__dem').evaluate((e) => getComputedStyle(e).fontWeight)).toBe('400');
+});
+
+test('reading order follows the layout: net first when stacked, terrain first side by side', async ({ page }, testInfo) => {
+  await openApp(page);
+  const terrainFirst = await page.evaluate(() => {
+    const net = document.querySelector('[aria-label="Net"]')!;
+    const terrain = document.querySelector('[aria-label="Terrain"]')!;
+    return Boolean(terrain.compareDocumentPosition(net) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(terrainFirst).toBe(testInfo.project.name !== 'phone');
+});
+
+test('puts the readout under the net on a tall phone', async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 915 });
+  await openApp(page);
+  const net = (await page.getByTestId('net').boundingBox())!;
+  const slope = (await page.getByTestId('slope').boundingBox())!;
+  expect(slope.y).toBeGreaterThanOrEqual(net.y + net.height);
+  expect(net.width).toBeGreaterThan(290);
 });
 
 test('fits the screen without scrolling', async ({ page }) => {

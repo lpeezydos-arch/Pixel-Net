@@ -546,3 +546,41 @@ Made on 2026-10-02 from the whole-branch review.
   cut short with an ellipsis. Two DEMs fit in full.
 - Section 10, known limit: the automated browser tests run in Chromium only.
   Safari and Firefox are checked by hand.
+
+Made on 2026-10-02 from the first design critique (`.impeccable/critique/`),
+which found the sun to be a control without a state, the keyboard reaching
+the terrain last on a desktop, and the net starved on tall phones and
+upright tablets.
+
+- Section 3, layout: the 720px rule is gone. A landscape viewport puts the
+  cards side by side; an upright one takes whichever arrangement gives the
+  larger smaller card, so a tablet held upright stacks them. On a phone the
+  cards span the screen; in an upright window wider than the 520px column
+  the column is shared so the net is as large as the terrain allows. The
+  readout moves under the net when leaving it beside the net would leave
+  more than half a readout row of the screen empty. The net card is never
+  wider than the terrain card.
+- Section 3, reading order: when the cards sit side by side the terrain
+  comes before the net in the document, so Tab reaches it first.
+- Section 3, sun: its position is always written beside it: quietly at
+  rest, in the net labels' voice with a paper halo, and raised into the
+  dark label while it is dragged, for 1.5 s after a key press, and for 2 s
+  after a single tap, when it reads "Double-tap to reset" if the sun is off
+  its default. The button's accessible name carries the position ("Sun,
+  NW · 45° high. Arrow keys move the light; Home resets it."), and a polite
+  live region announces it when a drag or a run of key presses ends and
+  after a reset. The tooltip reads "Drag, or use the arrow keys, to move
+  the light. Double-click or Home resets it." and closes once the keys move
+  the sun.
+- Section 3, tooltips: the three readout info dots are folded into the
+  net's one, which now explains the net and the three values. The dot is
+  help, not a control: it is not a Tab stop, its text is also the net
+  region's accessible description, and it opens below the dot so it never
+  covers the app name on a phone.
+- Section 3, caption: the hint names the pointer the screen has ("Click or
+  drag…" with a mouse), and while the terrain has keyboard focus with
+  nothing selected it reads "Arrow keys choose a pixel · Shift moves ten".
+- Section 6: the only DEM's name in the title bar is plain `--ink-500` text
+  at 400 weight, so it no longer dresses like the picker. The loading
+  shimmer multiplies over the net frame, so the rings and cross show
+  through it as section 3 always said they should.

@@ -22,49 +22,89 @@ const MIN_NET = 180;
 const MAX_COLUMN = 520;
 const READOUT_SIDE = 76; // width of the readout column beside the net
 const READOUT_BELOW = 78; // height of the readout row under the net, with its gap
-const WIDE_FROM = 720;
 
 const whole = (value: number) => Math.max(0, Math.floor(value));
 
+/** The smaller of the two cards: what a layout is judged by. */
+const smallerCard = (layout: Layout) => Math.min(layout.netSize, layout.terrainWidth);
+
 /**
  * Sizes that make the net card, the terrain card and the caption fill a
- * `width` × `height` area (the viewport minus the title bar) without scrolling. `aspect` is the DEM's width
- * divided by its height.
+ * `width` × `height` area (the viewport minus the title bar) without
+ * scrolling. `aspect` is the DEM's width divided by its height.
+ *
+ * A landscape viewport puts the cards side by side. An upright one takes
+ * whichever arrangement gives the larger smaller card: a phone stacks them,
+ * and so does a tablet held upright, rather than two small cards with most
+ * of the screen empty.
  */
 export function computeLayout(width: number, height: number, aspect: number): Layout {
-  if (width >= WIDE_FROM || width > height + HEADER_HEIGHT) return wideLayout(width, height, aspect);
+  if (width > height + HEADER_HEIGHT) return wideLayout(width, height, aspect);
+  const stacked = portraitLayout(width, height, aspect);
+  const wide = wideLayout(width, height, aspect);
+  return smallerCard(wide) > smallerCard(stacked) ? wide : stacked;
+}
 
+function portraitLayout(width: number, height: number, aspect: number): Layout {
   const pad = 12;
   const gap = 12;
   const inner = 12;
-  const cardWidth = whole(width - 2 * pad);
-  const netMax = whole(cardWidth - 2 * inner - gap - READOUT_SIDE);
+  const cardWidth = Math.min(MAX_COLUMN, whole(width - 2 * pad));
+  // On a phone the cards span the screen. In a wider window they float in a
+  // column, and the column is shared so the net is as large as the terrain
+  // allows instead of the terrain taking it all.
+  const spans = width - 2 * pad <= MAX_COLUMN;
   // Height left for the net and the terrain after everything of fixed size.
   const free = height - 2 * pad - gap - CAPTION_GAP - CAPTION_HEIGHT - 2 * inner;
 
-  let terrainWidth = cardWidth;
+  let readout: Layout['readout'] = 'side';
+  const netBeside = whole(cardWidth - 2 * inner - gap - READOUT_SIDE);
+  let terrainWidth = spans ? cardWidth : sharedTerrainWidth(cardWidth, free, aspect, netBeside);
   let terrainHeight = whole(terrainWidth / aspect);
-  let netSize = Math.min(netMax, whole(free - terrainHeight));
-  if (netSize < MIN_NET) {
+  let netSize = Math.min(netBeside, whole(free - terrainHeight));
+
+  // The readout moves under the net when leaving it beside the net would
+  // leave more than half a readout row of the screen empty; the net grows
+  // into that room instead.
+  const empty = free - terrainHeight - netSize;
+  const netBelow = Math.min(whole(cardWidth - 2 * inner), whole(free - READOUT_BELOW - terrainHeight));
+  if (empty > READOUT_BELOW / 2 && netBelow >= MIN_NET) {
+    readout = 'below';
+    netSize = netBelow;
+  } else if (netSize < MIN_NET) {
     // The net has shrunk as far as it may; the terrain gives up the rest.
-    netSize = Math.min(netMax, MIN_NET, whole(free));
+    netSize = Math.min(netBeside, MIN_NET, whole(free));
     terrainHeight = whole(free - netSize);
     terrainWidth = Math.min(cardWidth, whole(terrainHeight * aspect));
     terrainHeight = Math.min(terrainHeight, whole(terrainWidth / aspect));
   }
 
+  const readoutWidth = readout === 'side' ? gap + READOUT_SIDE : 0;
+  const readoutHeight = readout === 'below' ? READOUT_BELOW : 0;
   return {
     mode: 'portrait',
-    readout: 'side',
+    readout,
     pad,
     gap,
     inner,
     netSize,
-    netCardWidth: cardWidth,
-    netCardHeight: netSize + 2 * inner,
+    // No wider than the terrain, so the two cards share their edges.
+    netCardWidth: Math.min(cardWidth, Math.max(terrainWidth, netSize + 2 * inner + readoutWidth)),
+    netCardHeight: netSize + 2 * inner + readoutHeight,
     terrainWidth,
     terrainHeight,
   };
+}
+
+/**
+ * The widest terrain that still lets the net be as large as it can: the net
+ * grows to its width limit `netMax` if the height allows, and otherwise the
+ * two cards come out the same size.
+ */
+function sharedTerrainWidth(cardWidth: number, free: number, aspect: number, netMax: number): number {
+  const equal = whole((free * aspect) / (aspect + 1));
+  const shared = netMax < equal ? whole((free - netMax) * aspect) : equal;
+  return Math.min(cardWidth, shared);
 }
 
 function wideLayout(width: number, height: number, aspect: number): Layout {

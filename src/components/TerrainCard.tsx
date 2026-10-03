@@ -23,6 +23,8 @@ interface TerrainCardProps {
   interactive: boolean;
   onPress: () => void;
   onSettle: () => void;
+  /** The terrain gained or lost keyboard focus (focus a pointer gave it does not count). */
+  onFocusVisible?: (visible: boolean) => void;
 }
 
 export function TerrainCard({
@@ -37,6 +39,7 @@ export function TerrainCard({
   interactive,
   onPress,
   onSettle,
+  onFocusVisible,
 }: TerrainCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { pressed, handlers } = usePixelDrag({
@@ -60,6 +63,8 @@ export function TerrainCard({
           aria-label="Terrain. Drag, or use the arrow keys, to inspect a pixel."
           data-testid="terrain-area"
           {...handlers}
+          onFocus={(event) => onFocusVisible?.(event.currentTarget.matches(':focus-visible'))}
+          onBlur={() => onFocusVisible?.(false)}
         >
           <TerrainCanvas
             surface={surface}

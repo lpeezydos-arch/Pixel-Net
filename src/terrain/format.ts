@@ -1,5 +1,5 @@
-import { compass } from './net';
-import type { Dem, Surface } from './types';
+import { compass, formatSun } from './net';
+import type { Dem, Sun, Surface } from './types';
 
 export interface ReadoutText {
   slope: string;
@@ -31,4 +31,10 @@ export function describeReadout(readout: ReadoutText): string {
   if (readout === EMPTY_READOUT) return '';
   if (readout === NO_DATA) return 'No data at this pixel';
   return `Slope ${readout.slope}, aspect ${readout.aspect}, elevation ${readout.elevation}`;
+}
+
+/** The sun as one phrase, for screen readers. */
+export function describeSun(sun: Sun): string {
+  const text = formatSun(sun);
+  return text === 'Overhead' ? 'Sun overhead' : `Sun ${text.replace(' · ', ', ')}`;
 }

@@ -2,7 +2,6 @@ import type { MotionValue } from 'motion/react';
 import { useLayoutEffect, useRef } from 'react';
 import { EMPTY_READOUT, readoutFor } from '../terrain/format';
 import type { Dem, Surface } from '../terrain/types';
-import { InfoTip } from './InfoTip';
 
 interface ReadoutProps {
   dem: Dem | null;
@@ -11,7 +10,10 @@ interface ReadoutProps {
   selection: MotionValue<number>;
 }
 
-/** Slope, aspect and elevation of the selected pixel. Updated without re-rendering. */
+/**
+ * Slope, aspect and elevation of the selected pixel. Updated without
+ * re-rendering. The three are explained by the net's own info dot.
+ */
 export function Readout({ dem, surface, selection }: ReadoutProps) {
   const slopeRef = useRef<HTMLElement>(null);
   const aspectRef = useRef<HTMLElement>(null);
@@ -31,30 +33,15 @@ export function Readout({ dem, surface, selection }: ReadoutProps) {
   return (
     <dl className="readout">
       <div className="stat">
-        <dt className="stat__label">
-          Slope
-          <InfoTip
-            label="About slope"
-            text="How steep the ground is at this pixel, from 0° for flat to 90° for vertical."
-          />
-        </dt>
+        <dt className="stat__label">Slope</dt>
         <dd className="stat__value" ref={slopeRef} data-testid="slope" />
       </div>
       <div className="stat">
-        <dt className="stat__label">
-          Aspect
-          <InfoTip
-            label="About aspect"
-            text="The compass direction this slope faces, looking downhill."
-          />
-        </dt>
+        <dt className="stat__label">Aspect</dt>
         <dd className="stat__value" ref={aspectRef} data-testid="aspect" />
       </div>
       <div className="stat">
-        <dt className="stat__label">
-          Elevation
-          <InfoTip label="About elevation" text="The height stored in the DEM at this pixel." />
-        </dt>
+        <dt className="stat__label">Elevation</dt>
         <dd className="stat__value" ref={elevationRef} data-testid="elevation" />
       </div>
     </dl>

@@ -1,5 +1,16 @@
 import { type Page, expect, test } from '@playwright/test';
-import { GORE, NODATA_BLOCK, SECOND, caption, openApp, serveTwoDems, stage, terrainImage } from './helpers';
+import {
+  GORE,
+  NET_HELP,
+  NODATA_BLOCK,
+  SECOND,
+  caption,
+  hint,
+  openApp,
+  serveTwoDems,
+  stage,
+  terrainImage,
+} from './helpers';
 
 // Values of the bundled Gore Range DEM, by Horn's method.
 const WEST_SLOPE = { col: 150, row: 210, slope: '36.0°', aspect: '259° W', elevation: '3,874 m' };
@@ -232,7 +243,7 @@ test('keeps the selection on its pixel when the screen changes size', async ({ p
   await expect.poll(async () => Math.abs((await anchorOf(page, 'net-marker')).y - expected.y)).toBeLessThan(1.5);
 });
 
-test('switching DEMs clears the selection', async ({ page }) => {
+test('switching DEMs clears the selection', async ({ page }, testInfo) => {
   await serveTwoDems(page);
   await openApp(page);
   await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
@@ -245,7 +256,7 @@ test('switching DEMs clears the selection', async ({ page }) => {
   await expect(slope(page)).toHaveText('–');
   await expect(ring(page)).toHaveAttribute('data-visible', 'false');
   await expect(marker(page)).toHaveAttribute('data-visible', 'false');
-  await expect(caption(page)).toHaveText('Drag on the terrain to inspect a pixel');
+  await expect(caption(page)).toHaveText(hint(testInfo.project.name));
 
   // The second DEM is a uniform slope facing northwest.
   const box = (await area(page).boundingBox())!;
@@ -322,26 +333,25 @@ test('the net point pulses again on the first selection after a DEM switch', asy
   await expect(marker(page)).toHaveAttribute('data-pulse', 'true');
 });
 
-test('explains each value from its info button', async ({ page }) => {
+test('explains the net and its three values from one info button, below the button', async ({ page }) => {
   await openApp(page);
-  const tips: Array<[string, string]> = [
-    ['How to read the net', 'Each dot is one pixel: its direction from the center is the way the slope faces, and its distance from the center is how steep it is.'],
-    ['About slope', 'How steep the ground is at this pixel, from 0° for flat to 90° for vertical.'],
-    ['About aspect', 'The compass direction this slope faces, looking downhill.'],
-    ['About elevation', 'The height stored in the DEM at this pixel.'],
-  ];
-  for (const [name, text] of tips) {
-    await page.getByRole('button', { name }).focus();
-    await expect(page.locator('.tooltip')).toHaveText(text);
-    await page.keyboard.press('Escape');
-    await expect(page.locator('.tooltip')).toHaveCount(0);
-  }
+  const button = page.getByRole('button', { name: 'How to read the net' });
+  await button.focus();
+  const tip = page.locator('.tooltip');
+  await expect(tip).toHaveText(NET_HELP);
+  // Below, so it never covers the app name on a phone.
+  const dot = (await button.boundingBox())!;
+  const box = (await tip.boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(dot.y + dot.height);
+  await page.keyboard.press('Escape');
+  await expect(tip).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^About / })).toHaveCount(0);
 });
 
 test('a tap opens an info tooltip and a second tap closes it', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'phone', 'needs a touch screen');
   await openApp(page);
-  const button = page.getByRole('button', { name: 'About slope' });
+  const button = page.getByRole('button', { name: 'How to read the net' });
   await button.tap();
   await expect(page.locator('.tooltip')).toBeVisible();
   await button.tap();

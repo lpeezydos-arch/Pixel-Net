@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_READOUT, describeReadout, readoutFor } from './format';
+import { EMPTY_READOUT, describeReadout, describeSun, readoutFor } from './format';
 import { computeSurface } from './surface';
 import { demFrom, tiltedPlane } from './testing';
 
@@ -66,5 +66,16 @@ describe('describeReadout', () => {
     dem.nodata[CENTER] = 1;
     expect(describeReadout(readoutFor(dem, computeSurface(dem), CENTER))).toBe('No data at this pixel');
     expect(describeReadout(EMPTY_READOUT)).toBe('');
+  });
+});
+
+describe('describeSun', () => {
+  it('reads the sun as one phrase, with a pause where the label has a dot', () => {
+    expect(describeSun({ azimuth: 315, altitude: 45 })).toBe('Sun NW, 45° high');
+    expect(describeSun({ azimuth: 67.5, altitude: 10 })).toBe('Sun ENE, 10° high');
+  });
+
+  it('says overhead when the sun is overhead', () => {
+    expect(describeSun({ azimuth: 0, altitude: 90 })).toBe('Sun overhead');
   });
 });
