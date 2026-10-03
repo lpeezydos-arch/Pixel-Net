@@ -17,3 +17,28 @@ export function readSaved(): string {
     return '';
   }
 }
+
+/** The page's address with `view` as its fragment: the link that reopens the view. */
+export function linkTo(view: string): string {
+  const { origin, pathname, search } = window.location;
+  return `${origin}${pathname}${search}${view ? `#${view}` : ''}`;
+}
+
+/**
+ * Puts the view in the address bar, in place, and saves it on this device.
+ * Either can be refused (a private window, Safari's limit on address
+ * changes); the app carries on without it.
+ */
+export function writeView(view: string): void {
+  try {
+    if (readFragment() !== view) window.history.replaceState(window.history.state, '', linkTo(view));
+  } catch {
+    // The address stays as it was.
+  }
+  try {
+    if (view) window.localStorage.setItem(VIEW_KEY, view);
+    else window.localStorage.removeItem(VIEW_KEY);
+  } catch {
+    // Nothing is saved.
+  }
+}

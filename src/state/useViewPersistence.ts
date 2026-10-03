@@ -1,8 +1,11 @@
 import type { MotionValue } from 'motion/react';
 import { useCallback, useEffect, useRef } from 'react';
-import { toIndex } from '../terrain/pick';
+import { toIndex, toPixel } from '../terrain/pick';
 import type { DemEntry } from './useDems';
-import { type View, pixelInside } from './view';
+import { type View, decodeView, encodeView, pixelInside } from './view';
+import { readFragment, writeView } from './viewStore';
+
+const WRITE_AFTER_MS = 400; // quiet time after the last change before the view is written
 
 /** The DEM on screen, once it has loaded. */
 export interface LoadedView {
@@ -22,22 +25,60 @@ interface ViewPersistenceOptions {
   loaded: LoadedView | null;
   /** Index of the selected pixel, or −1. */
   selection: MotionValue<number>;
+  sunAzimuth: MotionValue<number>;
+  sunAltitude: MotionValue<number>;
+  /** Switches to another DEM, as the picker does. */
+  onSelectDem: (id: string) => void;
   /** A view was applied; `selected` says whether it selected a pixel. */
   onRestore: (selected: boolean) => void;
 }
 
 /**
- * Opens the app on a view: selects the view's pixel once the DEM it belongs
- * to has loaded. The sun and the DEM are given their starting values by the
- * caller, before the first paint.
+ * Keeps the view (which DEM, which pixel, where the sun is) in step with the
+ * address bar and with what is saved on the device.
+ *
+ * Reading: the view to open on has its pixel selected once its DEM has
+ * loaded, and a link pasted into the open tab is applied the same way.
+ * Writing: 400 ms after the last change, so never during a drag, and at once
+ * when the page is hidden.
+ *
+ * Returns a function that gives the view as text, or null before the list
+ * of DEMs has loaded.
  */
-export function useViewPersistence(options: ViewPersistenceOptions): void {
-  const { start, selection, loaded, activeId } = options;
-  // What `settle` reads, kept current without rebuilding it.
+export function useViewPersistence(options: ViewPersistenceOptions): () => string | null {
+  const { start, selection, sunAzimuth, sunAltitude } = options;
+  // What the callbacks below read, kept current without rebuilding them.
   const latest = useRef(options);
   latest.current = options;
   // The view still to be applied, while its DEM is on the way.
   const waiting = useRef<View | null>(start);
+  const timer = useRef<number | undefined>(undefined);
+
+  const viewText = useCallback((): string | null => {
+    const { entries, activeId, loaded } = latest.current;
+    if (!activeId || entries.length === 0) return null;
+    const index = selection.get();
+    // While another DEM loads there is no pixel to name: the switch cleared it.
+    const pixel = index >= 0 && loaded?.id === activeId ? toPixel(index, loaded.width) : null;
+    return encodeView(
+      { dem: activeId, pixel, sun: { azimuth: sunAzimuth.get(), altitude: sunAltitude.get() } },
+      entries[0].id,
+    );
+  }, [selection, sunAzimuth, sunAltitude]);
+
+  const write = useCallback(() => {
+    window.clearTimeout(timer.current);
+    timer.current = undefined;
+    // A view still waiting for its DEM must not be overwritten by what is on screen.
+    if (waiting.current) return;
+    const text = viewText();
+    if (text !== null) writeView(text);
+  }, [viewText]);
+
+  const schedule = useCallback(() => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(write, WRITE_AFTER_MS);
+  }, [write]);
 
   const settle = useCallback(() => {
     const view = waiting.current;
@@ -55,7 +96,74 @@ export function useViewPersistence(options: ViewPersistenceOptions): void {
       if (selection.get() >= 0) selection.set(-1);
       onRestore(false);
     }
-  }, [selection]);
+    // The address and the saved view now say what is shown, which corrects
+    // a link with a part that could not be used.
+    write();
+  }, [selection, write]);
 
-  useEffect(settle, [settle, loaded, activeId]);
+  /** Applies a view read from the address while the app is open. */
+  const apply = useCallback(
+    (view: View) => {
+      const { entries, activeId, onSelectDem } = latest.current;
+      sunAzimuth.set(view.sun.azimuth);
+      sunAltitude.set(view.sun.altitude);
+      waiting.current = view;
+      // A DEM that is not in the list means the first, as it does on opening.
+      const wanted = entries.find((entry) => entry.id === view.dem)?.id ?? entries[0]?.id;
+      if (wanted && wanted !== activeId) onSelectDem(wanted); // the pixel waits for its DEM
+      else settle();
+    },
+    [sunAzimuth, sunAltitude, settle],
+  );
+
+  // The waiting view is applied when its DEM arrives.
+  useEffect(settle, [settle, options.loaded, options.activeId]);
+
+  // Whatever changes the view starts the timer: a drag, a key, a reset.
+  useEffect(() => {
+    const stops = [
+      selection.on('change', schedule),
+      sunAzimuth.on('change', schedule),
+      sunAltitude.on('change', schedule),
+    ];
+    return () => {
+      for (const stop of stops) stop();
+      window.clearTimeout(timer.current);
+    };
+  }, [selection, sunAzimuth, sunAltitude, schedule]);
+
+  // So does a switch of DEM.
+  useEffect(() => {
+    if (options.activeId) schedule();
+  }, [options.activeId, schedule]);
+
+  // A page that is hidden or closed may never run its timer: write now.
+  useEffect(() => {
+    const flush = () => {
+      if (timer.current !== undefined) write();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [write]);
+
+  // Another link pasted into the open tab, or the address edited by hand.
+  // Our own writes replace the address in place and do not fire this.
+  useEffect(() => {
+    const onHashChange = () => {
+      const text = readFragment();
+      // An emptied address is left alone; the next change fills it in again.
+      if (text) apply(decodeView(text));
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [apply]);
+
+  return viewText;
 }

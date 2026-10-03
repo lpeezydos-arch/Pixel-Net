@@ -93,6 +93,9 @@ export function App() {
     activeId: active?.id ?? null,
     loaded,
     selection,
+    sunAzimuth,
+    sunAltitude,
+    onSelectDem: selectDem,
     onRestore: setHasSelection,
   });
 
