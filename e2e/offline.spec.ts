@@ -27,6 +27,8 @@ test('opens and works with no network after one visit', async ({ page, context }
     await expect.poll(() => page.evaluate(isCached, entry.file), `${entry.file} is stored`).toBe(true);
   }
   await expect.poll(() => page.evaluate(isCached, '.woff2')).toBe(true);
+  // The link-preview image is for other sites to read; the app never shows it.
+  expect(await page.evaluate(isCached, 'preview.png')).toBe(false);
 
   await context.setOffline(true);
   await page.reload();

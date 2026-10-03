@@ -38,6 +38,8 @@ export default defineConfig(({ mode }) => {
         workbox: {
           // Everything the app needs with no signal, the DEMs included.
           globPatterns: ['**/*.{js,css,html,woff2,json,tif,png,svg}'],
+          // The link-preview image is read by other sites, never by the app.
+          globIgnores: ['**/preview.png'],
           // The default limit of 2 MB would silently leave a larger DEM out.
           maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
         },

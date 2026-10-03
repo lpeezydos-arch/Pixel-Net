@@ -5,6 +5,9 @@ import { writeArrayBuffer } from 'geotiff';
 /** The app's name, from the `VITE_APP_NAME` line of `.env`. */
 export const APP_NAME = readFileSync('.env', 'utf8').match(/^VITE_APP_NAME=(.*)$/m)![1].trim();
 
+/** The site's whole address, from the `VITE_SITE_URL` line of `.env`. Link-preview tags need it. */
+export const SITE_URL = readFileSync('.env', 'utf8').match(/^VITE_SITE_URL=(.*)$/m)![1].trim();
+
 /** Pixel dimensions of the bundled Gore Range DEM. */
 export const GORE = { width: 288, height: 294 };
 

@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="A hillshade and a Schmidt net of every pixel in a DEM." />
+    <!-- What a link to the app shows when it is pasted into a message. Other
+         sites read these without running the page, so every link shows the
+         same card, and the addresses must be whole. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="%VITE_APP_NAME%" />
+    <meta property="og:description" content="A hillshade and a Schmidt net of every pixel in a DEM." />
+    <meta property="og:url" content="%VITE_SITE_URL%" />
+    <meta property="og:image" content="%VITE_SITE_URL%preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A hillshade of the Gore Range beside a Schmidt net of its slopes." />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="%BASE_URL%icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon.png" />
     <title>%VITE_APP_NAME%</title>
