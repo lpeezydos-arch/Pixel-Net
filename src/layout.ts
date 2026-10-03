@@ -19,7 +19,8 @@ export const CAPTION_HEIGHT = 18;
 export const CAPTION_GAP = 8;
 export const HEADER_HEIGHT = 56; // --header-h: the title bar above the stage
 const MIN_NET = 180;
-const MAX_COLUMN = 520;
+const SPAN_UP_TO = 520; // a screen this wide or narrower is a phone: the cards span it
+const MAX_COLUMN = 760; // the widest a card gets on a monitor
 const READOUT_SIDE = 76; // width of the readout column beside the net
 const READOUT_BELOW = 78; // height of the readout row under the net, with its gap
 
@@ -53,7 +54,7 @@ function portraitLayout(width: number, height: number, aspect: number): Layout {
   // On a phone the cards span the screen. In a wider window they float in a
   // column, and the column is shared so the net is as large as the terrain
   // allows instead of the terrain taking it all.
-  const spans = width - 2 * pad <= MAX_COLUMN;
+  const spans = width - 2 * pad <= SPAN_UP_TO;
   // Height left for the net and the terrain after everything of fixed size.
   const free = height - 2 * pad - gap - CAPTION_GAP - CAPTION_HEIGHT - 2 * inner;
 

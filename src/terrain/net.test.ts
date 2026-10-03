@@ -87,8 +87,10 @@ describe('sun on the net', () => {
     expect(netToSun(5, 5).altitude).toBe(10);
   });
 
-  it('describes the sun in words', () => {
-    expect(formatSun({ azimuth: 70, altitude: 35 })).toBe('ENE · 35° high');
+  it('writes the sun the way the aspect readout is written: degrees, then the compass letter', () => {
+    expect(formatSun({ azimuth: 70, altitude: 35 })).toBe('70° E · 35° high');
+    expect(formatSun(DEFAULT_SUN)).toBe('315° NW · 45° high');
+    expect(formatSun({ azimuth: 359.7, altitude: 45 })).toBe('0° N · 45° high');
     expect(formatSun({ azimuth: 0, altitude: 90 })).toBe('Overhead');
   });
 });

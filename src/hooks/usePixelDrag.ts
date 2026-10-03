@@ -13,13 +13,23 @@ interface PixelDragOptions {
   onPress: () => void;
   /** A drag ended, or a key press moved the selection. */
   onSettle: () => void;
+  /** Escape cleared the selection. */
+  onClear: () => void;
 }
 
 /**
  * Turns pointer and arrow-key events on the terrain into a selected pixel.
  * Spread `handlers` onto the element that shows the whole DEM.
  */
-export function usePixelDrag({ width, height, enabled, selection, onPress, onSettle }: PixelDragOptions) {
+export function usePixelDrag({
+  width,
+  height,
+  enabled,
+  selection,
+  onPress,
+  onSettle,
+  onClear,
+}: PixelDragOptions) {
   // The pointer that started the drag. A second finger does not take over.
   const pointer = useRef<number | null>(null);
   const [pressed, setPressed] = useState(false);
@@ -79,6 +89,13 @@ export function usePixelDrag({ width, height, enabled, selection, onPress, onSet
       onKeyDown(event: KeyboardEvent<HTMLElement>) {
         if (!enabled || event.altKey || event.ctrlKey || event.metaKey) return;
         const current = selection.get();
+        // The way out: back to the whole landscape and the clean net.
+        if (event.key === 'Escape') {
+          if (current < 0) return;
+          selection.set(-1);
+          onClear();
+          return;
+        }
         const next = stepPixel(
           current < 0 ? null : toPixel(current, width),
           event.key,

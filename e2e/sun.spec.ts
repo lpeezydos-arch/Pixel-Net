@@ -31,7 +31,7 @@ async function dragSunTo(page: Page, east: number, north: number) {
 
 test('the sun starts in the northwest, 45° high', async ({ page }) => {
   await openApp(page);
-  await expect(label(page)).toHaveText('NW · 45° high');
+  await expect(label(page)).toHaveText('315° NW · 45° high');
   const expected = await netPoint(page, -R45 * Math.SQRT1_2, R45 * Math.SQRT1_2);
   const actual = await sunCenter(page);
   expect(Math.abs(actual.x - expected.x)).toBeLessThan(1);
@@ -48,30 +48,30 @@ test('the sun can be dragged again after its pointer is lost', async ({ page }) 
   await expect(label(page)).toHaveAttribute('data-active', 'false');
 
   await dragSunTo(page, R45, 0);
-  await expect(label(page)).toHaveText('E · 45° high');
+  await expect(label(page)).toHaveText('90° E · 45° high');
   await page.mouse.up();
 });
 
 test('the sun states its position at rest, and keeps stating it after a drag', async ({ page }) => {
   await openApp(page);
-  await expect(label(page)).toHaveText('NW · 45° high');
+  await expect(label(page)).toHaveText('315° NW · 45° high');
   await expect(label(page)).toBeVisible();
   await expect(label(page)).toHaveAttribute('data-active', 'false');
   await expect(sun(page)).toHaveAttribute(
     'aria-label',
-    'Sun, NW · 45° high. Arrow keys move the light; Home resets it.',
+    'Sun, 315° NW · 45° high. Arrow keys move the light; Home resets it.',
   );
 
   await dragSunTo(page, R45, 0);
   await page.mouse.up();
-  await expect(label(page)).toHaveText('E · 45° high');
+  await expect(label(page)).toHaveText('90° E · 45° high');
   await expect(label(page)).toBeVisible();
   await expect(label(page)).toHaveAttribute('data-active', 'false');
   await expect(sun(page)).toHaveAttribute(
     'aria-label',
-    'Sun, E · 45° high. Arrow keys move the light; Home resets it.',
+    'Sun, 90° E · 45° high. Arrow keys move the light; Home resets it.',
   );
-  await expect(page.getByTestId('sun-announcement')).toHaveText('Sun E, 45° high');
+  await expect(page.getByTestId('sun-announcement')).toHaveText('Sun 90° E, 45° high');
 });
 
 test('key presses raise the label for a moment and announce where the sun ended up', async ({ page }) => {
@@ -80,10 +80,25 @@ test('key presses raise the label for a moment and announce where the sun ended 
   // Three steps of 5° take the sun from NW (315°) into NNW.
   for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
   await expect(label(page)).toHaveAttribute('data-active', 'true');
-  await expect(label(page)).toHaveText('NNW · 45° high');
+  await expect(label(page)).toHaveText('330° NW · 45° high');
   // One announcement for the run of presses, not one per press.
-  await expect(page.getByTestId('sun-announcement')).toHaveText('Sun NNW, 45° high');
+  await expect(page.getByTestId('sun-announcement')).toHaveText('Sun 330° NW, 45° high');
   await expect(label(page)).toHaveAttribute('data-active', 'false', { timeout: 3000 });
+});
+
+test('a tap on the sun at its default says how to move it', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone', 'needs a touch screen');
+  await openApp(page);
+  await sun(page).tap();
+  await expect(label(page)).toHaveText('Drag to move the light');
+  await expect(label(page)).toHaveAttribute('data-active', 'true');
+  await expect(label(page)).toHaveText('315° NW · 45° high', { timeout: 3500 });
+});
+
+test('the sun stirs once at first open on a touch screen, and never on a desktop', async ({ page }, testInfo) => {
+  await openApp(page);
+  const animation = await page.locator('.sun__disc').evaluate((element) => getComputedStyle(element).animationName);
+  expect(animation).toBe(testInfo.project.name === 'phone' ? 'sun-nudge' : 'none');
 });
 
 test('a tap on a moved sun says how to put it back', async ({ page }, testInfo) => {
@@ -91,13 +106,13 @@ test('a tap on a moved sun says how to put it back', async ({ page }, testInfo) 
   await openApp(page);
   await dragSunTo(page, 0, -R45);
   await page.mouse.up();
-  await expect(label(page)).toHaveText('S · 45° high');
+  await expect(label(page)).toHaveText('180° S · 45° high');
 
   await sun(page).tap();
   await expect(label(page)).toHaveText('Double-tap to reset');
   await expect(label(page)).toHaveAttribute('data-active', 'true');
   // The hint gives way to the position again.
-  await expect(label(page)).toHaveText('S · 45° high', { timeout: 3500 });
+  await expect(label(page)).toHaveText('180° S · 45° high', { timeout: 3500 });
   await expect(label(page)).toHaveAttribute('data-active', 'false');
 });
 
@@ -110,7 +125,7 @@ test('dragging the sun re-lights the terrain and leaves the net and the readout 
   const netBefore = await fingerprint(netCloud(page));
 
   await dragSunTo(page, R45, 0);
-  await expect(label(page)).toHaveText('E · 45° high');
+  await expect(label(page)).toHaveText('90° E · 45° high');
   await expect(label(page)).toHaveAttribute('data-active', 'true');
   await expect(page.locator('.tooltip')).toHaveCount(0); // the label replaces the tooltip
   await expect.poll(() => fingerprint(terrainImage(page))).not.toBe(terrainBefore);
@@ -125,7 +140,7 @@ test('dragging the sun re-lights the terrain and leaves the net and the readout 
 test('the sun stops at 10° above the horizon', async ({ page }) => {
   await openApp(page);
   await dragSunTo(page, 1.6, 0);
-  await expect(label(page)).toHaveText('E · 10° high');
+  await expect(label(page)).toHaveText('90° E · 10° high');
   const limit = await netPoint(page, Math.SQRT2 * Math.sin((80 * Math.PI) / 360), 0);
   const actual = await sunCenter(page);
   expect(Math.abs(actual.x - limit.x)).toBeLessThan(1);
@@ -144,10 +159,10 @@ test('a double click sends the sun back to the northwest', async ({ page }) => {
   const terrainBefore = await fingerprint(terrainImage(page));
   await dragSunTo(page, 0, -R45);
   await page.mouse.up();
-  await expect(label(page)).toHaveText('S · 45° high');
+  await expect(label(page)).toHaveText('180° S · 45° high');
 
   await sun(page).dblclick();
-  await expect(label(page)).toHaveText('NW · 45° high');
+  await expect(label(page)).toHaveText('315° NW · 45° high');
   await expect.poll(() => fingerprint(terrainImage(page))).toBe(terrainBefore);
 });
 
@@ -155,14 +170,14 @@ test('arrow keys move the sun and Home resets it', async ({ page }) => {
   await openApp(page);
   await sun(page).focus();
   for (let i = 0; i < 9; i++) await page.keyboard.press('ArrowRight');
-  await expect(label(page)).toHaveText('N · 45° high');
+  await expect(label(page)).toHaveText('0° N · 45° high');
   for (let i = 0; i < 10; i++) await page.keyboard.press('ArrowDown');
-  await expect(label(page)).toHaveText('N · 10° high');
+  await expect(label(page)).toHaveText('0° N · 10° high');
   for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowUp');
   await expect(label(page)).toHaveText('Overhead');
 
   await page.keyboard.press('Home');
-  await expect(label(page)).toHaveText('NW · 45° high');
+  await expect(label(page)).toHaveText('315° NW · 45° high');
 });
 
 test('pressing the net away from the sun does nothing', async ({ page }) => {
@@ -171,7 +186,7 @@ test('pressing the net away from the sun does nothing', async ({ page }) => {
   const away = await netPoint(page, 0.5, -0.5);
   await page.mouse.click(away.x, away.y);
   await page.mouse.move(away.x + 40, away.y);
-  await expect(label(page)).toHaveText('NW · 45° high');
+  await expect(label(page)).toHaveText('315° NW · 45° high');
   expect(await fingerprint(terrainImage(page))).toBe(terrainBefore);
 });
 
@@ -180,12 +195,12 @@ test('the sun keeps its place when the DEM changes', async ({ page }) => {
   await openApp(page);
   await sun(page).focus();
   for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
-  await expect(label(page)).toHaveText('NNW · 45° high');
+  await expect(label(page)).toHaveText('330° NW · 45° high');
 
   await page.getByRole('tab', { name: 'Second' }).click();
   await expect(terrainImage(page)).toHaveJSProperty('width', 60);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
-  await expect(label(page)).toHaveText('NNW · 45° high');
+  await expect(label(page)).toHaveText('330° NW · 45° high');
 });
 
 test('the selected point is drawn above the sun', async ({ page }) => {
@@ -209,13 +224,13 @@ test('moving the sun during a reset keeps it where the user put it', async ({ pa
   await openApp(page);
   await sun(page).focus();
   for (let i = 0; i < 9; i++) await page.keyboard.press('ArrowRight');
-  await expect(label(page)).toHaveText('N · 45° high');
+  await expect(label(page)).toHaveText('0° N · 45° high');
 
   await page.keyboard.press('Home'); // the sun starts gliding back to the northwest
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   const interrupted = await label(page).textContent();
-  expect(interrupted).not.toBe('NW · 45° high');
+  expect(interrupted).not.toBe('315° NW · 45° high');
 
   // Long enough for the abandoned glide to have finished, had it kept running.
   await page.waitForTimeout(1200);

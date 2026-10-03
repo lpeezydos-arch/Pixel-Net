@@ -48,7 +48,8 @@ export function netToSun(x: number, y: number): Sun {
   return { azimuth: aspect, altitude: Math.max(MIN_SUN_ALTITUDE, 90 - slope) };
 }
 
+/** The sun written the way the aspect readout is: degrees, then the compass letter. */
 export function formatSun(sun: Sun): string {
   if (sun.altitude >= 89.5) return 'Overhead';
-  return `${compass(sun.azimuth, 16)} · ${Math.round(sun.altitude)}° high`;
+  return `${Math.round(sun.azimuth) % 360}° ${compass(sun.azimuth)} · ${Math.round(sun.altitude)}° high`;
 }

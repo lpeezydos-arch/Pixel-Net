@@ -185,7 +185,7 @@ test('the retry button is a 44px target on a phone', async ({ page }, testInfo) 
 test('every control can be reached by keyboard, in reading order, and shows a focus ring', async ({ page }, testInfo) => {
   await serveTwoDems(page);
   await openApp(page);
-  const sunName = 'Sun, NW · 45° high. Arrow keys move the light; Home resets it.';
+  const sunName = 'Sun, 315° NW · 45° high. Arrow keys move the light; Home resets it.';
   const terrainName = 'Terrain. Drag, or use the arrow keys, to inspect a pixel.';
   // Tab follows the eye: the net sits above the terrain on a phone and to the
   // right of it on a desktop. The info dot is help, not a stop.

@@ -9,10 +9,12 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useCoarsePointer } from '../hooks/useCoarsePointer';
 import { NET_RIM } from '../terrain/cloud';
 import { describeSun } from '../terrain/format';
 import { DEFAULT_SUN, MIN_SUN_ALTITUDE, formatSun, netToSun, sunToNet } from '../terrain/net';
 import type { Sun } from '../terrain/types';
+import { announce } from './announce';
 import { POINT_SPRING } from './motion';
 
 interface SunHandleProps {
@@ -28,6 +30,7 @@ const KEY_STEP = 5; // degrees per arrow key press
 const RAISED_AFTER_KEY_MS = 1500; // how long the label stays raised after a key press
 const RAISED_FOR_HINT_MS = 2000; // how long a tap's hint stays
 const ANNOUNCE_AFTER_MS = 400; // quiet time after a key press before the new position is announced
+const MOVE_HINT = 'Drag to move the light';
 const RESET_HINT = 'Double-tap to reset';
 const NAME_SUFFIX = 'Arrow keys move the light; Home resets it.';
 
@@ -49,6 +52,7 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const reducedMotion = useReducedMotion();
+  const coarse = useCoarsePointer();
   const [dragging, setDragging] = useState(false);
   const [raised, setRaised] = useState(false); // the label in its dark form after a key press or a tap
   const [tipOpen, setTipOpen] = useState(false);
@@ -93,8 +97,8 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     };
   }, [azimuth, altitude, place]);
 
-  const announce = useCallback(() => {
-    if (announceRef.current) announceRef.current.textContent = describeSun(currentSun());
+  const announceSun = useCallback(() => {
+    announce(announceRef.current, describeSun(currentSun()));
   }, [currentSun]);
 
   const lower = useCallback(() => {
@@ -143,7 +147,7 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     const finish = () => {
       azimuth.set(DEFAULT_SUN.azimuth);
       altitude.set(DEFAULT_SUN.altitude);
-      announce();
+      announceSun();
     };
     if (reducedMotion) {
       finish();
@@ -210,7 +214,7 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     const moved = Math.hypot(event.clientX - current.startX, event.clientY - current.startY);
     if (event.type === 'pointercancel' || moved > TAP_SLOP) {
       lastTap.current = 0;
-      announce();
+      announceSun();
       return;
     }
     if (event.timeStamp - lastTap.current < DOUBLE_TAP_MS) {
@@ -219,9 +223,10 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
       return;
     }
     lastTap.current = event.timeStamp;
-    // A finger has no tooltip to hover: a single tap says what a second one does.
+    // A finger has no tooltip to hover: a single tap says what the sun does,
+    // or, once it has been moved, what a second tap would do.
     if (event.pointerType === 'touch') {
-      raise(RAISED_FOR_HINT_MS, atDefault(currentSun()) ? null : RESET_HINT);
+      raise(RAISED_FOR_HINT_MS, atDefault(currentSun()) ? MOVE_HINT : RESET_HINT);
     }
   };
 
@@ -251,7 +256,7 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
       raise(RAISED_AFTER_KEY_MS);
       // Speak where a run of key presses ends up, not every step on the way.
       if (announceTimer.current) clearTimeout(announceTimer.current);
-      announceTimer.current = setTimeout(announce, ANNOUNCE_AFTER_MS);
+      announceTimer.current = setTimeout(announceSun, ANNOUNCE_AFTER_MS);
     }
   };
 
@@ -274,7 +279,8 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
             onLostPointerCapture={onLostPointerCapture}
             onKeyDown={onKeyDown}
           >
-            <span className="sun__disc">
+            {/* On a touch screen nothing can hover, so the disc stirs once to say it moves. */}
+            <span className="sun__disc" data-nudge={coarse}>
               <SunIcon size={18} aria-hidden="true" />
             </span>
           </button>

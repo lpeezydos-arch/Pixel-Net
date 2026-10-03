@@ -38,14 +38,25 @@ describe('computeLayout', () => {
     expect(l.terrainWidth / l.terrainHeight).toBeCloseTo(GORE, 1);
   });
 
-  it('puts the cards side by side on a wide screen', () => {
+  it('puts the cards side by side on a laptop, each half the width', () => {
     const l = computeLayout(1280, 744, GORE);
     expect(l.mode).toBe('wide');
     expect(l.readout).toBe('below');
-    expect(l.terrainWidth).toBe(520);
-    expect(l.netCardWidth).toBe(520);
+    expect(l.terrainWidth).toBe(604);
+    expect(l.netCardWidth).toBe(604);
     expect(l.netCardHeight).toBe(l.terrainHeight);
-    expect(l.netSize).toBeGreaterThan(380);
+    expect(l.netSize).toBeGreaterThan(480);
+  });
+
+  it('lets the cards grow on a monitor, up to 760px', () => {
+    const monitor = computeLayout(1920, 968, GORE);
+    expect(monitor.mode).toBe('wide');
+    expect(monitor.terrainWidth).toBe(760);
+    expect(monitor.netCardWidth).toBe(760);
+    expect(monitor.netSize).toBeGreaterThan(640);
+    const laptop = computeLayout(1440, 844, GORE);
+    expect(laptop.terrainWidth).toBe(684);
+    expect(laptop.netSize).toBeGreaterThan(560);
   });
 
   it('puts the cards side by side on a phone turned sideways', () => {
@@ -78,13 +89,14 @@ describe('computeLayout', () => {
     expect(l.netSize).toBe(276);
   });
 
-  it('shares the column on a tablet held upright, so the net fills its card', () => {
+  it('shares the column on a tablet held upright, so the net and the terrain match', () => {
     const l = computeLayout(768, 968, GORE);
     expect(l.mode).toBe('portrait');
     expect(l.readout).toBe('side');
-    expect(l.terrainWidth).toBe(464);
-    expect(l.netSize).toBe(408);
-    expect(l.netCardWidth).toBe(520);
+    expect(Math.abs(l.netSize - l.terrainWidth)).toBeLessThanOrEqual(2);
+    expect(l.terrainWidth).toBeGreaterThan(420);
+    expect(l.netCardWidth).toBeGreaterThanOrEqual(l.terrainWidth);
+    expect(l.netCardWidth).toBeLessThanOrEqual(744);
   });
 
   it('makes the two cards the same size in a narrow upright window', () => {
@@ -117,7 +129,7 @@ describe('computeLayout', () => {
     const sizes = [
       [320, 480], [360, 684], [375, 591], [390, 763], [412, 783], [412, 859], [430, 870],
       [600, 900], [667, 319], [844, 334], [720, 944], [720, 1000], [768, 968], [1024, 712],
-      [1280, 744], [1920, 1024],
+      [1280, 744], [1440, 844], [1920, 968], [2560, 1384],
     ];
     for (const [width, height] of sizes) {
       for (const aspect of [GORE, 0.5, 1, 2]) {

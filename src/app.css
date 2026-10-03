@@ -432,6 +432,14 @@ p {
   box-shadow: 0 0 0 2px var(--paper);
 }
 
+/* Flat ground has no direction: its point sits at the center, hollow. */
+.net-marker[data-flat='true'] .net-marker__mark {
+  background: var(--paper);
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    0 0 0 2px var(--paper);
+}
+
 /* The 3px halo, outside the dot. */
 .net-marker__mark::after {
   content: '';
@@ -625,6 +633,30 @@ p {
   box-shadow: var(--shadow-1), var(--ring);
 }
 
+/* On a touch screen nothing can hover, so once the cloud has faded in the
+   disc stirs, once, to say that it can be moved. */
+@media (pointer: coarse) {
+  .sun__disc[data-nudge='true'] {
+    animation: sun-nudge 700ms var(--ease-out) 900ms 1;
+  }
+}
+
+@keyframes sun-nudge {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sun__disc[data-nudge='true'] {
+    animation: none;
+  }
+}
+
 /* The sun's position, written beside the disc. At rest it speaks in the net
    labels' voice, haloed in paper the way N, E, S and W are so it reads over
    the cloud; while the sun moves it is raised into a dark label. */
@@ -639,7 +671,7 @@ p {
   white-space: nowrap;
   pointer-events: none;
   paint-order: stroke fill;
-  -webkit-text-stroke: 3px var(--paper);
+  -webkit-text-stroke: 4px var(--paper); /* a dense arc still reads through 3px */
   transition:
     background var(--t-fast) var(--ease-out),
     color var(--t-fast) var(--ease-out),

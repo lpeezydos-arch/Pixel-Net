@@ -54,6 +54,15 @@ test('reading order follows the layout: net first when stacked, terrain first si
   expect(terrainFirst).toBe(testInfo.project.name !== 'phone');
 });
 
+test('lets the cards grow on a large monitor', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await openApp(page);
+  const terrain = (await page.getByRole('region', { name: 'Terrain' }).boundingBox())!;
+  const net = (await page.getByTestId('net').boundingBox())!;
+  expect(terrain.width).toBeGreaterThanOrEqual(700);
+  expect(net.width).toBeGreaterThanOrEqual(600);
+});
+
 test('puts the readout under the net on a tall phone', async ({ page }) => {
   await page.setViewportSize({ width: 412, height: 915 });
   await openApp(page);

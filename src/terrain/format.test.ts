@@ -71,8 +71,8 @@ describe('describeReadout', () => {
 
 describe('describeSun', () => {
   it('reads the sun as one phrase, with a pause where the label has a dot', () => {
-    expect(describeSun({ azimuth: 315, altitude: 45 })).toBe('Sun NW, 45° high');
-    expect(describeSun({ azimuth: 67.5, altitude: 10 })).toBe('Sun ENE, 10° high');
+    expect(describeSun({ azimuth: 315, altitude: 45 })).toBe('Sun 315° NW, 45° high');
+    expect(describeSun({ azimuth: 67.5, altitude: 10 })).toBe('Sun 68° E, 10° high');
   });
 
   it('says overhead when the sun is overhead', () => {

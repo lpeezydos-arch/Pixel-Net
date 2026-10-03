@@ -97,7 +97,7 @@ one. More than four DEMs is not supported.
 | Loading a DEM | Skeleton shimmer | Net frame drawn, shimmer in the plot area | Dashes | Empty |
 | Ready, nothing selected | Hillshade | Frame, cloud, sun marker | Dashes | "Drag on the terrain to inspect a pixel" |
 | Pixel selected | Hillshade and selection ring | Frame, cloud, sun marker, highlighted point | Slope, aspect, elevation | DEM place, pixel size, dimensions |
-| Flat pixel selected | Hillshade and ring | Highlighted point faded out | Slope 0.0°, aspect "Flat", elevation | As above |
+| Flat pixel selected | Hillshade and ring | Highlighted point at the center, drawn hollow | Slope 0.0°, aspect "Flat", elevation | As above |
 | No-data pixel selected | Hillshade and ring | Highlighted point faded out | "No data" for all three | As above |
 | DEM failed | Error card: one sentence and a "Try again" button | Frame only | Dashes | Empty |
 
@@ -584,3 +584,28 @@ upright tablets.
   at 400 weight, so it no longer dresses like the picker. The loading
   shimmer multiplies over the net frame, so the rings and cross show
   through it as section 3 always said they should.
+
+Made on 2026-10-02 from the second critique, which found the sun
+undiscoverable as a control on a phone, the lake giving the net nothing
+back, two dialects for direction, no way out of a selection, and the
+cards stopping at 520px on a monitor.
+
+- Section 3, states: a flat pixel's point is drawn at the center of the net,
+  hollow, instead of fading out; flat ground has no direction, and the
+  center is where slope 0° plots. A no-data pixel still has no point. The
+  cloud is unchanged: flat pixels are still left out of it.
+- Section 3, sun: the label, the accessible name and the announcement are
+  written the way the aspect readout is, degrees first and then the
+  eight-point letter: "315° NW · 45° high". A single tap on the sun at its
+  default says "Drag to move the light"; once it has been moved, "Double-tap
+  to reset". On a touch screen the disc stirs once, 0.9 s after it appears,
+  to say that it can be moved; not under reduced motion.
+- Section 3, selecting a pixel: Escape on the terrain clears the selection
+  and announces "Selection cleared"; the caption returns to the hint. A live
+  region is emptied before its words are written back, so pressing the same
+  pixel again, or stepping into the DEM's edge, is spoken again.
+- Section 3, layout: the widest a card gets is 760px, not 520px, so a
+  laptop's cards are each half its width and a monitor's grow to 760px. A
+  screen 520px wide or narrower is still a phone: its cards span it.
+- Section 6: the resting sun label's paper stroke is 4px, so it reads over
+  the dense arcs of the cloud.

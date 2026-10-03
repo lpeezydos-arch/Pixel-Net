@@ -102,19 +102,63 @@ test('dragging moves the point on the net to where the new pixel belongs', async
   await page.mouse.up();
 });
 
-test('a flat pixel has no point on the net', async ({ page }) => {
+test('a flat pixel plots at the center of the net as a hollow point', async ({ page }) => {
   await openApp(page);
   await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
   await expect(marker(page)).toHaveAttribute('data-visible', 'true');
+  await expect(marker(page)).toHaveAttribute('data-flat', 'false');
 
   const lake = await pointOf(page, LAKE.col, LAKE.row);
   await page.mouse.move(lake.x, lake.y, { steps: 6 });
   await expect(slope(page)).toHaveText('0.0°');
   await expect(aspect(page)).toHaveText('Flat');
   await expect(elevation(page)).toHaveText(LAKE.elevation);
-  await expect(marker(page)).toHaveAttribute('data-visible', 'false');
+  await expect(marker(page)).toHaveAttribute('data-visible', 'true');
+  await expect(marker(page)).toHaveAttribute('data-flat', 'true');
   await expect(ring(page)).toHaveAttribute('data-visible', 'true');
+  const net = (await page.getByTestId('net').boundingBox())!;
+  const center = { x: net.x + net.width / 2, y: net.y + net.height / 2 };
+  await expect.poll(async () => Math.abs((await anchorOf(page, 'net-marker')).x - center.x)).toBeLessThan(1.5);
+  await expect.poll(async () => Math.abs((await anchorOf(page, 'net-marker')).y - center.y)).toBeLessThan(1.5);
+
+  const back = await pointOf(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.move(back.x, back.y, { steps: 6 });
+  await expect(marker(page)).toHaveAttribute('data-flat', 'false');
   await page.mouse.up();
+});
+
+test('Escape clears the selection and says so', async ({ page }, testInfo) => {
+  await openApp(page);
+  await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.up();
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+
+  await page.keyboard.press('Escape');
+  await expect(slope(page)).toHaveText('–');
+  await expect(ring(page)).toHaveAttribute('data-visible', 'false');
+  await expect(marker(page)).toHaveAttribute('data-visible', 'false');
+  await expect(caption(page)).toHaveText(hint(testInfo.project.name));
+  await expect(page.getByTestId('announcement')).toHaveText('Selection cleared');
+});
+
+test('pressing the same pixel again is announced again', async ({ page }) => {
+  await openApp(page);
+  await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.up();
+  const spoken = `Slope ${WEST_SLOPE.slope}, aspect ${WEST_SLOPE.aspect}, elevation ${WEST_SLOPE.elevation}`;
+  await expect(page.getByTestId('announcement')).toHaveText(spoken);
+
+  // A live region only speaks when its text changes, so the same words must be written afresh.
+  await page.getByTestId('announcement').evaluate((element) => {
+    (window as unknown as Record<string, number>).__spoken = 0;
+    new MutationObserver(() => {
+      (window as unknown as Record<string, number>).__spoken += 1;
+    }).observe(element, { childList: true, characterData: true, subtree: true });
+  });
+  await press(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await page.mouse.up();
+  await expect.poll(() => page.evaluate(() => (window as unknown as Record<string, number>).__spoken)).toBeGreaterThan(0);
+  await expect(page.getByTestId('announcement')).toHaveText(spoken);
 });
 
 test('arrow keys step the selection one pixel, or ten with Shift', async ({ page }) => {
@@ -152,13 +196,11 @@ test('arrow keys with a modifier are left to the browser', async ({ page }) => {
   await expect(elevation(page)).toHaveText(WEST_SLOPE.elevation);
 });
 
-test('the net point pulses when it first appears after starting on a flat pixel', async ({ page }) => {
+test('the net point pulses on its first appearance, even when that is a flat pixel', async ({ page }) => {
   await openApp(page);
   await press(page, LAKE.col, LAKE.row);
-  await expect(marker(page)).toHaveAttribute('data-visible', 'false');
-  const target = await pointOf(page, WEST_SLOPE.col, WEST_SLOPE.row);
-  await page.mouse.move(target.x, target.y, { steps: 8 });
   await expect(marker(page)).toHaveAttribute('data-visible', 'true');
+  await expect(marker(page)).toHaveAttribute('data-flat', 'true');
   await expect(marker(page)).toHaveAttribute('data-pulse', 'true');
   await page.mouse.up();
 });

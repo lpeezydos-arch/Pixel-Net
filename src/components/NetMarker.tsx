@@ -13,7 +13,11 @@ interface NetMarkerProps {
   selection: MotionValue<number>;
 }
 
-/** The selected pixel's point on the net. It springs from one position to the next. */
+/**
+ * The selected pixel's point on the net. It springs from one position to the
+ * next. Flat ground has no direction, so its point sits at the center, drawn
+ * hollow; a pixel with no data has no point at all.
+ */
 export function NetMarker({ surface, size, selection }: NetMarkerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const pulsed = useRef(false); // has the point pulsed since the selection was last cleared
@@ -30,8 +34,7 @@ export function NetMarker({ surface, size, selection }: NetMarkerProps) {
     const rim = center * NET_RIM;
 
     const place = (index: number) => {
-      const plottable = index >= 0 && !surface.nodata[index] && !surface.flat[index];
-      if (!plottable) {
+      if (index < 0 || surface.nodata[index]) {
         marker.dataset.visible = 'false';
         // Re-arm the pulse, so the next first selection plays it again.
         if (index < 0) {
@@ -40,7 +43,8 @@ export function NetMarker({ surface, size, selection }: NetMarkerProps) {
         }
         return;
       }
-      const point = toNet(surface.slope[index], surface.aspect[index]);
+      const flat = surface.flat[index] === 1;
+      const point = flat ? { x: 0, y: 0 } : toNet(surface.slope[index], surface.aspect[index]);
       const px = center + point.x * rim;
       const py = center - point.y * rim;
       const appearing = marker.dataset.visible !== 'true';
@@ -54,10 +58,10 @@ export function NetMarker({ surface, size, selection }: NetMarkerProps) {
         targetX.set(px);
         targetY.set(py);
       }
+      marker.dataset.flat = String(flat);
       if (appearing) {
         marker.dataset.visible = 'true';
-        // One pulse on the first appearance after the selection was cleared,
-        // not on return from a flat pixel.
+        // One pulse on the first appearance after the selection was cleared.
         marker.dataset.pulse = pulsed.current ? 'false' : 'true';
         pulsed.current = true;
       }
@@ -72,6 +76,7 @@ export function NetMarker({ surface, size, selection }: NetMarkerProps) {
       ref={ref}
       className="net-marker"
       data-visible="false"
+      data-flat="false"
       data-testid="net-marker"
       style={{ x, y }}
     >

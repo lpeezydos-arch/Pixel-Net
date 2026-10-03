@@ -23,6 +23,8 @@ interface TerrainCardProps {
   interactive: boolean;
   onPress: () => void;
   onSettle: () => void;
+  /** Escape cleared the selection. */
+  onClear: () => void;
   /** The terrain gained or lost keyboard focus (focus a pointer gave it does not count). */
   onFocusVisible?: (visible: boolean) => void;
 }
@@ -39,6 +41,7 @@ export function TerrainCard({
   interactive,
   onPress,
   onSettle,
+  onClear,
   onFocusVisible,
 }: TerrainCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -49,6 +52,7 @@ export function TerrainCard({
     selection,
     onPress,
     onSettle,
+    onClear,
   });
 
   return (
