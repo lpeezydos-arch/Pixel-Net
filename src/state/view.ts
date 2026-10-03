@@ -21,6 +21,11 @@ function wholeSun(sun: Sun): Sun {
   };
 }
 
+/** The part of the string that names the DEM. */
+function demPart(dem: string): string {
+  return `dem=${encodeURIComponent(dem)}`;
+}
+
 /**
  * The view as text, such as `dem=gore&px=150,210&sun=120,35`. A part at its
  * default is left out, and the default view is the empty string. Any other
@@ -31,10 +36,19 @@ export function encodeView(view: View, firstDem: string): string {
   const sun = wholeSun(view.sun);
   const defaultSun = sun.azimuth === DEFAULT_SUN.azimuth && sun.altitude === DEFAULT_SUN.altitude;
   if (dem === firstDem && !view.pixel && defaultSun) return '';
-  const parts = [`dem=${encodeURIComponent(dem)}`];
+  const parts = [demPart(dem)];
   if (view.pixel) parts.push(`px=${view.pixel.col},${view.pixel.row}`);
   if (!defaultSun) parts.push(`sun=${sun.azimuth},${sun.altitude}`);
   return parts.join('&');
+}
+
+/**
+ * The view as a shared link writes it. Unlike the address bar, a link
+ * always names its DEM, so that the default view opens as the default view
+ * on a device that has a saved view of its own.
+ */
+export function encodeSharedView(view: View, firstDem: string): string {
+  return encodeView(view, firstDem) || demPart(view.dem ?? firstDem);
 }
 
 const WHOLE_PAIR = /^(\d{1,6}),(\d{1,6})$/;
@@ -64,6 +78,12 @@ export function decodeView(text: string): View {
     pixel: decodePixel(params.get('px')),
     sun: decodeSun(params.get('sun')),
   };
+}
+
+/** True if `text` names any part of a view. A fragment that names none is not a link to a view. */
+export function namesView(text: string): boolean {
+  const params = new URLSearchParams(text);
+  return params.has('dem') || params.has('px') || params.has('sun');
 }
 
 export function pixelInside(pixel: Pixel, width: number, height: number): boolean {

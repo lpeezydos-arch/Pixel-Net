@@ -13,8 +13,8 @@ import { type ShareOutcome, canShareFiles, shareView } from './share/share';
 import { shareText } from './share/text';
 import { useDems } from './state/useDems';
 import { useViewPersistence } from './state/useViewPersistence';
-import { decodeView } from './state/view';
-import { linkTo, readFragment, readSaved } from './state/viewStore';
+import { decodeView, namesView } from './state/view';
+import { readFragment, readSaved, shareLink } from './state/viewStore';
 import { demFacts, describeReadout, pixelSize, readoutFor } from './terrain/format';
 
 // The hint names the gesture the screen has, and the keys once the terrain
@@ -27,7 +27,10 @@ const CLEAR_HINT = 'Double-tap to clear';
 
 export function App() {
   // The view to open on: the one in the link, or else the one saved on this device.
-  const [start] = useState(() => decodeView(readFragment() || readSaved()));
+  const [start] = useState(() => {
+    const fragment = readFragment();
+    return decodeView(namesView(fragment) ? fragment : readSaved());
+  });
   const { entries, active, state, select, retry } = useDems(start.dem);
   const stageRef = useRef<HTMLElement>(null);
   const stage = useElementSize(stageRef);
@@ -85,6 +88,13 @@ export function App() {
     announce(announceRef.current, 'Selection cleared');
   }, []);
 
+  // A view from a link is not spoken, and whatever was spoken before it no
+  // longer describes the screen.
+  const handleRestore = useCallback((selected: boolean) => {
+    setHasSelection(selected);
+    announce(announceRef.current, '');
+  }, []);
+
   // A pixel from a link, or from the saved view, is selected once its DEM has loaded.
   const loaded = useMemo(
     () => (state.status === 'ready' ? { id: state.id, width: state.dem.width, height: state.dem.height } : null),
@@ -99,7 +109,7 @@ export function App() {
     sunAzimuth,
     sunAltitude,
     onSelectDem: selectDem,
-    onRestore: setHasSelection,
+    onRestore: handleRestore,
   });
 
   // Called inside the press on the share button: browsers refuse a share that starts later.
@@ -109,7 +119,7 @@ export function App() {
     const words = {
       title: import.meta.env.VITE_APP_NAME,
       text: shareText(active.place, readoutFor(state.dem, state.surface, index)),
-      url: linkTo(viewText() ?? ''),
+      url: shareLink(viewText(true) ?? ''),
     };
     // The picture takes a moment to draw, so it is made only where a share sheet could take it.
     const file = canShareFiles()

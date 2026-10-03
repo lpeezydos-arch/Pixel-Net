@@ -19,9 +19,19 @@ export function readSaved(): string {
 }
 
 /** The page's address with `view` as its fragment: the link that reopens the view. */
-export function linkTo(view: string): string {
+function linkTo(view: string): string {
   const { origin, pathname, search } = window.location;
   return `${origin}${pathname}${search}${view ? `#${view}` : ''}`;
+}
+
+/**
+ * The link that is shared: the page's address with the view as its fragment,
+ * and without any query the sharer arrived with. A `?fbclid=…` belongs to
+ * their visit, not to the person the link is sent to.
+ */
+export function shareLink(view: string): string {
+  const { origin, pathname } = window.location;
+  return `${origin}${pathname}#${view}`;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SUN } from '../terrain/net';
-import { DEFAULT_VIEW, type View, decodeView, encodeView, pixelInside } from './view';
+import { DEFAULT_VIEW, type View, decodeView, encodeSharedView, encodeView, namesView, pixelInside } from './view';
 
 const WEST = { col: 150, row: 210 };
 const LOW_SOUTHEAST = { azimuth: 120, altitude: 35 };
@@ -38,6 +38,32 @@ describe('encodeView', () => {
     expect(encodeView({ dem: 'big bend & more', pixel: null, sun: DEFAULT_SUN }, 'gore')).toBe(
       'dem=big%20bend%20%26%20more',
     );
+  });
+});
+
+describe('encodeSharedView', () => {
+  it('names the DEM of the default view', () => {
+    expect(encodeSharedView({ dem: 'gore', pixel: null, sun: DEFAULT_SUN }, 'gore')).toBe('dem=gore');
+  });
+
+  it('names the first DEM when the view names none', () => {
+    expect(encodeSharedView(DEFAULT_VIEW, 'gore')).toBe('dem=gore');
+    expect(encodeSharedView(DEFAULT_VIEW, 'big bend & more')).toBe('dem=big%20bend%20%26%20more');
+  });
+
+  it('writes any other view as encodeView does', () => {
+    const views: View[] = [
+      { dem: 'gore', pixel: WEST, sun: DEFAULT_SUN },
+      { dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST },
+      { dem: 'gore', pixel: null, sun: LOW_SOUTHEAST },
+      { dem: 'second', pixel: null, sun: DEFAULT_SUN },
+      { dem: null, pixel: WEST, sun: DEFAULT_SUN },
+    ];
+    for (const view of views) expect(encodeSharedView(view, 'gore')).toBe(encodeView(view, 'gore'));
+  });
+
+  it('is read back as the default view on the named DEM', () => {
+    expect(decodeView(encodeSharedView(DEFAULT_VIEW, 'gore'))).toEqual({ ...DEFAULT_VIEW, dem: 'gore' });
   });
 });
 
@@ -88,6 +114,20 @@ describe('decodeView', () => {
 
   it('ignores parts it does not know', () => {
     expect(decodeView('utm_source=x&dem=gore&zoom=3')).toEqual({ dem: 'gore', pixel: null, sun: DEFAULT_SUN });
+  });
+});
+
+describe('namesView', () => {
+  it('is true for text that names any part of a view', () => {
+    for (const text of ['dem=gore', 'px=1,2', 'sun=1,2', 'x=1&sun=1,2']) {
+      expect(namesView(text), text).toBe(true);
+    }
+  });
+
+  it('is false for text that names none', () => {
+    for (const text of ['', 'top', 'utm_source=x']) {
+      expect(namesView(text), text).toBe(false);
+    }
   });
 });
 

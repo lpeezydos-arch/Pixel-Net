@@ -2,7 +2,7 @@ import type { MotionValue } from 'motion/react';
 import { useCallback, useEffect, useRef } from 'react';
 import { toIndex, toPixel } from '../terrain/pick';
 import type { DemEntry } from './useDems';
-import { type View, decodeView, encodeView, pixelInside } from './view';
+import { type View, decodeView, encodeSharedView, encodeView, namesView, pixelInside } from './view';
 import { readFragment, writeView } from './viewStore';
 
 const WRITE_AFTER_MS = 400; // quiet time after the last change before the view is written
@@ -43,9 +43,10 @@ interface ViewPersistenceOptions {
  * when the page is hidden.
  *
  * Returns a function that gives the view as text, or null before the list
- * of DEMs has loaded.
+ * of DEMs has loaded. Asked for the `shared` form, it gives the view as a
+ * shared link writes it, which always names its DEM.
  */
-export function useViewPersistence(options: ViewPersistenceOptions): () => string | null {
+export function useViewPersistence(options: ViewPersistenceOptions): (shared?: boolean) => string | null {
   const { start, selection, sunAzimuth, sunAltitude } = options;
   // What the callbacks below read, kept current without rebuilding them.
   const latest = useRef(options);
@@ -54,17 +55,21 @@ export function useViewPersistence(options: ViewPersistenceOptions): () => strin
   const waiting = useRef<View | null>(start);
   const timer = useRef<number | undefined>(undefined);
 
-  const viewText = useCallback((): string | null => {
-    const { entries, activeId, loaded } = latest.current;
-    if (!activeId || entries.length === 0) return null;
-    const index = selection.get();
-    // While another DEM loads there is no pixel to name: the switch cleared it.
-    const pixel = index >= 0 && loaded?.id === activeId ? toPixel(index, loaded.width) : null;
-    return encodeView(
-      { dem: activeId, pixel, sun: { azimuth: sunAzimuth.get(), altitude: sunAltitude.get() } },
-      entries[0].id,
-    );
-  }, [selection, sunAzimuth, sunAltitude]);
+  const viewText = useCallback(
+    (shared = false): string | null => {
+      const { entries, activeId, loaded } = latest.current;
+      if (!activeId || entries.length === 0) return null;
+      const index = selection.get();
+      // While another DEM loads there is no pixel to name: the switch cleared it.
+      const pixel = index >= 0 && loaded?.id === activeId ? toPixel(index, loaded.width) : null;
+      const encode = shared ? encodeSharedView : encodeView;
+      return encode(
+        { dem: activeId, pixel, sun: { azimuth: sunAzimuth.get(), altitude: sunAltitude.get() } },
+        entries[0].id,
+      );
+    },
+    [selection, sunAzimuth, sunAltitude],
+  );
 
   const write = useCallback(() => {
     window.clearTimeout(timer.current);
@@ -158,8 +163,9 @@ export function useViewPersistence(options: ViewPersistenceOptions): () => strin
   useEffect(() => {
     const onHashChange = () => {
       const text = readFragment();
-      // An emptied address is left alone; the next change fills it in again.
-      if (text) apply(decodeView(text));
+      // An emptied address, or one that names no view (such as `#top`), is
+      // left alone; the next change fills it in again.
+      if (namesView(text)) apply(decodeView(text));
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);

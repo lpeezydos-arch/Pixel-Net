@@ -62,6 +62,17 @@ test('a link wins over the saved view', async ({ page }) => {
   await expect(aspect(page)).toHaveText(WEST_SLOPE.aspect);
 });
 
+test('a link to the default view opens the default view on a device with a saved view', async ({ page }) => {
+  await page.addInitScript(
+    ([key, view]) => window.localStorage.setItem(key, view),
+    [SAVED, 'dem=gore&px=150,210&sun=120,35'],
+  );
+  await openLink(page, 'dem=gore');
+  await expect(slope(page)).toHaveText('–');
+  await expect(ring(page)).toHaveAttribute('data-visible', 'false');
+  await expect(sunLabel(page)).toHaveText('315° NW · 45° high');
+});
+
 test('a link to another DEM opens it with its pixel', async ({ page }) => {
   await serveTwoDems(page);
   await openLink(page, 'dem=second&px=30,20');
@@ -172,12 +183,19 @@ test('the view is saved at once when the page is hidden', async ({ page }) => {
 
 test('a link pasted into the open tab is applied', async ({ page }, testInfo) => {
   await openApp(page);
+  // A pixel chosen by hand is announced.
+  await clickPixel(page, 200, 230);
+  await expect(page.getByTestId('announcement')).toHaveText('Slope 41.5°, aspect 35° NE, elevation 3,878 m');
+
   await page.evaluate(() => {
     window.location.hash = 'dem=gore&px=150,210&sun=120,35';
   });
   await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
   await expect(ring(page)).toHaveAttribute('data-visible', 'true');
   await expect(sunLabel(page)).toHaveText('120° SE · 35° high');
+  // What was said about the pixel before no longer describes the screen.
+  await page.waitForTimeout(100); // the announcer writes its words 60 ms late
+  await expect(page.getByTestId('announcement')).toHaveText('');
 
   // A link describes the whole view: one with no pixel clears the selection.
   await page.evaluate(() => {
@@ -210,6 +228,30 @@ test('an address emptied by hand is left alone and filled in at the next change'
 
   await clickPixel(page, 200, 230);
   await expect.poll(() => fragment(page)).toBe('#dem=gore&px=200,230');
+});
+
+test('a fragment that names no view is ignored', async ({ page }) => {
+  await page.addInitScript(
+    ([key, view]) => window.localStorage.setItem(key, view),
+    [SAVED, 'dem=gore&px=150,210&sun=120,35'],
+  );
+  await openLink(page, 'top');
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(sunLabel(page)).toHaveText('120° SE · 35° high');
+  await page.waitForTimeout(600); // longer than the write delay
+  expect(await saved(page)).toBe('dem=gore&px=150,210&sun=120,35');
+});
+
+test('a fragment that names no view is ignored in an open tab', async ({ page }) => {
+  await openApp(page);
+  await clickPixel(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await page.evaluate(() => {
+    window.location.hash = 'top';
+  });
+  await page.waitForTimeout(600); // longer than the write delay
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect(ring(page)).toHaveAttribute('data-visible', 'true');
 });
 
 test('a link with a part that cannot be used is corrected in the address', async ({ page }) => {

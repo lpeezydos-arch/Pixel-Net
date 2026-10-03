@@ -99,13 +99,23 @@ test('with a share sheet that takes no files, a press shares the link, the title
   await expect(notice(page)).toHaveText('');
 });
 
-test('with nothing selected, the link is the bare address and the text is the place', async ({ page }) => {
+test('with nothing selected, the link names the DEM and the text is the place', async ({ page }) => {
   await withShareSheet(page);
   await openApp(page);
   await share(page).click();
   await expect
     .poll(() => shared(page))
-    .toEqual([{ title: APP_NAME, text: 'Gore Range, Colorado', url: `${origin(page)}/`, files: 0 }]);
+    .toEqual([{ title: APP_NAME, text: 'Gore Range, Colorado', url: `${origin(page)}/#dem=gore`, files: 0 }]);
+});
+
+test('a shared link leaves out the query the address arrived with', async ({ page }) => {
+  await withShareSheet(page);
+  await page.goto('/?ref=mail');
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  await share(page).click();
+  await expect
+    .poll(() => shared(page))
+    .toEqual([{ title: APP_NAME, text: 'Gore Range, Colorado', url: `${origin(page)}/#dem=gore`, files: 0 }]);
 });
 
 test('closing the share sheet changes nothing', async ({ page }) => {
