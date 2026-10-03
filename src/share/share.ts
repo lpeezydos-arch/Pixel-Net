@@ -7,6 +7,11 @@ export interface ShareWords {
   url: string;
 }
 
+/** True where there is a share sheet that can say whether it takes files. */
+export function canShareFiles(): boolean {
+  return typeof navigator.share === 'function' && typeof navigator.canShare === 'function';
+}
+
 async function copy(url: string): Promise<ShareOutcome> {
   try {
     await navigator.clipboard.writeText(url);

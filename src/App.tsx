@@ -8,7 +8,8 @@ import { announce } from './components/announce';
 import { useCoarsePointer } from './hooks/useCoarsePointer';
 import { useElementSize } from './hooks/useElementSize';
 import { computeLayout } from './layout';
-import { type ShareOutcome, shareView } from './share/share';
+import { pictureFile } from './share/drawCard';
+import { type ShareOutcome, canShareFiles, shareView } from './share/share';
 import { shareText } from './share/text';
 import { useDems } from './state/useDems';
 import { useViewPersistence } from './state/useViewPersistence';
@@ -104,14 +105,27 @@ export function App() {
   // Called inside the press on the share button: browsers refuse a share that starts later.
   const handleShare = useCallback((): Promise<ShareOutcome> => {
     if (state.status !== 'ready' || !active) return Promise.resolve<ShareOutcome>('failed');
-    const readout = readoutFor(state.dem, state.surface, selection.get());
+    const index = selection.get();
     const words = {
       title: import.meta.env.VITE_APP_NAME,
-      text: shareText(active.place, readout),
+      text: shareText(active.place, readoutFor(state.dem, state.surface, index)),
       url: linkTo(viewText() ?? ''),
     };
-    return shareView(words, null);
-  }, [state, active, selection, viewText]);
+    // The picture takes a moment to draw, so it is made only where a share sheet could take it.
+    const file = canShareFiles()
+      ? pictureFile({
+          mode: layout.mode,
+          appName: import.meta.env.VITE_APP_NAME,
+          demId: state.id,
+          place: active.place,
+          dem: state.dem,
+          surface: state.surface,
+          sun: { azimuth: sunAzimuth.get(), altitude: sunAltitude.get() },
+          selection: index,
+        })
+      : null;
+    return shareView(words, file);
+  }, [state, active, selection, sunAzimuth, sunAltitude, viewText, layout.mode]);
 
   const netCard = (
     <NetCard
