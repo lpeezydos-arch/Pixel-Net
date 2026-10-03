@@ -7,9 +7,20 @@ export interface ShareWords {
   url: string;
 }
 
-/** True where there is a share sheet that can say whether it takes files. */
+/** Asks the share sheet whether it takes these files. A check that throws counts as no. */
+function takesFiles(files: File[]): boolean {
+  try {
+    return typeof navigator.canShare === 'function' && navigator.canShare({ files });
+  } catch {
+    return false;
+  }
+}
+
+/** True where there is a share sheet that says it takes a PNG. */
 export function canShareFiles(): boolean {
-  return typeof navigator.share === 'function' && typeof navigator.canShare === 'function';
+  return (
+    typeof navigator.share === 'function' && takesFiles([new File([], 'probe.png', { type: 'image/png' })])
+  );
 }
 
 async function copy(url: string): Promise<ShareOutcome> {
@@ -29,10 +40,7 @@ async function copy(url: string): Promise<ShareOutcome> {
 export async function shareView(words: ShareWords, file: File | null): Promise<ShareOutcome> {
   if (typeof navigator.share !== 'function') return copy(words.url);
   // The picture goes along only if this share sheet says it takes it.
-  const files =
-    file !== null && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })
-      ? [file]
-      : null;
+  const files = file !== null && takesFiles([file]) ? [file] : null;
   try {
     await navigator.share(files ? { ...words, files } : words);
     return 'shared';

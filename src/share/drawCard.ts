@@ -90,7 +90,9 @@ function drawTerrain(context: Context, box: Box, { surface, sun, selection, pale
 
   context.save();
   context.beginPath();
-  context.roundRect(box.x, box.y, box.width, box.height, 12 * K);
+  // Older Safari has no roundRect. Square corners are better than no picture.
+  if (typeof context.roundRect === 'function') context.roundRect(box.x, box.y, box.width, box.height, 12 * K);
+  else context.rect(box.x, box.y, box.width, box.height);
   context.clip();
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
@@ -273,8 +275,10 @@ export function pictureFile({ mode, appName, demId, place, dem, surface, sun, se
       fontFamily: getComputedStyle(document.body).fontFamily,
     });
     return cardFile(canvas, fileName(appName, demId));
-  } catch {
-    // The link is shared without the picture.
+  } catch (error) {
+    // The link is shared without the picture. This warning is the only trace
+    // of why it went alone.
+    console.warn('The picture could not be made.', error);
     return null;
   }
 }

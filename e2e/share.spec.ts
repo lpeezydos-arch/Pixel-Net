@@ -26,9 +26,9 @@ async function withoutShareSheet(page: Page) {
 /**
  * Stands in for a share sheet that takes no files. What it is handed is kept
  * in `window.__shared`. It can take the share, be closed by the user, fail,
- * or stay open for a while.
+ * or be held open until the test calls `closeSheet`.
  */
-async function withShareSheet(page: Page, behavior: 'takes' | 'closed' | 'fails' | 'slow' = 'takes') {
+async function withShareSheet(page: Page, behavior: 'takes' | 'closed' | 'fails' | 'held' = 'takes') {
   await page.addInitScript((how) => {
     const shared: unknown[] = [];
     Object.assign(window, { __shared: shared });
@@ -39,13 +39,16 @@ async function withShareSheet(page: Page, behavior: 'takes' | 'closed' | 'fails'
         shared.push({ title: data.title, text: data.text, url: data.url, files: data.files?.length ?? 0 });
         if (how === 'closed') throw new DOMException('Share canceled', 'AbortError');
         if (how === 'fails') throw new DOMException('Permission denied', 'NotAllowedError');
-        if (how === 'slow') await new Promise((resolve) => setTimeout(resolve, 400));
+        if (how === 'held') await new Promise((resolve) => Object.assign(window, { __closeSheet: resolve }));
       },
     });
   }, behavior);
 }
 
 const shared = (page: Page) => page.evaluate(() => (window as unknown as { __shared: unknown[] }).__shared);
+/** Lets a share sheet held open by `withShareSheet(page, 'held')` close, as if the share was taken. */
+const closeSheet = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __closeSheet: () => void }).__closeSheet());
 
 test.beforeEach(async ({ context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -118,6 +121,47 @@ test('a shared link leaves out the query the address arrived with', async ({ pag
     .toEqual([{ title: APP_NAME, text: 'Gore Range, Colorado', url: `${origin(page)}/#dem=gore`, files: 0 }]);
 });
 
+test('a share sheet whose file check throws still shares the link', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await withShareSheet(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'canShare', {
+      configurable: true,
+      value: () => {
+        throw new TypeError('This share sheet cannot check files.');
+      },
+    });
+  });
+  await openApp(page);
+  await clickPixel(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await share(page).click();
+  await expect
+    .poll(() => shared(page))
+    .toEqual([{ title: APP_NAME, text: WEST_TEXT, url: `${origin(page)}/${WEST_FRAGMENT}`, files: 0 }]);
+  expect(errors).toEqual([]);
+});
+
+test('no picture is drawn where the share sheet takes no files', async ({ page }) => {
+  await withShareSheet(page);
+  // Every picture is turned into a file by way of toDataURL: count the calls.
+  await page.addInitScript(() => {
+    const toDataURL = HTMLCanvasElement.prototype.toDataURL;
+    const calls = { count: 0 };
+    Object.assign(window, { __toDataURL: calls });
+    HTMLCanvasElement.prototype.toDataURL = function (this: HTMLCanvasElement, type?: string, quality?: number) {
+      calls.count++;
+      return toDataURL.call(this, type, quality);
+    };
+  });
+  await openApp(page);
+  await clickPixel(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await share(page).click();
+  await expect.poll(async () => (await shared(page)).length).toBe(1);
+  const calls = await page.evaluate(() => (window as unknown as { __toDataURL: { count: number } }).__toDataURL.count);
+  expect(calls).toBe(0);
+});
+
 test('closing the share sheet changes nothing', async ({ page }) => {
   await withShareSheet(page, 'closed');
   await openApp(page);
@@ -157,11 +201,13 @@ test('a refused copy says so', async ({ page }) => {
 });
 
 test('a second press while the share sheet is open is ignored', async ({ page }) => {
-  await withShareSheet(page, 'slow');
+  await withShareSheet(page, 'held');
   await openApp(page);
   await share(page).click();
   await share(page).click();
-  await page.waitForTimeout(700); // longer than the stand-in sheet stays open
+  // The sheet stays open until it is let go, so both presses land while it is.
+  expect(await shared(page)).toHaveLength(1);
+  await closeSheet(page);
   expect(await shared(page)).toHaveLength(1);
   await expect(notice(page)).toHaveText('');
 });
@@ -236,6 +282,23 @@ const inkIn = (page: Page, box: Box) =>
       if (data[i] !== 255 || data[i + 1] !== 255 || data[i + 2] !== 255) count++;
     }
     return count;
+  }, box);
+
+/** How many rows of a box of the shared picture have any pixel that is not white: the height of its ink. */
+const inkRows = (page: Page, box: Box) =>
+  page.evaluate((b) => {
+    const canvas = (window as unknown as { __picture: HTMLCanvasElement }).__picture;
+    const data = canvas.getContext('2d')!.getImageData(b.x, b.y, b.width, b.height).data;
+    let rows = 0;
+    for (let y = 0; y < b.height; y++) {
+      for (let i = y * b.width * 4; i < (y + 1) * b.width * 4; i += 4) {
+        if (data[i] !== 255 || data[i + 1] !== 255 || data[i + 2] !== 255) {
+          rows++;
+          break;
+        }
+      }
+    }
+    return rows;
   }, box);
 
 test('with a share sheet that takes files, a press shares a picture of the view', async ({ page }, testInfo) => {
@@ -314,7 +377,10 @@ test('a flat pixel is drawn hollow at the center of the net', async ({ page }, t
 });
 
 test('a place name too long for the picture is set smaller and stays inside it', async ({ page }, testInfo) => {
-  const place = 'The cirque above the upper lake on the east side of the Gore Range, Eagle County, Colorado';
+  // Long enough that the facts line overflows the caption side by side as well as stacked.
+  const place =
+    'The high cirque below the long north ridge, above the upper lake on the east side of the Gore Range, ' +
+    'reached by the pack trail from the valley floor, in the White River National Forest, Eagle County, Colorado';
   await page.route('**/dems/dems.json', (route) =>
     route.fulfill({ json: [{ id: 'gore', name: 'Gore Range', place, file: 'gore.tif', width: 288, height: 294 }] }),
   );
@@ -324,18 +390,31 @@ test('a place name too long for the picture is set smaller and stays inside it',
   await expect.poll(async () => (await shared(page)).length).toBe(1);
 
   const layout = cardLayout({ mode: modeOf(testInfo), aspect: GORE_SHAPE, lines: [28, 28] });
-  const first = layout.caption.lines[0];
-  const last = layout.caption.lines[layout.caption.lines.length - 1];
-  const captionHeight = last.y + last.height - first.y;
+  const [facts, source] = layout.caption.lines;
+  const lineBox = (line: { y: number; height: number }) => ({
+    x: layout.caption.x,
+    y: line.y,
+    width: layout.caption.width,
+    height: line.height,
+  });
+  const captionHeight = source.y + source.height - facts.y;
   // The caption is there...
-  const captionBox = { x: layout.caption.x, y: first.y, width: layout.caption.width, height: captionHeight };
+  const captionBox = { x: layout.caption.x, y: facts.y, width: layout.caption.width, height: captionHeight };
   expect(await inkIn(page, captionBox)).toBeGreaterThan(0);
+  // ...the facts line is set smaller than the source line, which fits at the
+  // same size: its letters are shorter. Squeezing a line into the width
+  // narrows its letters but keeps their height.
+  expect(await inkRows(page, lineBox(facts))).toBeLessThan(await inkRows(page, lineBox(source)));
   // ...and nothing runs into the space to its right.
-  const margin = { x: layout.width - 48, y: first.y, width: 48, height: captionHeight };
+  const margin = { x: layout.width - 48, y: facts.y, width: 48, height: captionHeight };
   expect(await inkIn(page, margin)).toBe(0);
 });
 
 test('when the picture cannot be made, the link is shared without it', async ({ page }) => {
+  const warnings: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'warning') warnings.push(message.text());
+  });
   await withFileShareSheet(page);
   await page.addInitScript(() => {
     HTMLCanvasElement.prototype.toDataURL = () => {
@@ -348,4 +427,20 @@ test('when the picture cannot be made, the link is shared without it', async ({ 
   await expect
     .poll(() => shared(page))
     .toEqual([{ title: APP_NAME, text: WEST_TEXT, url: `${origin(page)}/${WEST_FRAGMENT}`, picture: null }]);
+  // The warning is the only trace of why the link went alone.
+  await expect.poll(() => warnings.filter((text) => text.includes('The picture could not be made'))).toHaveLength(1);
+});
+
+test('where the canvas has no roundRect, the picture is still made', async ({ page }, testInfo) => {
+  await withFileShareSheet(page);
+  // As in Safari 15 and older.
+  await page.addInitScript(() => {
+    delete (CanvasRenderingContext2D.prototype as Partial<CanvasRenderingContext2D>).roundRect;
+  });
+  await openApp(page);
+  await share(page).click();
+  await expect.poll(async () => (await shared(page)).length).toBe(1);
+  const layout = cardLayout({ mode: modeOf(testInfo), aspect: GORE_SHAPE, lines: [28, 28] });
+  const [sent] = (await shared(page)) as Array<{ picture: { width: number; height: number } | null }>;
+  expect(sent.picture).toMatchObject({ width: layout.width, height: layout.height });
 });
