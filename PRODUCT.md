@@ -22,7 +22,9 @@ One screen: a hillshade of a DEM beside a Schmidt net of every pixel in it.
 Pressing or dragging on the terrain highlights that pixel's point on the net
 and shows its slope, aspect and elevation. Dragging the sun on the net
 re-lights the terrain. The app installs to a phone's home screen and works
-with no signal after the first visit.
+with no signal after the first visit. It reopens on the DEM, pixel and sun it
+was left on, and one button shares a picture of the view with a link that
+restores it.
 
 It exists so a geoscientist can see how a place on the terrain maps to a
 position on the net, and read the net as a portrait of the landscape's slope
@@ -77,13 +79,19 @@ Confirmed functionality (spec §2–3):
   separator. Flat pixels read "Flat"; no-data pixels read "No data".
 - Sun: a draggable marker on the net. Default azimuth 315°, height 45°; height
   limited to 10°–90°; double-tap resets; keyboard adjustable. Persists across a
-  DEM switch, resets when the app opens.
+  DEM switch and is restored when the app reopens.
 - DEM picker: a segmented control for two to four DEMs, plain text for one.
   More than four is unsupported.
 - States: loading (skeletons), ready, selected, flat, no-data, and a DEM error
   card with "Try again".
 - Offline: the shell, font, manifest and every `.tif` are precached (25 MB per
   file); new versions apply on the next open with no prompt.
+- View: the DEM, the selected pixel and the sun are written into the address
+  (`#dem=gore&px=150,210&sun=120,35`) and saved on the device; the app reopens
+  on them, and a link wins over the saved view
+  (`docs/superpowers/specs/2026-10-03-share-and-restore-design.md`).
+- Share: one button in the title bar opens the share sheet with a picture of
+  the view and its link; where there is no share sheet it copies the link.
 
 Technical constraints:
 
@@ -99,8 +107,11 @@ Technical constraints:
 
 Out of scope by decision (spec §2); do not reintroduce without a new decision:
 density net, aspect rose, patch or area selection; user-supplied or fetched
-DEMs; shareable links; zoom or pan; cast shadows or a sun set by date and
-time; dark theme; USGS VID chrome; native app-store builds.
+DEMs; zoom or pan; cast shadows or a sun set by date and time; dark theme;
+USGS VID chrome; native app-store builds. Shareable links left this list on
+2026-10-03. Out of scope for sharing (share and restore spec §2): saving the
+picture where there is no share sheet; short links, QR codes and embeds; a
+preview card that shows the linked view.
 
 Terminology: DEM; hillshade; the net (Schmidt net); the cloud (every plotted
 pixel); the point (the highlighted pixel); slope, aspect, elevation; the sun

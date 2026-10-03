@@ -4,9 +4,12 @@ A one-screen web app that shows a hillshade of a DEM beside a Schmidt net of
 every pixel in it. Press or drag on the terrain and that pixel's point is
 highlighted on the net, with its slope, aspect and elevation. Drag the sun on
 the net to change the lighting. It installs to a phone's home screen and works
-with no signal after the first visit.
+with no signal after the first visit. It reopens where it was left, and the
+share button sends a picture of the view with a link that restores it.
 
-The design is in `docs/superpowers/specs/2026-10-01-pixel-net-design.md`.
+The design is in `docs/superpowers/specs/2026-10-01-pixel-net-design.md`;
+sharing and restoring are in
+`docs/superpowers/specs/2026-10-03-share-and-restore-design.md`.
 
 ## Run it
 
@@ -24,6 +27,7 @@ npm run dev        # http://localhost:5173
 | `npm run build` | Type-check and build into `dist/` |
 | `npm run preview` | Serve `dist/` at http://localhost:4173 |
 | `npm run icons` | Redraw the app icons in `public/icons/` |
+| `npm run preview-image` | Redraw the link-preview image, `public/preview.png`. Builds the app and needs Chromium, as the browser tests do |
 
 ### Browser tests need Chromium's system libraries
 
@@ -84,6 +88,21 @@ sun feel slow.
 Change `VITE_APP_NAME` in `.env`. The title bar, the browser tab and the
 installed app's name all come from it.
 
+## Links, sharing and the saved view
+
+The address always holds the view, for example
+`#dem=gore&px=150,210&sun=120,35`: the DEM's `id`, the selected pixel's column
+and row, and the sun's azimuth and height. Opening such a link opens that
+view. The same string is saved on the device under `pixel-net:view`, so the
+app reopens where it was left; a link wins over the saved view.
+
+The share button sends a picture of the view with its link. Where the browser
+has no share sheet, it copies the link.
+
+A link pasted into a message shows a preview card. Its tags are in
+`index.html` and need the site's whole address, which is `VITE_SITE_URL` in
+`.env`.
+
 ## Deploy
 
 Every push to `main` builds and deploys to GitHub Pages at
@@ -98,6 +117,9 @@ serves from a sub-path, set `BASE_PATH` to that path:
 ```bash
 BASE_PATH=/Pixel-Net/ npm run build
 ```
+
+For another host, also change `VITE_SITE_URL` in `.env` to the new address,
+ending in a slash, so the link-preview tags point at it.
 
 ## Design system
 

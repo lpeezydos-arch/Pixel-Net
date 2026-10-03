@@ -638,3 +638,21 @@ label is raised.
   still carries the position.
 - Section 7: the two forms of the sun label swap at once rather than
   fading, because a fade between them passes through gray.
+
+Made on 2026-10-03 for sharing and restoring, designed in
+`2026-10-03-share-and-restore-design.md`, which is the record for both.
+
+- Section 2: shareable links to a view are in scope, with one share button.
+  The rest of the out-of-scope list stands.
+- Section 3, sun: the sun no longer returns to its default each time the app
+  opens. The app reopens on the DEM, the pixel and the sun it was left on,
+  from the link in the address or else from the view saved on the device.
+- Section 3, title bar: a share button sits at the right end, after the
+  DEM's name or the picker, and comes before the terrain in the Tab order.
+  Known limit: with three or four DEMs on a phone the names are cut shorter
+  by its width.
+- Section 6: the icons are lucide `sun`, `info`, `share` and `check`.
+- Section 8: `preview.png`, the link-preview image, is left out of the
+  offline cache.
+- Section 10: polish-pass item 4, a copy-link button for linkable state, now
+  applies and is met.
