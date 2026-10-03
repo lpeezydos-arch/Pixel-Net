@@ -1,8 +1,8 @@
 # Share and restore — design
 
 Date: 2026-10-03
-Status: design approved in conversation on 2026-10-03; this document awaits
-review
+Status: approved 2026-10-03. The implementation plan is
+`docs/superpowers/plans/2026-10-03-share-and-restore.md`
 
 This extends `2026-10-01-pixel-net-design.md`, called "the first spec" below.
 Section numbers here are this document's own.
