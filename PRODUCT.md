@@ -180,8 +180,9 @@ Undecided:
   view that is out of scope, and a Kamb-contoured figure of the same data. The
   Kamb figure is not the reference for the density layer, which is counted
   another way.
-- `screenshots/`, thirteen captures of the current build at phone and desktop
-  sizes (untracked as of 2026-10-02).
+- `screenshots/`, twenty captures of the current build at phone and desktop
+  sizes, the last four with the density layer on (untracked; retaken
+  2026-10-04).
 - Automated tests in `src/**/*.test.ts` and `e2e/*.spec.ts`.
 - `docs/polish-pass.md`: twenty items with evidence, plus hand checks on a
   real phone that are still open (safe areas, drag feel, loupe near the top
