@@ -370,6 +370,8 @@ test('turning the phone while the sheet is open rearranges it, and it still fits
 
   await page.setViewportSize({ width: 839, height: 412 });
   await expect(sheet(page)).toBeVisible();
+  // Changing arrangement swaps the sheet's animation for another, so let that one finish.
+  await settled(page);
   const box = (await sheet(page).boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(0);
   expect(box.y + box.height).toBeLessThanOrEqual(412.5);
