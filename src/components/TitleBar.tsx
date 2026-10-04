@@ -1,6 +1,7 @@
 import type { ShareOutcome } from '../share/share';
 import type { DemEntry } from '../state/useDems';
 import { ShareButton } from './ShareButton';
+import { HelpButton } from './HelpButton';
 
 interface TitleBarProps {
   entries: DemEntry[];
@@ -36,6 +37,7 @@ export function TitleBar({ entries, activeId, onSelect, shareDisabled, onShare }
           <span className="titlebar__dem">{entries[0].name}</span>
         ) : null}
         <ShareButton disabled={shareDisabled} onShare={onShare} />
+        <HelpButton />
       </div>
     </header>
   );

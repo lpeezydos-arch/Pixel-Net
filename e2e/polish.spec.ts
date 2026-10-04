@@ -98,6 +98,9 @@ test('four DEMs with two-word names stay inside a phone screen', async ({ page }
   const shareBox = (await page.getByTestId('share').boundingBox())!;
   expect(shareBox.x).toBeGreaterThanOrEqual(0);
   expect(shareBox.x + shareBox.width).toBeLessThanOrEqual(width);
+  const helpBox = (await page.getByTestId('help').boundingBox())!;
+  expect(helpBox.x).toBeGreaterThanOrEqual(shareBox.x + shareBox.width);
+  expect(helpBox.x + helpBox.width).toBeLessThanOrEqual(width);
   for (const region of [net(page), terrain(page)]) {
     const box = (await region.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
@@ -154,6 +157,9 @@ test('touch targets are at least 44px', async ({ page }, testInfo) => {
   const shareBox = (await page.getByTestId('share').boundingBox())!;
   expect(Math.round(shareBox.width)).toBeGreaterThanOrEqual(44);
   expect(Math.round(shareBox.height)).toBeGreaterThanOrEqual(44);
+  const helpBox = (await page.getByTestId('help').boundingBox())!;
+  expect(Math.round(helpBox.width)).toBeGreaterThanOrEqual(44);
+  expect(Math.round(helpBox.height)).toBeGreaterThanOrEqual(44);
 
   // The info icon is 16px with an invisible 44px target around it.
   const button = page.getByRole('button', { name: 'How to read the net' });
@@ -194,13 +200,14 @@ test('every control can be reached by keyboard, in reading order, and shows a fo
   const sunName = 'Sun, 315° NW · 45° high. Arrow keys move the light; Home resets it.';
   const terrainName = 'Terrain. Drag, or use the arrow keys, to inspect a pixel.';
   const shareName = 'Share this view';
+  const helpName = "Help and what's new, new changes";
   // Tab follows the eye: the title bar first, then the net above the terrain
   // on a phone and to the right of it on a desktop. The info dot is help,
   // not a stop.
   const expected =
     testInfo.project.name === 'phone'
-      ? ['Gore Range', 'Second', shareName, sunName, terrainName]
-      : ['Gore Range', 'Second', shareName, terrainName, sunName];
+      ? ['Gore Range', 'Second', shareName, helpName, sunName, terrainName]
+      : ['Gore Range', 'Second', shareName, helpName, terrainName, sunName];
 
   const focused = () =>
     page.evaluate(() => {

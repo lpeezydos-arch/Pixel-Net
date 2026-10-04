@@ -65,7 +65,7 @@ p {
   color: var(--ink-500);
 }
 
-/* The DEM's name or the picker, then the share button. */
+/* The DEM's name or the picker, then the share button and the help button. */
 .titlebar__end {
   display: flex;
   align-items: center;
@@ -770,4 +770,129 @@ p {
 .sun__label[data-active='true'][data-side='right'] {
   left: 24px;
   right: auto;
+}
+
+/* ---------- Help ---------- */
+
+.help-btn {
+  position: relative;
+}
+
+/* News this device has not shown. It sits on the icon's upper right, with a
+   ring of paper between it and the icon's stroke. */
+.help-btn__dot {
+  position: absolute;
+  top: calc(50% - 12px);
+  right: calc(50% - 12px);
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: color-mix(in srgb, var(--ink-900) 40%, transparent);
+}
+
+/* A floating surface: shadow, no border. On a phone it stands on the bottom
+   edge, clear of the home indicator. It never scrolls, so what it holds is
+   kept short enough to fit. */
+.sheet {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-modal);
+  padding: var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-right))
+    calc(var(--sp-5) + env(safe-area-inset-bottom)) calc(var(--sp-4) + env(safe-area-inset-left));
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--paper);
+  box-shadow: var(--shadow-3);
+}
+
+.sheet__close {
+  position: absolute;
+  top: var(--sp-2);
+  right: calc(var(--sp-2) + env(safe-area-inset-right));
+}
+
+.sheet__parts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.sheet__part {
+  min-width: 0;
+}
+
+.sheet__heading {
+  margin: 0 0 var(--sp-2);
+  /* The first heading shares its row with the close button. */
+  padding-right: var(--touch);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--ink-900);
+}
+
+.sheet__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+  color: var(--ink-700);
+}
+
+.news {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5.5em 1fr;
+  column-gap: var(--sp-3);
+}
+
+.news__date {
+  color: var(--ink-500);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The mark on an entry this device had not shown. It hangs in the sheet's
+   padding so the dates stay in line with the lines above them. */
+.news__dot {
+  position: absolute;
+  top: 0.5em;
+  left: -11px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+}
+
+.news[data-new='true'] .news__dot {
+  background: var(--accent);
+}
+
+/* Wider than a phone held upright: a card in the middle of the window. */
+@media (min-width: 521px) {
+  .sheet {
+    inset: 0;
+    width: min(420px, calc(100vw - 2 * var(--sp-4)));
+    height: fit-content;
+    margin: auto;
+    padding: var(--sp-5);
+    border-radius: var(--r-lg);
+  }
+
+  .sheet__close {
+    top: var(--sp-3);
+    right: var(--sp-3);
+  }
 }
