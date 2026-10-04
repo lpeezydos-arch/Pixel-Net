@@ -178,6 +178,11 @@ BASE_PATH=/Pixel-Net/ npm run build
 For another host, also change `VITE_SITE_URL` in `.env` to the new address,
 ending in a slash, so the link-preview tags point at it.
 
+## AI use
+
+This app was produced with AI. The code, tests and documentation were written
+with Claude Code, Anthropic's coding assistant, under the author's direction.
+
 ## Design system
 
 Styles follow the `lauren-frontend-design` skill. `src/styles/tokens.css` is
