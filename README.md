@@ -29,6 +29,7 @@ npm run dev        # http://localhost:5173
 | `npm run preview` | Serve `dist/` at http://localhost:4173 |
 | `npm run icons` | Redraw the app icons in `public/icons/` |
 | `npm run preview-image` | Redraw the link-preview image, `public/preview.png`; needs Chromium |
+| `npm run changelog` | Rewrite `CHANGELOG.md` from the news list, `src/help/news.json` |
 
 ### Browser tests need Chromium's system libraries
 
@@ -112,6 +113,23 @@ link is copied.
 A link pasted into a message shows a preview card. Its tags are in
 `index.html` and need the site's whole address, which is `VITE_SITE_URL` in
 `.env`.
+
+## Tell users what changed
+
+The help button in the title bar opens a sheet with how to use the app and the
+latest three changes. A dot on the button marks changes a device has not shown.
+
+To announce a change:
+
+1. Add an entry at the end of `src/help/news.json`: the next `id`, the date as
+   `YYYY-MM-DD`, and one sentence written for someone using the app. Do not
+   name the app in it.
+2. Run `npm run changelog`. It rewrites `CHANGELOG.md` from the list.
+3. Commit both files. `npm test` fails if `CHANGELOG.md` is out of step, and
+   the deploy runs `npm test` first.
+
+A change that is not worth telling a user about gets no entry, and raises no
+dot.
 
 ## Deploy
 
