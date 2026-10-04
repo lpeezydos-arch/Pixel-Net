@@ -1,7 +1,7 @@
 # Density layer — design
 
 Date: 2026-10-03
-Status: written 2026-10-03, awaiting review.
+Status: approved 2026-10-03.
 
 This extends `2026-10-01-pixel-net-design.md`, called "the first spec" below,
 and follows `2026-10-03-share-and-restore-design.md`, called "the share spec".
