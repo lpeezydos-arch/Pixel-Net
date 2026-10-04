@@ -34,7 +34,7 @@ it really good; a way to adjust the sun.
 Decided during brainstorming: the scatterplot is the Schmidt net; the full
 cloud stays visible and one pixel is highlighted; DEMs are bundled, not
 uploaded; selection is by drag with a loupe; only the scatter net is shown;
-the app installs and works offline; no USGS chrome; phone layout has the net
+the app installs and works offline; no agency chrome; phone layout has the net
 on top and the terrain below; the accent is rust; the sun is dragged on the
 net.
 
@@ -61,7 +61,7 @@ Out of scope:
 - Zoom or pan on the terrain.
 - Cast shadows, or a sun set by date and time.
 - Dark theme.
-- USGS VID chrome (banner, header, footer).
+- agency identity chrome (banner, header, footer).
 - Native app-store builds.
 - DEMs larger than about two million pixels (section 5).
 
@@ -364,7 +364,7 @@ From `lauren-frontend-design`:
 
 Deviations from the skill, all deliberate:
 
-- No USGS VID chrome; this is not an official USGS app.
+- No agency identity chrome; this is not an official app.
 - `theme-color` is white, not the accent, so rust stays reserved for the
   selection.
 - The focus ring is the accent at 80%, set in `src/app.css`. The design

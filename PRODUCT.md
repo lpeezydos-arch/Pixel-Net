@@ -133,8 +133,8 @@ Technical constraints:
 
 Out of scope by decision (spec §2); do not reintroduce without a new decision:
 aspect rose, patch or area selection; user-supplied or fetched DEMs; zoom or
-pan; cast shadows or a sun set by date and time; dark theme; USGS VID chrome;
-native app-store builds. Shareable links left this list on 2026-10-03. The
+pan; cast shadows or a sun set by date and time; dark theme; agency identity
+chrome; native app-store builds. Shareable links left this list on 2026-10-03. The
 density net left it the same day, as the density layer; still out of scope for
 it: a legend with a color bar, the density at the selected pixel, a choice of
 counting circle, levels or color, and Kamb contouring. Out of scope for
@@ -159,8 +159,8 @@ Undecided:
 
 ## Brand Commitments
 
-- Not an official USGS product. No USGS Visual Identity chrome, and nothing
-  that implies official status (spec §2, README).
+- Not an official product of any agency. No agency identity chrome, and
+  nothing that implies official status (spec §2, README).
 - The name is provisional. "Pixel Net" is set in one place (`VITE_APP_NAME`)
   so it can change; do not build identity around it. Confirmed 2026-10-02.
 - Binding visual constraint, recorded as given: styling follows the
@@ -202,7 +202,7 @@ Undecided:
 4. Works with no signal. Data is bundled, the app is installable, and there is
    nothing to set up.
 5. A personal tool, not an institution. Quiet, plain-spoken, and never
-   mistakable for an official USGS product.
+   mistakable for an official product.
 
 ## Accessibility & Inclusion
 

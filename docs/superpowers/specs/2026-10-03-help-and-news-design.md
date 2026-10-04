@@ -61,7 +61,7 @@ In scope:
 Out of scope:
 
 - Anything that appears unasked: a first-visit tour, a note after an update.
-- An "About" part: the method, credits, or the "not a USGS product" statement.
+- An "About" part: the method, credits, or the "not an official product" statement.
 - The full history inside the app. The sheet shows the latest three entries.
 - A link from the sheet to `CHANGELOG.md`. It would need a signal.
 - Teaching what a Schmidt net is. Learners are not a target (`PRODUCT.md`).

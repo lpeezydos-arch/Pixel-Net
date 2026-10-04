@@ -188,7 +188,7 @@ with Claude Code, Anthropic's coding assistant, under the author's direction.
 Styles follow the `lauren-frontend-design` skill. `src/styles/tokens.css` is
 that skill's `assets/tokens.css` with only the accent changed to rust
 (`--accent: #b84a00`, `--accent-strong: #8f3900`). Four deliberate departures:
-there is no USGS VID chrome, because this is not an official USGS app; the
+there is no agency identity chrome, because this is not an official app; the
 phone status bar is white so that rust stays reserved for the selection (and
 for unseen news: the dot on the help button and beside an unseen entry); the
 focus ring is the accent at 80% (set in `src/app.css`), because at the

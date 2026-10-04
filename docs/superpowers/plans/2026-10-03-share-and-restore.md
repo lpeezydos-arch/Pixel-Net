@@ -2950,7 +2950,7 @@ Replace the out-of-scope paragraph with:
 Out of scope by decision (spec §2); do not reintroduce without a new decision:
 density net, aspect rose, patch or area selection; user-supplied or fetched
 DEMs; zoom or pan; cast shadows or a sun set by date and time; dark theme;
-USGS VID chrome; native app-store builds. Shareable links left this list on
+agency identity chrome; native app-store builds. Shareable links left this list on
 2026-10-03. Out of scope for sharing (share and restore spec §2): saving the
 picture where there is no share sheet; short links, QR codes and embeds; a
 preview card that shows the linked view.
