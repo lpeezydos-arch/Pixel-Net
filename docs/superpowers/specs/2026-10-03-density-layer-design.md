@@ -67,6 +67,7 @@ In scope:
 - One more sentence in the net's tooltip while the layer is on.
 - The layer's state in the view: the address, the saved view and shared links.
 - The layer and one caption line in the shared picture.
+- One line in the help sheet's "How to use it", and one in its news.
 - Updates to `PRODUCT.md`, the README and `docs/polish-pass.md`.
 
 Out of scope:
@@ -296,6 +297,8 @@ Unit, `src/terrain/density.test.ts`:
 
 Unit, elsewhere:
 
+- `howTo.test.ts` and `news.test.ts`: the new lines, by the rules those tests
+  already hold the lists to.
 - `view.test.ts`: `density=1` round-trips; off is left out; the default view
   is still empty; a link without `density` reads as off; other values read as
   off; a string with only `density` names a view.
@@ -326,6 +329,9 @@ button is easy to press beside the readout.
   not the reference for this layer.
 - `README.md`: what the layer shows and how it is counted.
 - This is built in its own worktree off `main`.
-- The `help-and-news` branch is unmerged and holds the news list. The news
-  line for this change, "A button on the net shows where pixels crowd
-  together.", is added in whichever of the two branches merges second.
+- `src/help/howTo.ts`: one line on both kinds of device, before the line
+  about the `i`: "The layers button on the net shows where pixels crowd
+  together."
+- `src/help/news.json`: entry 5, "A button on the net shows where pixels crowd
+  together.", dated the day it ships. `CHANGELOG.md` is written from the list
+  by `npm run changelog`, and the dot on the help button then marks it unseen.
