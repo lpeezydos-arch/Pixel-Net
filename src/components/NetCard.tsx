@@ -12,8 +12,8 @@ import { NetMarker } from './NetMarker';
 import { Readout } from './Readout';
 import { SunHandle } from './SunHandle';
 
-/** Net width below which the key uses its short form. */
-const SHORT_KEY_NET = 240; // below this the full key would cross the rim
+/** Net width below which the full key, in the net's corner, would cross the rim. */
+const SMALL_NET = 240;
 
 /** The one explanation of the net and of the three values read off it. */
 export const NET_HELP =
@@ -48,12 +48,30 @@ export function NetCard({
   // The layer is counted the first time it is shown. Once counted it is kept,
   // so the key still has its words while the layer fades out.
   const field = surface ? (density ? densityOf(surface) : knownDensity(surface)) : null;
-  const key = field ? densityKey(field, layout.netSize < SHORT_KEY_NET) : '';
+  // On a small net the key has no room in the net's corner. It goes under the
+  // readout when the readout is beside the net, which is where a small net
+  // has it; were the readout ever below, the key would stay in the corner in
+  // its short form.
+  const small = layout.netSize < SMALL_NET;
+  const keyUnderReadout = small && layout.readout === 'side';
+  const key = field ? densityKey(field, small && !keyUnderReadout) : '';
+  const keyLine = key && (
+    <p
+      className={keyUnderReadout ? 'readout-col__key' : 'net__key'}
+      data-testid="density-key"
+      data-on={density}
+      aria-hidden={!density}
+    >
+      {key}
+    </p>
+  );
+  const readout = <Readout dem={dem} surface={surface} selection={selection} />;
   const help = density && field ? `${NET_HELP} ${densitySentence(field)}` : NET_HELP;
   const style = {
     width: layout.netCardWidth,
     height: layout.netCardHeight,
     '--inner': `${layout.inner}px`,
+    '--net': `${layout.netSize}px`,
   } as CSSProperties;
 
   return (
@@ -83,15 +101,20 @@ export function NetCard({
         <InfoTip className="net__info" label="How to read the net" text={help} side="bottom" />
         {/* Before the sun, so Tab reaches it first; over the sun, so it can always be pressed. */}
         {surface && <DensityToggle on={density} onChange={onDensityChange} />}
-        {key && (
-          <p className="net__key" data-testid="density-key" data-on={density} aria-hidden={!density}>
-            {key}
-          </p>
-        )}
+        {!keyUnderReadout && keyLine}
         {surface && <SunHandle size={layout.netSize} azimuth={sunAzimuth} altitude={sunAltitude} />}
         {surface && <NetMarker surface={surface} size={layout.netSize} selection={selection} />}
       </div>
-      <Readout dem={dem} surface={surface} selection={selection} />
+      {keyUnderReadout ? (
+        // The column is there whether or not the layer has been counted, so
+        // the readout is not rebuilt when the key first appears.
+        <div className="readout-col" data-key={density && key !== ''}>
+          {readout}
+          {keyLine}
+        </div>
+      ) : (
+        readout
+      )}
       <p id="net-help" className="visually-hidden">
         {help}
       </p>

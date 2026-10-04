@@ -89,8 +89,9 @@ Confirmed functionality (spec §2–3):
   with a line at each level; levels are whole multiples of the smallest of 1,
   2, 5, 10 and 20 that gives six or fewer, starting at 2× when the step is 1.
   A one-line key on the net names the first level and the last. On a net
-  under 240px the key is shortened to `2×–6×`. The net's
-  tooltip says how it is counted. Off by default; kept across a DEM switch
+  under 240px, where it would cross the rim, the key is the last line of the
+  readout beside the net. The net's tooltip says how it is counted. Off by
+  default; kept across a DEM switch
   (`docs/superpowers/specs/2026-10-03-density-layer-design.md`).
 - DEM picker: a segmented control for two to four DEMs, plain text for one.
   More than four is unsupported.

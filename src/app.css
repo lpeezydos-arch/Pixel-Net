@@ -618,6 +618,48 @@ p {
   opacity: 1;
 }
 
+/* On a small net the key is the last line of the readout column, which is
+   as tall as the net even where the card is taller, so the key lines up
+   with the net's foot. While the key shows, the three values close up and
+   move up to leave it the bottom line. */
+.readout-col {
+  position: relative;
+  height: var(--net);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.readout-col .readout {
+  transition:
+    gap var(--t-base) var(--ease-out),
+    margin-bottom var(--t-base) var(--ease-out);
+}
+
+.readout-col[data-key='true'] .readout {
+  gap: var(--sp-2);
+  margin-bottom: 20px; /* the key's line and 4px above it */
+}
+
+.readout-col__key {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 16px;
+  color: var(--viz-1);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-base) var(--ease-out);
+}
+
+.readout-col__key[data-on='true'] {
+  opacity: 1;
+}
+
 /* ---------- Readout ---------- */
 
 .readout {

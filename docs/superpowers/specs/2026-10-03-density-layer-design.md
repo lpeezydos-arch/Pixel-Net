@@ -186,12 +186,21 @@ square that holds the net, in `--viz-1` at `--fs-xs`:
 - `Below 2× even` when the peak is below 2×.
 - Nothing when the DEM has no plottable pixels.
 
-These full forms are used on a net 240px wide or wider. Under that, where the
-full key would cross the rim (the usual upright layout on an iPhone, where the
-net is 180px), the key drops "even" and reads `2×–6×`, `2×` or `Below 2×`. This
-was decided after the whole-branch review found the overlap.
+On a net 240px wide or wider the corner is outside the rim, so no dots lie
+under the key.
 
-The corner is outside the rim, so no dots lie under the key.
+On a narrower net the key in that corner would cross the rim. That is the
+usual upright layout on an iPhone in Safari, where the net is 180px, and the
+whole-branch review found it. There the readout is beside the net, and the
+key, in the same words, is the last line of the readout column, level with the
+net's foot. While it shows, the gaps between the three values close from 12px
+to 8px and the values move up to make room; they move back when the layer is
+turned off. Decided 2026-10-04, in place of a short form, `2×–6×`, that was
+used for a day.
+
+No screen size tried gives a narrow net with the readout below it, but the
+layout allows it. There the key stays in the corner and drops "even": `2×–6×`,
+`2×` or `Below 2×`.
 
 The key fades with the layer.
 

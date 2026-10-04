@@ -1,5 +1,5 @@
 import { type Page, expect, test } from '@playwright/test';
-import { NET_HELP, fingerprint, inkedPixels, netCloud, openApp, openLink, serveTwoDems, stage } from './helpers';
+import { NET_HELP, clickPixel, fingerprint, inkedPixels, netCloud, openApp, openLink, serveTwoDems, stage } from './helpers';
 
 /** The rim's radius as a share of half the net's square, as in `src/terrain/cloud.ts`. */
 const NET_RIM = 0.9375;
@@ -7,7 +7,6 @@ const SAVED = 'pixel-net:view';
 const SENTENCE =
   'Blue shading shows where pixels crowd together, counted in circles covering 1% of the net. The outer line is 2 times an even spread, and each line inward adds 1 more.';
 const GORE_KEY = '2× to 6× even';
-const SHORT_GORE_KEY = '2×–6×';
 // The second DEM is one uniform slope, so nearly every pixel falls in one circle.
 const SECOND_KEY = '20× to 80× even';
 
@@ -195,19 +194,67 @@ test('the button and the key sit in the net’s corners, clear of the rim', asyn
   await checkCorners(page, GORE_KEY);
 });
 
-test('the button and the key sit clear of the rim on a 320 × 480 screen, the key in its short form', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 320, height: 480 });
-  await checkCorners(page, SHORT_GORE_KEY);
-});
+/** Whether two boxes share any area. */
+const overlap = (
+  a: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number },
+) => a.x < b.x + b.width - 0.5 && b.x < a.x + a.width - 0.5 && a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5;
 
-test('the button and the key sit clear of the rim on a 390 × 660 screen, the key in its short form', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 660 });
-  await checkCorners(page, SHORT_GORE_KEY);
-});
+// On an upright iPhone in Safari the net is 180px, and the full key would
+// cross its rim. There the readout is beside the net, and the key is its last line.
+for (const size of [
+  { width: 320, height: 480 },
+  { width: 390, height: 660 },
+  { width: 667, height: 375 },
+]) {
+  test(`on a ${size.width} × ${size.height} screen the key is the last line of the readout, in full`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(size);
+    await openApp(page);
+    const slopeLabel = page.locator('.stat__label', { hasText: 'Slope' });
+    const resting = (await slopeLabel.boundingBox())!;
+    await toggle(page).click();
+    await expect(key(page)).toHaveText(GORE_KEY);
+    await expect(key(page)).toHaveCSS('opacity', '1');
+
+    const check = async () => {
+      const card = (await page.getByRole('region', { name: 'Net' }).boundingBox())!;
+      const net = (await page.getByTestId('net').boundingBox())!;
+      const words = (await key(page).boundingBox())!;
+      const elevation = (await page.getByTestId('elevation').boundingBox())!;
+      const label = (await slopeLabel.boundingBox())!;
+      // Inside the card, beside the net, under the last value.
+      expect(words.x).toBeGreaterThanOrEqual(net.x + net.width);
+      expect(words.x + words.width).toBeLessThanOrEqual(card.x + card.width + 0.5);
+      expect(words.y + words.height).toBeLessThanOrEqual(net.y + net.height + 0.5);
+      expect(words.y).toBeGreaterThanOrEqual(elevation.y + elevation.height - 0.5);
+      // The three values made room without leaving the card's content area.
+      expect(label.y).toBeGreaterThanOrEqual(net.y - 0.5);
+      for (const id of ['slope', 'aspect', 'elevation']) {
+        expect(overlap(words, (await page.getByTestId(id).boundingBox())!), `key over ${id}`).toBe(false);
+      }
+    };
+    // Wait for the values to finish moving before measuring.
+    await expect
+      .poll(async () => {
+        const elevation = (await page.getByTestId('elevation').boundingBox())!;
+        return (await key(page).boundingBox())!.y - (elevation.y + elevation.height);
+      })
+      .toBeGreaterThanOrEqual(-0.5);
+    await check();
+
+    // A selected pixel's values are as tall as the dashes they replace, and wider.
+    await clickPixel(page, 150, 210);
+    await expect(page.getByTestId('elevation')).toHaveText('3,874 m');
+    await check();
+
+    // With the layer off the values go back where they were.
+    await toggle(page).click();
+    await expect(key(page)).toHaveCSS('opacity', '0');
+    await expect.poll(async () => Math.abs((await slopeLabel.boundingBox())!.y - resting.y)).toBeLessThan(0.5);
+  });
+}
 
 test('the button can be pressed on a small net with the sun low in the northeast', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 480 });
