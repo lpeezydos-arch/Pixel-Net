@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "date": "2026-10-02",
+    "text": "The first version: a hillshade beside a Schmidt net of every pixel, with a sun you can drag."
+  },
+  {
+    "id": 2,
+    "date": "2026-10-03",
+    "text": "The app reopens on the DEM, pixel and sun you left."
+  },
+  {
+    "id": 3,
+    "date": "2026-10-03",
+    "text": "The share button sends a link that reopens this view, with a picture of it."
+  },
+  {
+    "id": 4,
+    "date": "2026-10-03",
+    "text": "The help button shows how to use the app and what has changed."
+  }
+]
