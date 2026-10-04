@@ -1,7 +1,8 @@
 # Help and news — design
 
 Date: 2026-10-03
-Status: awaiting review
+Status: approved 2026-10-03. The implementation plan is
+`docs/superpowers/plans/2026-10-03-help-and-news.md`
 
 This extends `2026-10-01-pixel-net-design.md`, called "the first spec" below,
 and follows `2026-10-03-share-and-restore-design.md`. Section numbers here are
@@ -91,8 +92,8 @@ Out of scope:
   moves into the sheet on open and returns to the help button on close.
 - It is a modal dialog to assistive technology, titled "Help".
 - It never scrolls. Its content fits at every size the app supports.
-- It moves with the app's existing springs; with reduced motion it appears and
-  disappears with no movement.
+- It moves over `--t-slow` with `--ease-out`, the duration `tokens.css` gives
+  to sheets; with reduced motion it appears and disappears with no movement.
 - It is a floating surface: shadow, no border (`tokens.css`).
 
 ### "How to use it"
@@ -139,15 +140,17 @@ Mouse and keyboard:
   for a developer.
 - An entry is added only for a change worth telling a user about. A change
   with no entry raises no dot.
+- No entry names the app or the sheet it is shown in. The name is provisional
+  and set in one place, and the same sentence is read in `CHANGELOG.md`.
 
 The first entries:
 
 | id | date | text |
 |---|---|---|
-| 1 | 2026-10-02 | Pixel Net opens: a hillshade beside a Schmidt net of every pixel, with a sun you can drag. |
+| 1 | 2026-10-02 | The first version: a hillshade beside a Schmidt net of every pixel, with a sun you can drag. |
 | 2 | 2026-10-03 | The app reopens on the DEM, pixel and sun you left. |
 | 3 | 2026-10-03 | The share button sends a link that reopens this view, with a picture of it. |
-| 4 | date it ships | This sheet: how to use the app, and what has changed. |
+| 4 | date it ships | The help button shows how to use the app and what has changed. |
 
 `src/help/news.ts` holds pure functions over the list:
 
@@ -192,9 +195,10 @@ The first entries:
 - `npm run changelog` runs `scripts/make-changelog.mjs`, which reads
   `src/help/news.json` and writes `CHANGELOG.md` at the repository root: every
   entry, newest first, grouped under a heading for each date.
-- The text is made by one exported function, so a unit test can call it and
-  compare its result with the file. The test fails when they differ, and unit
-  tests gate the deploy, so a forgotten run is caught before it ships.
+- With `--print` the script writes the text to standard output and leaves the
+  file alone. A unit test runs it that way and compares the result with the
+  file. The test fails when they differ, and unit tests gate the deploy, so a
+  forgotten run is caught before it ships.
 - `CHANGELOG.md` says at its top that it is written from the list and how to
   add an entry.
 
