@@ -905,6 +905,20 @@ p {
     padding: var(--sp-4) var(--sp-5);
   }
 
+  /* The card's padding is smaller here, so the button is centered on the
+     heading's line instead of sitting at a fixed offset; that keeps the two on
+     one row whether the button is 40px (mouse) or 44px (touch). */
+  .sheet__close {
+    top: calc(var(--sp-4) + var(--fs-sm) * var(--lh-snug) / 2);
+    transform: translateY(-50%);
+  }
+
+  /* A 44px button centered on the heading reaches below it, so both headings
+     leave room enough that the first news entry starts under the button. */
+  .sheet__heading {
+    margin-bottom: var(--sp-4);
+  }
+
   .sheet__parts {
     flex-direction: row;
     gap: var(--sp-5);

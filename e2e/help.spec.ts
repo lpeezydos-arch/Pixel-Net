@@ -372,3 +372,27 @@ test('the sheet moves into place, and with reduced motion it does not move', asy
   await page.keyboard.press('Escape');
   await expect(sheet(page)).toHaveCount(0);
 });
+
+test('sideways, the close button shares a row with the "What\'s new" heading and clears the news', async ({ page }) => {
+  await page.setViewportSize({ width: 839, height: 412 });
+  await openApp(page);
+  await help(page).click();
+  await expect(sheet(page)).toBeVisible();
+  await settled(page);
+
+  const close = (await sheet(page).getByRole('button', { name: 'Close' }).boundingBox())!;
+  const heading = (await page.getByRole('heading', { name: "What's new" }).boundingBox())!;
+  const card = (await sheet(page).boundingBox())!;
+  expect(Math.abs(close.y + close.height / 2 - (heading.y + heading.height / 2))).toBeLessThanOrEqual(2);
+  expect(close.x).toBeGreaterThanOrEqual(card.x);
+  expect(close.y).toBeGreaterThanOrEqual(card.y);
+  expect(close.x + close.width).toBeLessThanOrEqual(card.x + card.width + 0.5);
+  expect(close.y + close.height).toBeLessThanOrEqual(card.y + card.height + 0.5);
+  for (const item of await news(page).all()) {
+    const line = (await item.boundingBox())!;
+    const apart =
+      close.x + close.width <= line.x || line.x + line.width <= close.x ||
+      close.y + close.height <= line.y || line.y + line.height <= close.y;
+    expect(apart).toBe(true);
+  }
+});
