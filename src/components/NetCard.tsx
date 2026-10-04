@@ -12,6 +12,9 @@ import { NetMarker } from './NetMarker';
 import { Readout } from './Readout';
 import { SunHandle } from './SunHandle';
 
+/** Net width below which the key uses its short form. */
+const SHORT_KEY_NET = 240; // below this the full key would cross the rim
+
 /** The one explanation of the net and of the three values read off it. */
 export const NET_HELP =
   'Each dot is one pixel. Its direction from the center is its aspect, the way the slope faces looking downhill; its distance from the center is its slope, from 0° at the center to 90° at the rim. Elevation is the height the DEM stores for the pixel.';
@@ -45,6 +48,7 @@ export function NetCard({
   // The layer is counted the first time it is shown. Once counted it is kept,
   // so the key still has its words while the layer fades out.
   const field = surface ? (density ? densityOf(surface) : knownDensity(surface)) : null;
+  const key = field ? densityKey(field, layout.netSize < SHORT_KEY_NET) : '';
   const help = density && field ? `${NET_HELP} ${densitySentence(field)}` : NET_HELP;
   const style = {
     width: layout.netCardWidth,
@@ -79,9 +83,9 @@ export function NetCard({
         <InfoTip className="net__info" label="How to read the net" text={help} side="bottom" />
         {/* Before the sun, so Tab reaches it first; over the sun, so it can always be pressed. */}
         {surface && <DensityToggle on={density} onChange={onDensityChange} />}
-        {field && (
+        {key && (
           <p className="net__key" data-testid="density-key" data-on={density} aria-hidden={!density}>
-            {densityKey(field)}
+            {key}
           </p>
         )}
         {surface && <SunHandle size={layout.netSize} azimuth={sunAzimuth} altitude={sunAltitude} />}

@@ -24,7 +24,7 @@ and shows its slope, aspect and elevation. Dragging the sun on the net
 re-lights the terrain. A button on the net lays a see-through density layer
 over the cloud, which shows where its pixels crowd together. The app installs
 to a phone's home screen and works with no signal after the first visit. It
-reopens on the DEM, pixel and sun it was left on, and one button shares a link
+reopens on the DEM, pixel, sun and density layer it was left on, and one button shares a link
 that restores the view, with a picture of it where the share sheet takes one.
 
 It exists so a geoscientist can see how a place on the terrain maps to a
@@ -88,7 +88,8 @@ Confirmed functionality (spec §2–3):
   pixels in a circle covering 1% of the net, in times an even spread. Bands
   with a line at each level; levels are whole multiples of the smallest of 1,
   2, 5, 10 and 20 that gives six or fewer, starting at 2× when the step is 1.
-  A one-line key on the net names the first level and the last, and the net's
+  A one-line key on the net names the first level and the last. On a net
+  under 240px the key is shortened to `2×–6×`. The net's
   tooltip says how it is counted. Off by default; kept across a DEM switch
   (`docs/superpowers/specs/2026-10-03-density-layer-design.md`).
 - DEM picker: a segmented control for two to four DEMs, plain text for one.

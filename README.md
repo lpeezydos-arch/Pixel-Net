@@ -128,12 +128,14 @@ points as it would if the cloud were spread evenly over the whole net. The
 net is equal-area, so one circle covers the same share of directions
 everywhere on it.
 
-Bands are drawn from 2× up, with a line at each level. The Gore Range peaks
+The first level is 2× when levels rise by 1 or 2, and otherwise the step itself; bands are drawn from there up, with a line at each level. The Gore Range peaks
 at about 6.5× on its southwest slopes, so its lines are at 2×, 3×, 4×, 5× and
 6×. A gentler landscape crowds toward the center and peaks far higher; its
 levels rise by 2, 5, 10 or 20, whichever is the smallest step that gives six
 levels or fewer. The key in the net's bottom-left corner names the first
-level and the last.
+level and the last. The count runs once per DEM, on the main thread, when the
+layer is first shown: instant for the Gore Range, and it may take a moment for
+a DEM near the two-million-pixel limit.
 
 Near the rim part of the circle lies outside the net, and the density there
 reads low. It is not corrected: only ground steeper than about 80° plots

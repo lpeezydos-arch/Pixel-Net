@@ -583,11 +583,16 @@ p {
 }
 
 @media (pointer: coarse) {
-  /* A 44px touch target around the 28px button. */
+  /* A 44px touch target around the 28px button. It reaches out into the
+     card's padding, up and to the right, and only 4px in, so it stays off
+     the sun on a small net. */
   .net .net__toggle::after {
     content: '';
     position: absolute;
-    inset: -8px;
+    top: -12px;
+    right: -12px;
+    bottom: -4px;
+    left: -4px;
   }
 }
 

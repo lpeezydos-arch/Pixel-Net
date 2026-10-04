@@ -186,8 +186,12 @@ square that holds the net, in `--viz-1` at `--fs-xs`:
 - `Below 2× even` when the peak is below 2×.
 - Nothing when the DEM has no plottable pixels.
 
-The corner is outside the rim, so no dots lie under the key. On the smallest
-phone layout there is room for about 110px of text beside the rim.
+These full forms are used on a net 240px wide or wider. Under that, where the
+full key would cross the rim (the usual upright layout on an iPhone, where the
+net is 180px), the key drops "even" and reads `2×–6×`, `2×` or `Below 2×`. This
+was decided after the whole-branch review found the overlap.
+
+The corner is outside the rim, so no dots lie under the key.
 
 The key fades with the layer.
 

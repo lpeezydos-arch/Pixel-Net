@@ -243,6 +243,14 @@ describe('the words', () => {
     expect(densityKey(nothing)).toBe('');
   });
 
+  it('drop "even" from the key on a small net', () => {
+    expect(densityKey(some, true)).toBe('2×–6×');
+    expect(densityKey(steep, true)).toBe('10×–40×');
+    expect(densityKey(one, true)).toBe('2×');
+    expect(densityKey(none, true)).toBe('Below 2×');
+    expect(densityKey(nothing, true)).toBe('');
+  });
+
   it('say what the lines are in the caption, and nothing for an empty layer', () => {
     expect(densityCaption(some)).toBe('Density: lines from 2× to 6× an even spread');
     expect(densityCaption(one)).toBe('Density: a line at 2× an even spread');

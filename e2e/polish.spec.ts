@@ -167,9 +167,11 @@ test('touch targets are at least 44px', async ({ page }, testInfo) => {
     expect(await hitAt(button, dx, dy), `info dot at ${dx},${dy}`).toBe(true);
   }
 
-  // The density button is 28px with an invisible 44px target around it.
+  // The density button is 28px with an invisible 44px target: it reaches 12px
+  // out above and to the right, 4px in below and to the left, so it is 26px
+  // right and up of the button's center and 18px left and down.
   const density = page.getByTestId('density-toggle');
-  for (const [dx, dy] of [[21, 0], [-21, 0], [0, 21], [0, -21]]) {
+  for (const [dx, dy] of [[25, 0], [-17, 0], [0, -25], [0, 17]]) {
     expect(await hitAt(density, dx, dy), `density button at ${dx},${dy}`).toBe(true);
   }
 });

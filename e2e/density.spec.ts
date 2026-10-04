@@ -7,6 +7,7 @@ const SAVED = 'pixel-net:view';
 const SENTENCE =
   'Blue shading shows where pixels crowd together, counted in circles covering 1% of the net. The outer line is 2 times an even spread, and each line inward adds 1 more.';
 const GORE_KEY = '2× to 6× even';
+const SHORT_GORE_KEY = '2×–6×';
 // The second DEM is one uniform slope, so nearly every pixel falls in one circle.
 const SECOND_KEY = '20× to 80× even';
 
@@ -158,10 +159,12 @@ test('the layer is redrawn at the cloud’s size when the window changes', async
   expect(await inkedPixels(drawing(page))).toBeGreaterThan(500);
 });
 
-test('the button and the key sit in the net’s corners, clear of the rim', async ({ page }) => {
+/** The button and the key in the net's corners, clear of the rim, at the window's present size. */
+async function checkCorners(page: Page, expectedKey: string) {
   await openApp(page);
   await toggle(page).click();
   await expect(key(page)).toHaveCSS('opacity', '1');
+  await expect(key(page)).toHaveText(expectedKey);
   const net = (await page.getByTestId('net').boundingBox())!;
   const centerX = net.x + net.width / 2;
   const centerY = net.y + net.height / 2;
@@ -186,6 +189,24 @@ test('the button and the key sit in the net’s corners, clear of the rim', asyn
   expect(Math.round(words.x)).toBe(Math.round(net.x));
   expect(Math.round(words.y + words.height)).toBe(Math.round(net.y + net.height));
   expect(Math.hypot(words.x + words.width - centerX, words.y - centerY)).toBeGreaterThan(rim);
+}
+
+test('the button and the key sit in the net’s corners, clear of the rim', async ({ page }) => {
+  await checkCorners(page, GORE_KEY);
+});
+
+test('the button and the key sit clear of the rim on a 320 × 480 screen, the key in its short form', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 480 });
+  await checkCorners(page, SHORT_GORE_KEY);
+});
+
+test('the button and the key sit clear of the rim on a 390 × 660 screen, the key in its short form', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 660 });
+  await checkCorners(page, SHORT_GORE_KEY);
 });
 
 test('the button can be pressed on a small net with the sun low in the northeast', async ({ page }) => {
@@ -228,4 +249,50 @@ test('there is no density button on the error card', async ({ page }) => {
   await expect(stage(page)).toHaveAttribute('data-status', 'error');
   await expect(toggle(page)).toHaveCount(0);
   await expect(layer(page)).toHaveCount(0);
+});
+
+test('the sun can still be dragged on a small net when it is low in the northeast', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 480 });
+  await openLink(page, 'dem=gore&sun=45,10');
+  const box = (await page.getByTestId('sun').boundingBox())!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 40, y + 40, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(() => fragment(page)).not.toContain('sun=45,10');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+});
+
+/** Starts recording the animations begun on the layer's canvas, from before the page's scripts run. */
+async function recordLayerAnimations(page: Page) {
+  await page.addInitScript(() => {
+    const calls: string[] = [];
+    (window as unknown as { layerAnimations: string[] }).layerAnimations = calls;
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) {
+      if (this.getAttribute('data-testid') === 'net-density') calls.push('animate');
+      return animate.apply(this, args);
+    } as typeof animate;
+  });
+}
+const layerAnimations = (page: Page) =>
+  page.evaluate(() => (window as unknown as { layerAnimations: unknown[] }).layerAnimations.length);
+
+test('a link with density=1 fades the layer in with the cloud', async ({ page }) => {
+  await recordLayerAnimations(page);
+  await page.goto('/#dem=gore&density=1');
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  await expect(layer(page)).toHaveAttribute('data-on', 'true');
+  expect(await layerAnimations(page)).toBe(1);
+});
+
+test('pressing the button starts no fade of its own on the layer’s canvas', async ({ page }) => {
+  await recordLayerAnimations(page);
+  await openApp(page);
+  await toggle(page).click();
+  await expect(layer(page)).toHaveCSS('opacity', '1');
+  expect(await inkedPixels(drawing(page))).toBeGreaterThan(1000);
+  expect(await layerAnimations(page)).toBe(0);
 });

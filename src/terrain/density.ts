@@ -180,13 +180,19 @@ export function densityAlpha(field: DensityField, levels: number[], size: number
   return alpha;
 }
 
-/** The key on the net: the first level and the last. Empty when nothing was counted. */
-export function densityKey(field: DensityField): string {
+/**
+ * The key on the net: the first level and the last. Empty when nothing was
+ * counted. On a small net the full words would cross the rim, so `short`
+ * drops "even" and joins the levels with an en dash.
+ */
+export function densityKey(field: DensityField, short = false): string {
   if (field.count === 0) return '';
   const levels = densityLevels(field.peak);
-  if (levels.length === 0) return 'Below 2× even';
-  if (levels.length === 1) return `${levels[0]}× even`;
-  return `${levels[0]}× to ${levels[levels.length - 1]}× even`;
+  const even = short ? '' : ' even';
+  if (levels.length === 0) return `Below 2×${even}`;
+  if (levels.length === 1) return `${levels[0]}×${even}`;
+  const last = levels[levels.length - 1];
+  return short ? `${levels[0]}×–${last}×` : `${levels[0]}× to ${last}×${even}`;
 }
 
 /** The picture's caption line, or null when the layer is empty. */

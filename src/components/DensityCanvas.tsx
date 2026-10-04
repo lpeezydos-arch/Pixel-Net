@@ -22,12 +22,17 @@ export function DensityCanvas({ surface, size, on }: DensityCanvasProps) {
   const ghostRef = useRef<HTMLCanvasElement>(null);
   const drawn = useRef<{ surface: Surface; pixels: number } | null>(null);
   const wasOn = useRef(false);
+  // True until the layout effect has run once, so a layer that is on from
+  // the start (a link or the saved view) can fade in with the cloud.
+  const mounting = useRef(true);
 
   // A layout effect, so a layer that is turned on never shows, even for a
   // frame, what it last drew for another DEM or another size.
   useLayoutEffect(() => {
     const stayedOn = wasOn.current && on;
     wasOn.current = on;
+    const opening = mounting.current && on;
+    if (!on) mounting.current = false; // started off: turning it on later is not opening
     const canvas = canvasRef.current;
     const ghost = ghostRef.current;
     if (!on || !canvas || !ghost || size <= 0) return;
@@ -59,6 +64,12 @@ export function DensityCanvas({ surface, size, on }: DensityCanvasProps) {
     context.putImageData(image, 0, 0);
 
     if (crossfade) fadeIn(canvas, '--t-base');
+    // Opened on, the sheet comes in with the cloud, not before it. A layer
+    // the user turns on has the wrapper's own fade and needs no second one.
+    // The ref is cleared here, after the draw: StrictMode's second run finds
+    // the drawing done and returns above, so the fade is not started twice.
+    if (opening) fadeIn(canvas, '--t-slow');
+    mounting.current = false;
     drawn.current = { surface, pixels };
   }, [surface, size, on]);
 
