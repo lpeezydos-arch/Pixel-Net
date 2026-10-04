@@ -2,9 +2,6 @@ import type { Sun, Surface } from './types';
 
 const RAD = Math.PI / 180;
 
-/** Gray level of a slope that receives no direct light. Keeps shade readable. */
-export const SHADE_FLOOR = 40;
-
 /**
  * Writes one RGBA pixel per DEM pixel into `out` (length width × height × 4),
  * so it can be handed straight to an ImageData. There are no cast shadows.
@@ -16,15 +13,18 @@ export function shade(surface: Surface, sun: Sun, out: Uint8ClampedArray): void 
   const ly = Math.cos(altitude) * Math.cos(azimuth);
   const lz = Math.sin(altitude);
   const { nx, ny, nz, nodata } = surface;
-  const range = 255 - SHADE_FLOOR;
 
   for (let i = 0, o = 0; i < nx.length; i++, o += 4) {
     if (nodata[i]) {
       out[o] = out[o + 1] = out[o + 2] = out[o + 3] = 0;
       continue;
     }
+    // Half-Lambert: wrap N·L from [-1,1] into [0,1] rather than clamping it, so
+    // ground facing away from the sun keeps its shape. Squaring brings the
+    // contrast on the lit side back close to what the clamp gave.
     const facing = nx[i] * lx + ny[i] * ly + nz[i] * lz;
-    const gray = SHADE_FLOOR + range * (facing > 0 ? facing : 0);
+    const wrapped = (facing + 1) / 2;
+    const gray = 255 * wrapped * wrapped;
     out[o] = out[o + 1] = out[o + 2] = gray;
     out[o + 3] = 255;
   }

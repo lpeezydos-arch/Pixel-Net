@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SHADE_FLOOR, shade } from './hillshade';
+import { shade } from './hillshade';
 import { computeSurface } from './surface';
 import { demFrom, tiltedPlane } from './testing';
 
@@ -18,25 +18,30 @@ describe('shade', () => {
     expect(grayAt(tiltedPlane(45, 90), 90, 45, CENTER)).toEqual([255, 255, 255, 255]);
   });
 
-  it('makes a slope that faces away from the sun as dark as the floor', () => {
-    // A 45° slope facing west, sun in the east 45° high.
-    expect(grayAt(tiltedPlane(45, 270), 90, 45, CENTER)).toEqual([
-      SHADE_FLOOR, SHADE_FLOOR, SHADE_FLOOR, 255,
-    ]);
+  it('makes a slope the sun only grazes a quarter gray', () => {
+    // A 45° slope facing west, sun in the east 45° high: the light runs along it.
+    expect(grayAt(tiltedPlane(45, 270), 90, 45, CENTER)).toEqual([64, 64, 64, 255]);
+  });
+
+  it('keeps the shape of ground facing away from the sun', () => {
+    // Slopes facing west under a sun in the east 45° high. Both get no direct
+    // light; the steeper one turns further from the sun and prints darker.
+    const [steep] = grayAt(tiltedPlane(60, 270), 90, 45, CENTER);
+    const [steeper] = grayAt(tiltedPlane(75, 270), 90, 45, CENTER);
+    expect(steep).toBe(35);
+    expect(steeper).toBe(16);
   });
 
   it('lights a north-facing slope from the north and darkens it from the south', () => {
     expect(grayAt(tiltedPlane(45, 0), 0, 45, CENTER)).toEqual([255, 255, 255, 255]);
-    expect(grayAt(tiltedPlane(45, 0), 180, 45, CENTER)).toEqual([
-      SHADE_FLOOR, SHADE_FLOOR, SHADE_FLOOR, 255,
-    ]);
+    expect(grayAt(tiltedPlane(45, 0), 180, 45, CENTER)).toEqual([64, 64, 64, 255]);
   });
 
   it('lights level ground by the height of the sun alone', () => {
     const level = demFrom(5, 5, 5, () => 100);
     const [low] = grayAt(level, 0, 30, 12);
     const [high] = grayAt(level, 200, 90, 12);
-    expect(low).toBe(Math.round(SHADE_FLOOR + (255 - SHADE_FLOOR) * 0.5));
+    expect(low).toBe(143);
     expect(high).toBe(255);
   });
 
