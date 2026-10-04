@@ -896,3 +896,97 @@ p {
     right: var(--sp-3);
   }
 }
+
+/* A phone on its side: too short to stack the two parts, so they sit side by
+   side in a wider card. */
+@media (min-width: 521px) and (max-height: 520px) {
+  .sheet {
+    width: min(680px, calc(100vw - 2 * var(--sp-4)));
+    padding: var(--sp-4) var(--sp-5);
+  }
+
+  .sheet__parts {
+    flex-direction: row;
+    gap: var(--sp-5);
+  }
+
+  .sheet__part {
+    flex: 1 1 0;
+  }
+}
+
+/* The sheet rises from the edge it stands on; the card, which stands on
+   nothing, fades up a little. Radix keeps both in the page until the closing
+   animation ends. */
+.scrim {
+  animation: scrim-in var(--t-base) var(--ease-out);
+}
+
+.scrim[data-state='closed'] {
+  animation: scrim-out var(--t-fast) var(--ease-out);
+}
+
+.sheet {
+  animation: sheet-in var(--t-slow) var(--ease-out);
+}
+
+.sheet[data-state='closed'] {
+  animation: sheet-out var(--t-base) var(--ease-out);
+}
+
+@media (min-width: 521px) {
+  .sheet {
+    animation-name: card-in;
+  }
+
+  .sheet[data-state='closed'] {
+    animation-name: card-out;
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes scrim-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes card-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .scrim[data-state='closed'],
+  .sheet,
+  .sheet[data-state='closed'] {
+    animation: none;
+  }
+}

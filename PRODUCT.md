@@ -98,6 +98,12 @@ Confirmed functionality (spec §2–3):
   and where there is no share sheet the link is copied. A shared link always
   names its DEM, so even the default view opens as itself on a device with a
   saved view.
+- Help: one button in the title bar opens a sheet with how to use the screen
+  and the latest three changes. A dot on the button marks changes the device
+  has not shown; opening the sheet clears it. Nothing opens unasked. The
+  changes are a hand-written list, `src/help/news.json`, which is also written
+  out as `CHANGELOG.md`
+  (`docs/superpowers/specs/2026-10-03-help-and-news-design.md`).
 
 Technical constraints:
 
@@ -119,6 +125,9 @@ USGS VID chrome; native app-store builds. Shareable links left this list on
 picture where there is no share sheet; short links, QR codes and embeds; a
 preview card that shows the linked view; opening a link in the installed app on
 an iPhone, where iOS opens links in Safari.
+Out of scope for help (help and news spec §2): anything that appears unasked,
+such as a first-visit tour or a note after an update; an "About" part; the
+full history inside the app; a link from the sheet to the changelog.
 
 Terminology: DEM; hillshade; the net (Schmidt net); the cloud (every plotted
 pixel); the point (the highlighted pixel); slope, aspect, elevation; the sun

@@ -253,3 +253,122 @@ test('the help button sits after the share button and is a 44px target on a touc
     expect(Math.round(helpBox.height)).toBeGreaterThanOrEqual(44);
   }
 });
+
+/** Waits until the sheet has finished moving. */
+const settled = (page: Page) =>
+  sheet(page).evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+
+/** Opens the sheet and checks that all of it is on the screen and nothing scrolls. */
+async function expectSheetFits(page: Page) {
+  await help(page).click();
+  await expect(sheet(page)).toBeVisible();
+  await settled(page);
+
+  const viewport = page.viewportSize()!;
+  const box = (await sheet(page).boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 0.5);
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 0.5);
+
+  const overflow = await sheet(page).evaluate((element) => ({
+    sheet: element.scrollHeight - element.clientHeight,
+    page: document.documentElement.scrollHeight - window.innerHeight,
+    wide: document.documentElement.scrollWidth - window.innerWidth,
+  }));
+  expect(overflow.sheet).toBeLessThanOrEqual(0);
+  expect(overflow.page).toBeLessThanOrEqual(0);
+  expect(overflow.wide).toBeLessThanOrEqual(0);
+
+  // Every line is inside the sheet, not hanging out of it.
+  for (const item of [...(await howTo(page).all()), ...(await news(page).all())]) {
+    const line = (await item.boundingBox())!;
+    expect(line.x).toBeGreaterThanOrEqual(box.x);
+    expect(line.x + line.width).toBeLessThanOrEqual(box.x + box.width + 0.5);
+    expect(line.y + line.height).toBeLessThanOrEqual(box.y + box.height + 0.5);
+  }
+  return box;
+}
+
+const parts = (page: Page) => sheet(page).locator('.sheet__part');
+
+test('on an upright phone the sheet stands on the bottom edge and spans the screen', async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 839 });
+  await openApp(page);
+  const box = await expectSheetFits(page);
+  expect(Math.round(box.x)).toBe(0);
+  expect(Math.round(box.width)).toBe(412);
+  expect(Math.round(box.y + box.height)).toBe(839);
+  // The parts are stacked.
+  const [how, whatsNew] = [(await parts(page).nth(0).boundingBox())!, (await parts(page).nth(1).boundingBox())!];
+  expect(whatsNew.y).toBeGreaterThanOrEqual(how.y + how.height);
+});
+
+test('the sheet fits a small phone', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await openApp(page);
+  await expectSheetFits(page);
+});
+
+test('on a desktop the sheet is a 420px card in the middle of the window', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page);
+  const box = await expectSheetFits(page);
+  expect(Math.round(box.width)).toBe(420);
+  expect(Math.abs(box.x + box.width / 2 - 640)).toBeLessThanOrEqual(1);
+  expect(Math.abs(box.y + box.height / 2 - 400)).toBeLessThanOrEqual(1);
+});
+
+for (const size of [
+  { width: 839, height: 412 },
+  { width: 640, height: 360 },
+]) {
+  test(`on a sideways phone, ${size.width} × ${size.height}, the two parts sit side by side`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await openApp(page);
+    await expectSheetFits(page);
+    const [how, whatsNew] = [(await parts(page).nth(0).boundingBox())!, (await parts(page).nth(1).boundingBox())!];
+    expect(Math.abs(how.y - whatsNew.y)).toBeLessThanOrEqual(1);
+    expect(whatsNew.x).toBeGreaterThanOrEqual(how.x + how.width);
+  });
+}
+
+test('turning the phone while the sheet is open rearranges it, and it still fits', async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 839 });
+  await openApp(page);
+  await expectSheetFits(page);
+
+  await page.setViewportSize({ width: 839, height: 412 });
+  await expect(sheet(page)).toBeVisible();
+  const box = (await sheet(page).boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(412.5);
+  expect(box.x + box.width).toBeLessThanOrEqual(839.5);
+  const [how, whatsNew] = [(await parts(page).nth(0).boundingBox())!, (await parts(page).nth(1).boundingBox())!];
+  expect(Math.abs(how.y - whatsNew.y)).toBeLessThanOrEqual(1);
+
+  // And back.
+  await page.setViewportSize({ width: 412, height: 839 });
+  // Changing arrangement swaps the sheet's animation for another, so let that one finish.
+  await settled(page);
+  const upright = (await sheet(page).boundingBox())!;
+  expect(Math.round(upright.y + upright.height)).toBe(839);
+});
+
+test('the sheet moves into place, and with reduced motion it does not move', async ({ page }) => {
+  await openApp(page);
+  await help(page).click();
+  const moving = await sheet(page).evaluate((element) => getComputedStyle(element).animationName);
+  expect(moving).not.toBe('none');
+  await page.keyboard.press('Escape');
+  await expect(sheet(page)).toBeHidden();
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await help(page).click();
+  await expect(sheet(page)).toBeVisible();
+  expect(await sheet(page).evaluate((element) => getComputedStyle(element).animationName)).toBe('none');
+  expect(await page.locator('.scrim').evaluate((element) => getComputedStyle(element).animationName)).toBe('none');
+  // With nothing to wait for, it is gone at once.
+  await page.keyboard.press('Escape');
+  await expect(sheet(page)).toHaveCount(0);
+});
