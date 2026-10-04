@@ -35,11 +35,16 @@ export function HelpButton() {
     // A tooltip that was open under the pointer must not wait behind the sheet
     // and show the moment it closes.
     setTipOpen(false);
-    setSeenAtOpen(seen);
+    // Another tab may have shown the news since this one read it. The higher
+    // value wins; with storage closed the read is 0 and the state still counts.
+    const current = Math.max(seen, readSeen());
+    setSeenAtOpen(current);
     // A remembered value above the newest entry is left as it is.
-    if (hasNews) {
+    if (NEWEST > current) {
       setSeen(NEWEST);
       writeSeen(NEWEST);
+    } else {
+      setSeen(current);
     }
   };
 

@@ -99,7 +99,7 @@ Confirmed functionality (spec §2–3):
   names its DEM, so even the default view opens as itself on a device with a
   saved view.
 - Help: one button in the title bar opens a sheet with how to use the screen
-  and the latest three changes. A dot on the button marks changes the device
+  and the latest three changes. A dot in the accent color on the button marks changes the device
   has not shown; opening the sheet clears it. Nothing opens unasked. The
   changes are a hand-written list, `src/help/news.json`, which is also written
   out as `CHANGELOG.md`
@@ -114,8 +114,9 @@ Technical constraints:
 - Slope and aspect by Horn's 3×3 method; the net is the equal-area (Schmidt)
   projection of the upward normal; no cast shadows. Aspect is the downhill
   direction.
-- Known limit: with three or four DEMs the picker and the app name truncate on
-  a phone.
+- Known limit: with two to four DEMs the picker and the app name truncate on
+  a phone narrower than about 400px; two fit at 412px and wider, and one fits
+  everywhere.
 
 Out of scope by decision (spec §2); do not reintroduce without a new decision:
 density net, aspect rose, patch or area selection; user-supplied or fetched

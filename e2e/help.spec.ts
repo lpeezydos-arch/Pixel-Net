@@ -153,6 +153,24 @@ test('with storage closed to the app, the dot clears for the visit and comes bac
   expect(errors).toEqual([]);
 });
 
+test('a second tab that opens the sheet after the first is not told again', async ({ page, context }) => {
+  await openApp(page);
+  const other = await context.newPage();
+  await openApp(other);
+  await expect(dot(page)).toBeVisible();
+  await expect(dot(other)).toBeVisible();
+
+  await help(page).click();
+  await expect(sheet(page)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(sheet(page)).toHaveCount(0);
+
+  await help(other).click();
+  await expect(sheet(other)).toBeVisible();
+  await expect(sheet(other).locator('[data-new="true"]')).toHaveCount(0);
+  await expect(dot(other)).toHaveCount(0);
+});
+
 test('Escape closes the sheet and returns focus to the help button', async ({ page }) => {
   await openApp(page);
   await help(page).click();
@@ -309,6 +327,18 @@ test('the sheet fits a small phone', async ({ page }) => {
   await openApp(page);
   await expectSheetFits(page);
 });
+
+// The sheet cannot scroll, so a longer sentence at a small size has nothing to catch it.
+for (const size of [
+  { width: 320, height: 480 },
+  { width: 667, height: 319 },
+]) {
+  test(`the sheet fits a ${size.width} × ${size.height} screen`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await openApp(page);
+    await expectSheetFits(page);
+  });
+}
 
 test('on a desktop the sheet is a 420px card in the middle of the window', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });

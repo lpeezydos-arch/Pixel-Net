@@ -41,7 +41,8 @@ export function HelpSheet({ entries, seen, coarse, onReturnFocus }: HelpSheetPro
             <h2 id="help-how-heading" className="sheet__heading">
               How to use it
             </h2>
-            <ul className="sheet__list" data-testid="help-how">
+            {/* role="list": Safari VoiceOver drops list semantics when list-style is none. */}
+            <ul className="sheet__list" role="list" data-testid="help-how">
               {howToLines(coarse).map((line) => (
                 <li key={line}>{line}</li>
               ))}
@@ -52,7 +53,8 @@ export function HelpSheet({ entries, seen, coarse, onReturnFocus }: HelpSheetPro
               <h2 id="help-news-heading" className="sheet__heading">
                 {"What's new"}
               </h2>
-              <ul className="sheet__list" data-testid="help-news">
+              {/* role="list": Safari VoiceOver drops list semantics when list-style is none. */}
+              <ul className="sheet__list" role="list" data-testid="help-news">
                 {entries.map((entry) => {
                   const unseen = isUnseen(entry, seen);
                   return (

@@ -12,8 +12,8 @@ each item is met. "Test" names a test that fails if the item regresses.
 | 5 | Legends | Not applicable | No legend |
 | 6 | Map controls never overlap | Not applicable | No map controls |
 | 7 | 44px hit targets; selection visible | Met | Test: "touch targets are at least 44px", which covers the share button too. The selected point has a 3px halo. A finger can let go of it: "a double-tap on the terrain clears the selection, and the caption says so once". |
-| 8 | Popups never clipped | Not applicable | No popups. The loupe is kept inside the terrain: test "is never clipped by the top of the box". |
-| 9 | Mobile: safe areas respected | Pending phone check | `env(safe-area-inset-*)` on the title bar and stage. Check on a phone with a notch. The footer, sheet and datepicker parts do not apply. |
+| 8 | Popups never clipped | Not applicable | The loupe is kept inside the terrain: test "is never clipped by the top of the box". The help sheet is a dialog on the bottom edge or centered, and tests check that all of it is on the screen at several sizes (`e2e/help.spec.ts`). The help tooltip is placed by Radix with collision padding. |
+| 9 | Mobile: safe areas respected | Pending phone check | `env(safe-area-inset-*)` on the title bar, the stage and the help sheet (padding on all three sides it can touch). Check on a phone with a notch, upright and sideways. The footer and datepicker parts do not apply. |
 | 10 | Touch targets 44px; inputs 16px | Met | Test: "touch targets are at least 44px". No text inputs. |
 | 11 | Spacing on the scale; nothing accidentally full-width | Met | Tests: "fits a … without scrolling or overlap" at seven sizes; `src/layout.test.ts` for the readout moving under the net on a tall phone, the shared column on an upright tablet with both cards the same width, the cards growing to 760px on a monitor, and nineteen sizes that must fit; "the readout columns hold still while the values change"; "the resting label stays inside the net and clear of the ring labels" |
 | 12 | Empty, error and loading states | Met | Tests: "shows dashes until a pixel is chosen", "shows an error card…", "nothing moves when the DEM arrives", "a flat pixel plots at the center of the net as a hollow point", "Escape clears the selection and says so" |
@@ -24,7 +24,7 @@ each item is met. "Test" names a test that fails if the item regresses.
 | 17 | Reduced motion honored, springs included | Met | Test: "with reduced motion the point jumps and nothing animates"; "the sheet moves into place, and with reduced motion it does not move" |
 | 18 | VID chrome intact | Not applicable | Not an official USGS app |
 | 19 | Buttons are pills with verb labels | Met | The one text button reads "Try again" (the picker's segments are tabs); the share button is an icon in a pill, named "Share this view"; the help button is an icon in a pill, named "Help and what's new" |
-| 20 | Accent only on the primary action and selection | Met | Accent appears on the selection ring, the net point, the loupe outline, the focus ring, the retry button, and the two news dots (on the help button and beside an unseen entry) |
+| 20 | Accent only on the primary action and selection | Met | Accent appears on the selection ring, the net point, the loupe outline, the focus ring, the retry button, and the two news dots (on the help button and beside an unseen entry). The news dots are a recorded exception, decided in `docs/superpowers/specs/2026-10-03-help-and-news-design.md` |
 
 ## Checked by hand on a phone
 

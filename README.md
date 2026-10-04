@@ -155,7 +155,8 @@ Styles follow the `lauren-frontend-design` skill. `src/styles/tokens.css` is
 that skill's `assets/tokens.css` with only the accent changed to rust
 (`--accent: #b84a00`, `--accent-strong: #8f3900`). Four deliberate departures:
 there is no USGS VID chrome, because this is not an official USGS app; the
-phone status bar is white so that rust stays reserved for the selection; the
+phone status bar is white so that rust stays reserved for the selection (and
+for unseen news: the dot on the help button and beside an unseen entry); the
 focus ring is the accent at 80% (set in `src/app.css`), because at the
 design system's 60% a rust ring is under 3:1; and the one info dot is not a
 Tab stop, because it is help for the net rather than a control, so its text

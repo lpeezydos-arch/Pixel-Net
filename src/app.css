@@ -281,8 +281,9 @@ p {
   background: color-mix(in srgb, var(--accent) 16%, white);
 }
 
-/* An icon alone, on the ground it sits on. Not accent-colored: rust is for
-   the selection. */
+/* An icon alone, on the ground it sits on. The button is not accent-colored:
+   rust is for the selection. The help button's news dot is the one rust on an
+   icon button, a recorded exception. */
 .icon-btn {
   flex: none;
   display: inline-flex;

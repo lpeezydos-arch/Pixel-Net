@@ -65,8 +65,11 @@ Out of scope:
 - The full history inside the app. The sheet shows the latest three entries.
 - A link from the sheet to `CHANGELOG.md`. It would need a signal.
 - Teaching what a Schmidt net is. Learners are not a target (`PRODUCT.md`).
-- A fix for the title bar truncating with three or four DEMs. The new button
-  makes that known limit slightly worse; it fits with one or two.
+- A fix for the title bar truncating with several DEMs. The help button takes
+  44px, so on a phone narrower than about 400px the picker and the app name now
+  truncate with two DEMs of two-word names as well as with three or four. It
+  fits with one DEM, and with two at 412px. The fix is its own decision and is
+  out of scope here.
 
 ## 3. What a person sees
 
