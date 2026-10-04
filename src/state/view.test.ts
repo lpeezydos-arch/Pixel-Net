@@ -8,34 +8,34 @@ const LOW_SOUTHEAST = { azimuth: 120, altitude: 35 };
 describe('encodeView', () => {
   it('writes the default view as nothing', () => {
     expect(encodeView(DEFAULT_VIEW, 'gore')).toBe('');
-    expect(encodeView({ dem: 'gore', pixel: null, sun: DEFAULT_SUN }, 'gore')).toBe('');
+    expect(encodeView({ dem: 'gore', pixel: null, sun: DEFAULT_SUN, density: false }, 'gore')).toBe('');
   });
 
   it('names the DEM, then the pixel, then the sun', () => {
-    expect(encodeView({ dem: 'gore', pixel: WEST, sun: DEFAULT_SUN }, 'gore')).toBe('dem=gore&px=150,210');
-    expect(encodeView({ dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST }, 'gore')).toBe(
+    expect(encodeView({ dem: 'gore', pixel: WEST, sun: DEFAULT_SUN, density: false }, 'gore')).toBe('dem=gore&px=150,210');
+    expect(encodeView({ dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST, density: false }, 'gore')).toBe(
       'dem=gore&px=150,210&sun=120,35',
     );
-    expect(encodeView({ dem: 'gore', pixel: null, sun: LOW_SOUTHEAST }, 'gore')).toBe('dem=gore&sun=120,35');
-    expect(encodeView({ dem: 'second', pixel: null, sun: DEFAULT_SUN }, 'gore')).toBe('dem=second');
+    expect(encodeView({ dem: 'gore', pixel: null, sun: LOW_SOUTHEAST, density: false }, 'gore')).toBe('dem=gore&sun=120,35');
+    expect(encodeView({ dem: 'second', pixel: null, sun: DEFAULT_SUN, density: false }, 'gore')).toBe('dem=second');
   });
 
   it('takes a view with no DEM to mean the first', () => {
-    expect(encodeView({ dem: null, pixel: WEST, sun: DEFAULT_SUN }, 'gore')).toBe('dem=gore&px=150,210');
+    expect(encodeView({ dem: null, pixel: WEST, sun: DEFAULT_SUN, density: false }, 'gore')).toBe('dem=gore&px=150,210');
   });
 
   it('rounds the sun to whole degrees and writes 360 as 0', () => {
     const sun = { azimuth: 359.6, altitude: 34.5 };
-    expect(encodeView({ dem: 'gore', pixel: null, sun }, 'gore')).toBe('dem=gore&sun=0,35');
+    expect(encodeView({ dem: 'gore', pixel: null, sun, density: false }, 'gore')).toBe('dem=gore&sun=0,35');
   });
 
   it('leaves out a sun that rounds to the default', () => {
     const sun = { azimuth: 315.2, altitude: 44.8 };
-    expect(encodeView({ dem: 'gore', pixel: null, sun }, 'gore')).toBe('');
+    expect(encodeView({ dem: 'gore', pixel: null, sun, density: false }, 'gore')).toBe('');
   });
 
   it('escapes a DEM id that is not plain', () => {
-    expect(encodeView({ dem: 'big bend & more', pixel: null, sun: DEFAULT_SUN }, 'gore')).toBe(
+    expect(encodeView({ dem: 'big bend & more', pixel: null, sun: DEFAULT_SUN, density: false }, 'gore')).toBe(
       'dem=big%20bend%20%26%20more',
     );
   });
@@ -43,7 +43,7 @@ describe('encodeView', () => {
 
 describe('encodeSharedView', () => {
   it('names the DEM of the default view', () => {
-    expect(encodeSharedView({ dem: 'gore', pixel: null, sun: DEFAULT_SUN }, 'gore')).toBe('dem=gore');
+    expect(encodeSharedView({ dem: 'gore', pixel: null, sun: DEFAULT_SUN, density: false }, 'gore')).toBe('dem=gore');
   });
 
   it('names the first DEM when the view names none', () => {
@@ -53,11 +53,11 @@ describe('encodeSharedView', () => {
 
   it('writes any other view as encodeView does', () => {
     const views: View[] = [
-      { dem: 'gore', pixel: WEST, sun: DEFAULT_SUN },
-      { dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST },
-      { dem: 'gore', pixel: null, sun: LOW_SOUTHEAST },
-      { dem: 'second', pixel: null, sun: DEFAULT_SUN },
-      { dem: null, pixel: WEST, sun: DEFAULT_SUN },
+      { dem: 'gore', pixel: WEST, sun: DEFAULT_SUN, density: false },
+      { dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST, density: false },
+      { dem: 'gore', pixel: null, sun: LOW_SOUTHEAST, density: false },
+      { dem: 'second', pixel: null, sun: DEFAULT_SUN, density: false },
+      { dem: null, pixel: WEST, sun: DEFAULT_SUN, density: false },
     ];
     for (const view of views) expect(encodeSharedView(view, 'gore')).toBe(encodeView(view, 'gore'));
   });
@@ -70,12 +70,12 @@ describe('encodeSharedView', () => {
 describe('decodeView', () => {
   it('reads back everything encodeView writes', () => {
     const views: View[] = [
-      { dem: 'gore', pixel: WEST, sun: DEFAULT_SUN },
-      { dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST },
-      { dem: 'gore', pixel: null, sun: LOW_SOUTHEAST },
-      { dem: 'second', pixel: null, sun: DEFAULT_SUN },
-      { dem: 'second', pixel: { col: 0, row: 0 }, sun: { azimuth: 0, altitude: 90 } },
-      { dem: 'big bend & more', pixel: null, sun: DEFAULT_SUN },
+      { dem: 'gore', pixel: WEST, sun: DEFAULT_SUN, density: false },
+      { dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST, density: false },
+      { dem: 'gore', pixel: null, sun: LOW_SOUTHEAST, density: false },
+      { dem: 'second', pixel: null, sun: DEFAULT_SUN, density: false },
+      { dem: 'second', pixel: { col: 0, row: 0 }, sun: { azimuth: 0, altitude: 90 }, density: false },
+      { dem: 'big bend & more', pixel: null, sun: DEFAULT_SUN, density: false },
     ];
     for (const view of views) expect(decodeView(encodeView(view, 'gore'))).toEqual(view);
   });
@@ -89,6 +89,7 @@ describe('decodeView', () => {
       dem: 'big bend & more',
       pixel: WEST,
       sun: DEFAULT_SUN,
+      density: false,
     });
   });
 
@@ -114,7 +115,7 @@ describe('decodeView', () => {
   });
 
   it('ignores parts it does not know', () => {
-    expect(decodeView('utm_source=x&dem=gore&zoom=3')).toEqual({ dem: 'gore', pixel: null, sun: DEFAULT_SUN });
+    expect(decodeView('utm_source=x&dem=gore&zoom=3')).toEqual({ dem: 'gore', pixel: null, sun: DEFAULT_SUN, density: false });
   });
 });
 
@@ -140,5 +141,43 @@ describe('pixelInside', () => {
     expect(pixelInside({ col: 288, row: 0 }, 288, 294)).toBe(false);
     expect(pixelInside({ col: 0, row: 294 }, 288, 294)).toBe(false);
     expect(pixelInside({ col: -1, row: 0 }, 288, 294)).toBe(false);
+  });
+});
+
+describe('the density layer', () => {
+  const ON: View = { dem: 'gore', pixel: WEST, sun: LOW_SOUTHEAST, density: true };
+
+  it('is written last, as density=1', () => {
+    expect(encodeView(ON, 'gore')).toBe('dem=gore&px=150,210&sun=120,35&density=1');
+    expect(encodeView({ ...DEFAULT_VIEW, density: true }, 'gore')).toBe('dem=gore&density=1');
+  });
+
+  it('is left out when it is off', () => {
+    expect(encodeView({ ...ON, density: false }, 'gore')).toBe('dem=gore&px=150,210&sun=120,35');
+    expect(encodeView(DEFAULT_VIEW, 'gore')).toBe('');
+  });
+
+  it('is read back', () => {
+    expect(decodeView(encodeView(ON, 'gore'))).toEqual(ON);
+    expect(decodeView('density=1')).toEqual({ ...DEFAULT_VIEW, density: true });
+  });
+
+  it('reads as off in a link made before there was a layer', () => {
+    expect(decodeView('dem=gore&px=150,210&sun=120,35').density).toBe(false);
+  });
+
+  it('reads as off for any value but 1', () => {
+    for (const value of ['', '0', 'true', 'on', '2', '01', '1.0', ' 1']) {
+      expect(decodeView(`density=${value}`).density, `density=${value}`).toBe(false);
+    }
+  });
+
+  it('is shared like any other part', () => {
+    expect(encodeSharedView({ ...DEFAULT_VIEW, density: true }, 'gore')).toBe('dem=gore&density=1');
+  });
+
+  it('makes a string name a view', () => {
+    expect(namesView('density=1')).toBe(true);
+    expect(namesView('density=0')).toBe(true);
   });
 });

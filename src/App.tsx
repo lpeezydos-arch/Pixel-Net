@@ -38,6 +38,7 @@ export function App() {
   const selection = useMotionValue(-1); // index of the selected pixel, or −1
   const sunAzimuth = useMotionValue(start.sun.azimuth);
   const sunAltitude = useMotionValue(start.sun.altitude);
+  const [density, setDensity] = useState(start.density);
   const [hasSelection, setHasSelection] = useState(false);
   const [clearedOnce, setClearedOnce] = useState(false);
   const [terrainFocused, setTerrainFocused] = useState(false);
@@ -108,6 +109,8 @@ export function App() {
     selection,
     sunAzimuth,
     sunAltitude,
+    density,
+    onDensity: setDensity,
     onSelectDem: selectDem,
     onRestore: handleRestore,
   });

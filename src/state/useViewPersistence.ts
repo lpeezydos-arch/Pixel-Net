@@ -27,6 +27,10 @@ interface ViewPersistenceOptions {
   selection: MotionValue<number>;
   sunAzimuth: MotionValue<number>;
   sunAltitude: MotionValue<number>;
+  /** Whether the density layer is on. */
+  density: boolean;
+  /** Turns the density layer on or off, as its button does. */
+  onDensity: (on: boolean) => void;
   /** Switches to another DEM, as the picker does. */
   onSelectDem: (id: string) => void;
   /** A view was applied; `selected` says whether it selected a pixel. */
@@ -34,7 +38,8 @@ interface ViewPersistenceOptions {
 }
 
 /**
- * Keeps the view (which DEM, which pixel, where the sun is) in step with the
+ * Keeps the view (which DEM, which pixel, where the sun is, whether the
+ * density layer is on) in step with the
  * address bar and with what is saved on the device.
  *
  * Reading: the view to open on has its pixel selected once its DEM has
@@ -57,14 +62,14 @@ export function useViewPersistence(options: ViewPersistenceOptions): (shared?: b
 
   const viewText = useCallback(
     (shared = false): string | null => {
-      const { entries, activeId, loaded } = latest.current;
+      const { entries, activeId, loaded, density } = latest.current;
       if (!activeId || entries.length === 0) return null;
       const index = selection.get();
       // While another DEM loads there is no pixel to name: the switch cleared it.
       const pixel = index >= 0 && loaded?.id === activeId ? toPixel(index, loaded.width) : null;
       const encode = shared ? encodeSharedView : encodeView;
       return encode(
-        { dem: activeId, pixel, sun: { azimuth: sunAzimuth.get(), altitude: sunAltitude.get() } },
+        { dem: activeId, pixel, sun: { azimuth: sunAzimuth.get(), altitude: sunAltitude.get() }, density },
         entries[0].id,
       );
     },
@@ -109,9 +114,13 @@ export function useViewPersistence(options: ViewPersistenceOptions): (shared?: b
   /** Applies a view read from the address while the app is open. */
   const apply = useCallback(
     (view: View) => {
-      const { entries, activeId, onSelectDem } = latest.current;
+      const { entries, activeId, onSelectDem, onDensity } = latest.current;
       sunAzimuth.set(view.sun.azimuth);
       sunAltitude.set(view.sun.altitude);
+      onDensity(view.density);
+      // The view is written below, before the next render brings the new
+      // value: without this it would be written with the layer as it was.
+      latest.current = { ...latest.current, density: view.density };
       waiting.current = view;
       // A DEM that is not in the list means the first, as it does on opening.
       const wanted = entries.find((entry) => entry.id === view.dem)?.id ?? entries[0]?.id;
@@ -141,6 +150,11 @@ export function useViewPersistence(options: ViewPersistenceOptions): (shared?: b
   useEffect(() => {
     if (options.activeId) schedule();
   }, [options.activeId, schedule]);
+
+  // And so does the density layer turning on or off.
+  useEffect(() => {
+    schedule();
+  }, [options.density, schedule]);
 
   // A page that is hidden or closed may never run its timer: write now.
   useEffect(() => {

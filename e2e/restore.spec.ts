@@ -315,3 +315,43 @@ test('an address that already has a query keeps it', async ({ page }) => {
     .poll(() => page.evaluate(() => window.location.search + window.location.hash))
     .toBe('?ref=mail#dem=gore&px=200,230');
 });
+
+test('the density part of a link is kept as the view changes', async ({ page }) => {
+  await openLink(page, 'dem=gore&px=150,210&density=1');
+  await clickPixel(page, 200, 230);
+  await expect.poll(() => fragment(page)).toBe('#dem=gore&px=200,230&density=1');
+  await expect.poll(() => saved(page)).toBe('dem=gore&px=200,230&density=1');
+});
+
+test('a density part that is not 1 is dropped from the address', async ({ page }) => {
+  await openLink(page, 'dem=gore&px=150,210&density=yes');
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await expect.poll(() => fragment(page)).toBe('#dem=gore&px=150,210');
+});
+
+test('a link pasted with a density part keeps it in the address from the first moment', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => {
+    window.location.hash = 'dem=gore&px=150,210&density=1';
+  });
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  // The view is written as soon as the pixel is selected. It must be written with the layer the link asked for.
+  expect(await fragment(page)).toBe('#dem=gore&px=150,210&density=1');
+  await page.waitForTimeout(600); // past the 400 ms after which a change is written
+  expect(await fragment(page)).toBe('#dem=gore&px=150,210&density=1');
+  expect(await saved(page)).toBe('dem=gore&px=150,210&density=1');
+});
+
+test('a link pasted with no density part turns the layer off', async ({ page }) => {
+  await openLink(page, 'dem=gore&px=150,210&density=1');
+  await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
+  await page.evaluate(() => {
+    window.location.hash = 'dem=gore&px=200,230';
+  });
+  await expect(slope(page)).toHaveText('41.5°');
+  // A link describes the whole view. The next change is written without the layer.
+  await clickPixel(page, WEST_SLOPE.col, WEST_SLOPE.row);
+  await expect.poll(() => fragment(page)).toBe('#dem=gore&px=150,210');
+  await page.waitForTimeout(600);
+  expect(await fragment(page)).toBe('#dem=gore&px=150,210');
+});
