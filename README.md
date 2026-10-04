@@ -93,10 +93,11 @@ installed app's name all come from it.
 ## Links, sharing and the saved view
 
 The address always holds the view, for example
-`#dem=gore&px=150,210&sun=120,35`: the DEM's `id`, the selected pixel's column
-and row, and the sun's azimuth and height. Opening such a link opens that
-view. The pixel is left out when nothing is selected, and the sun when it is
-at its default. At the default view (the first DEM, nothing selected, the sun
+`#dem=gore&px=150,210&sun=120,35&density=1`: the DEM's `id`, the selected
+pixel's column and row, the sun's azimuth and height, and `density=1` when the
+density layer is on. Opening such a link opens that view. The pixel is left
+out when nothing is selected, the sun when it is at its default, and the layer
+when it is off. At the default view (the first DEM, nothing selected, the sun
 in the northwest) nothing is written and the address is bare.
 
 The same string is saved on the device under `pixel-net:view`, so the app
@@ -113,6 +114,32 @@ link is copied.
 A link pasted into a message shows a preview card. Its tags are in
 `index.html` and need the site's whole address, which is `VITE_SITE_URL` in
 `.env`.
+
+## The density layer
+
+The button in the net's top-right corner turns on a see-through blue layer
+that shows where the cloud is densest. The cloud itself darkens where points
+overlap, but it saturates quickly, so its dense part looks uniform.
+
+It is the classic Schmidt count. For each position on the net, the app takes
+the share of plottable pixels inside a circle covering 1% of the net, and
+divides by 1%. The unit is times an even spread: at 1× a place holds as many
+points as it would if the cloud were spread evenly over the whole net. The
+net is equal-area, so one circle covers the same share of directions
+everywhere on it.
+
+Bands are drawn from 2× up, with a line at each level. The Gore Range peaks
+at about 6.5× on its southwest slopes, so its lines are at 2×, 3×, 4×, 5× and
+6×. A gentler landscape crowds toward the center and peaks far higher; its
+levels rise by 2, 5, 10 or 20, whichever is the smallest step that gives six
+levels or fewer. The key in the net's bottom-left corner names the first
+level and the last.
+
+Near the rim part of the circle lies outside the net, and the density there
+reads low. It is not corrected: only ground steeper than about 80° plots
+there.
+
+The code is `src/terrain/density.ts`.
 
 ## Tell users what changed
 

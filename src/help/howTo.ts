@@ -1,5 +1,6 @@
 const SUN = 'Drag the sun on the net to change the light.';
 const SHARE = 'The share button sends a link to this view.';
+const DENSITY = 'The layers button on the net shows density.';
 const NET = 'The i on the net explains how to read it.';
 
 /**
@@ -15,6 +16,7 @@ export function howToLines(coarse: boolean): string[] {
         SUN,
         'Double-tap the sun to put it back.',
         SHARE,
+        DENSITY,
         NET,
       ]
     : [
@@ -23,6 +25,7 @@ export function howToLines(coarse: boolean): string[] {
         SUN,
         'Double-click the sun to put it back.',
         SHARE,
+        DENSITY,
         NET,
       ];
 }

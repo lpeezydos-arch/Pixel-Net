@@ -50,7 +50,7 @@ test('the sheet is a dialog named Help with the two parts', async ({ page }, tes
   await expect(dialog.getByRole('heading', { name: "What's new" })).toBeVisible();
 
   // The first line names the gesture the screen has, as the caption does.
-  await expect(howTo(page)).toHaveCount(6);
+  await expect(howTo(page)).toHaveCount(7);
   await expect(howTo(page).first()).toHaveText(`${hint(testInfo.project.name)}.`);
   await expect(howTo(page).nth(1)).toHaveText(
     testInfo.project.name === 'phone'
@@ -257,7 +257,7 @@ test('the help button works while the DEM cannot be loaded', async ({ page }) =>
   await expect(help(page)).toBeEnabled();
   await help(page).click();
   await expect(sheet(page)).toBeVisible();
-  await expect(howTo(page)).toHaveCount(6);
+  await expect(howTo(page)).toHaveCount(7);
 });
 
 test('the help button sits after the share button and is a 44px target on a touch screen', async ({ page }, testInfo) => {

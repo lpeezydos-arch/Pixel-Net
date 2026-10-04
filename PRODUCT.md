@@ -21,10 +21,11 @@ not chosen; it is not a target.
 One screen: a hillshade of a DEM beside a Schmidt net of every pixel in it.
 Pressing or dragging on the terrain highlights that pixel's point on the net
 and shows its slope, aspect and elevation. Dragging the sun on the net
-re-lights the terrain. The app installs to a phone's home screen and works
-with no signal after the first visit. It reopens on the DEM, pixel and sun it
-was left on, and one button shares a link that restores the view, with a
-picture of it where the share sheet takes one.
+re-lights the terrain. A button on the net lays a see-through density layer
+over the cloud, which shows where its pixels crowd together. The app installs
+to a phone's home screen and works with no signal after the first visit. It
+reopens on the DEM, pixel and sun it was left on, and one button shares a link
+that restores the view, with a picture of it where the share sheet takes one.
 
 It exists so a geoscientist can see how a place on the terrain maps to a
 position on the net, and read the net as a portrait of the landscape's slope
@@ -82,17 +83,27 @@ Confirmed functionality (spec §2–3):
 - Sun: a draggable marker on the net. Default azimuth 315°, height 45°; height
   limited to 10°–90°; double-tap resets; keyboard adjustable. Persists across a
   DEM switch and is restored when the app reopens.
+- Density layer: a button in the net's top-right corner turns on a translucent
+  blue layer over the cloud. It is the Schmidt count: the share of plottable
+  pixels in a circle covering 1% of the net, in times an even spread. Bands
+  with a line at each level; levels are whole multiples of the smallest of 1,
+  2, 5, 10 and 20 that gives six or fewer, starting at 2× when the step is 1.
+  A one-line key on the net names the first level and the last, and the net's
+  tooltip says how it is counted. Off by default; kept across a DEM switch
+  (`docs/superpowers/specs/2026-10-03-density-layer-design.md`).
 - DEM picker: a segmented control for two to four DEMs, plain text for one.
   More than four is unsupported.
 - States: loading (skeletons), ready, selected, flat, no-data, and a DEM error
   card with "Try again".
 - Offline: the shell, font, manifest and every `.tif` are precached (25 MB per
   file); new versions apply on the next open with no prompt.
-- View: the DEM, the selected pixel and the sun are written into the address
-  (`#dem=gore&px=150,210&sun=120,35`, with an unselected pixel and a default
-  sun left out) and saved on the device; the app reopens on them, and a link
-  that names a view wins over the saved view; a bare address opens the saved
-  view (`docs/superpowers/specs/2026-10-03-share-and-restore-design.md`).
+- View: the DEM, the selected pixel, the sun and whether the density layer is
+  on are written into the address
+  (`#dem=gore&px=150,210&sun=120,35&density=1`, with an unselected pixel, a
+  default sun and a layer that is off left out) and saved on the device; the
+  app reopens on them, and a link that names a view wins over the saved view;
+  a bare address opens the saved view
+  (`docs/superpowers/specs/2026-10-03-share-and-restore-design.md`).
 - Share: one button in the title bar opens the share sheet with a picture of
   the view and its link; a share sheet that takes no files gets the link alone,
   and where there is no share sheet the link is copied. A shared link always
@@ -119,20 +130,25 @@ Technical constraints:
   everywhere.
 
 Out of scope by decision (spec §2); do not reintroduce without a new decision:
-density net, aspect rose, patch or area selection; user-supplied or fetched
-DEMs; zoom or pan; cast shadows or a sun set by date and time; dark theme;
-USGS VID chrome; native app-store builds. Shareable links left this list on
-2026-10-03. Out of scope for sharing (share and restore spec §2): saving the
-picture where there is no share sheet; short links, QR codes and embeds; a
-preview card that shows the linked view; opening a link in the installed app on
-an iPhone, where iOS opens links in Safari.
+aspect rose, patch or area selection; user-supplied or fetched DEMs; zoom or
+pan; cast shadows or a sun set by date and time; dark theme; USGS VID chrome;
+native app-store builds. Shareable links left this list on 2026-10-03. The
+density net left it the same day, as the density layer; still out of scope for
+it: a legend with a color bar, the density at the selected pixel, a choice of
+counting circle, levels or color, and Kamb contouring. Out of scope for
+sharing (share and restore spec §2): saving the picture where there is no
+share sheet; short links, QR codes and embeds; a preview card that shows the
+linked view; opening a link in the installed app on an iPhone, where iOS opens
+links in Safari.
 Out of scope for help (help and news spec §2): anything that appears unasked,
 such as a first-visit tour or a note after an update; an "About" part; the
 full history inside the app; a link from the sheet to the changelog.
 
 Terminology: DEM; hillshade; the net (Schmidt net); the cloud (every plotted
-pixel); the point (the highlighted pixel); slope, aspect, elevation; the sun
-(azimuth and height); loupe; readout; picker; caption.
+pixel); the point (the highlighted pixel); the density layer (bands over the
+cloud where pixels crowd together); times an even spread (its unit); the key
+(the line that names its levels); slope, aspect, elevation; the sun (azimuth
+and height); loupe; readout; picker; caption.
 
 Undecided:
 
@@ -158,8 +174,10 @@ Undecided:
   copy of it.
 - `data/GORE/GORE_stereonet.png`, the reference net the cloud is checked
   against by eye. Also there: `GORE_hillshade.png`, `GORE_rose.png` and
-  `GORE_stereonet_density.png`, reference figures for the hillshade and for two
-  views that are out of scope.
+  `GORE_stereonet_density.png`: reference figures for the hillshade, for a
+  view that is out of scope, and a Kamb-contoured figure of the same data. The
+  Kamb figure is not the reference for the density layer, which is counted
+  another way.
 - `screenshots/`, thirteen captures of the current build at phone and desktop
   sizes (untracked as of 2026-10-02).
 - Automated tests in `src/**/*.test.ts` and `e2e/*.spec.ts`.

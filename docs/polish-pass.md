@@ -5,13 +5,13 @@ each item is met. "Test" names a test that fails if the item regresses.
 
 | # | Item | Status | Evidence |
 |---|---|---|---|
-| 1 | Tooltips on every non-obvious control and metric | Met | Tests: "explains the net and its three values from one info button, below the button", "explains the sun from its tooltip", "the info dot is help for the net, not a tab stop". The sun also states its own position at rest ("the sun states its position at rest, and keeps stating it after a drag") and, on a touch screen, says what it does when tapped ("a tap on the sun at its default says how to move it") and stirs once at first open ("the sun stirs once at first open on a touch screen, and never on a desktop"). |
+| 1 | Tooltips on every non-obvious control and metric | Met | Tests: "explains the net and its three values from one info button, below the button", "explains the sun from its tooltip", "the info dot is help for the net, not a tab stop". The sun also states its own position at rest ("the sun states its position at rest, and keeps stating it after a drag") and, on a touch screen, says what it does when tapped ("a tap on the sun at its default says how to move it") and stirs once at first open ("the sun stirs once at first open on a touch screen, and never on a desktop"). The density button is named by its tooltip ("the button is named by its tooltip"), and the net's own tooltip says what the layer shows while it is on ("the net's explanation says what the layer shows while it is on"). |
 | 2 | Skeletons for anything over 300ms; chart frame first | Met | Tests: "nothing moves when the DEM arrives", "the loading shimmer shows the net frame through it" |
 | 3 | No snap-in; nothing reflows on load | Met | Test: "nothing moves when the DEM arrives". Terrain and cloud fade in. |
 | 4 | Copy-link button for linkable state | Met | The view is linkable: the address holds it. The share button shares the link where there is a share sheet and copies it where there is none. Tests: "the address follows the view, and is bare again at the default view", "a link opens its pixel and its sun", "with no share sheet, a press copies the link and says so" |
-| 5 | Legends | Not applicable | No legend |
+| 5 | Legends | Met | The density layer has a one-line key on the net that names its first and last levels, and its method is in the net's tooltip. A color bar was decided against (`docs/superpowers/specs/2026-10-03-density-layer-design.md`). Tests: "the density button turns the layer on and off", "the button and the key sit in the net's corners, clear of the rim". |
 | 6 | Map controls never overlap | Not applicable | No map controls |
-| 7 | 44px hit targets; selection visible | Met | Test: "touch targets are at least 44px", which covers the share button too. The selected point has a 3px halo. A finger can let go of it: "a double-tap on the terrain clears the selection, and the caption says so once". |
+| 7 | 44px hit targets; selection visible | Met | Test: "touch targets are at least 44px", which covers the share button too. The selected point has a 3px halo. A finger can let go of it: "a double-tap on the terrain clears the selection, and the caption says so once". The density button is 28px with a 44px target, covered by the same test, and shows that it is pressed. |
 | 8 | Popups never clipped | Not applicable | The loupe is kept inside the terrain: test "is never clipped by the top of the box". The help sheet is a dialog on the bottom edge or centered, and tests check that all of it is on the screen at several sizes (`e2e/help.spec.ts`). The help tooltip is placed by Radix with collision padding. |
 | 9 | Mobile: safe areas respected | Pending phone check | `env(safe-area-inset-*)` on the title bar, the stage and the help sheet (padding on all three sides it can touch). Check on a phone with a notch, upright and sideways. The footer and datepicker parts do not apply. |
 | 10 | Touch targets 44px; inputs 16px | Met | Test: "touch targets are at least 44px". No text inputs. |
@@ -24,7 +24,7 @@ each item is met. "Test" names a test that fails if the item regresses.
 | 17 | Reduced motion honored, springs included | Met | Test: "with reduced motion the point jumps and nothing animates"; "the sheet moves into place, and with reduced motion it does not move" |
 | 18 | VID chrome intact | Not applicable | Not an official USGS app |
 | 19 | Buttons are pills with verb labels | Met | The one text button reads "Try again" (the picker's segments are tabs); the share button is an icon in a pill, named "Share this view"; the help button is an icon in a pill, named "Help and what's new" |
-| 20 | Accent only on the primary action and selection | Met | Accent appears on the selection ring, the net point, the loupe outline, the focus ring, the retry button, and the two news dots (on the help button and beside an unseen entry). The news dots are a recorded exception, decided in `docs/superpowers/specs/2026-10-03-help-and-news-design.md` |
+| 20 | Accent only on the primary action and selection | Met | Accent appears on the selection ring, the net point, the loupe outline, the focus ring, the retry button, and the two news dots (on the help button and beside an unseen entry). The news dots are a recorded exception, decided in `docs/superpowers/specs/2026-10-03-help-and-news-design.md`. The density layer, its key and its pressed button are `--viz-1`, a data color, so that rust stays the selection's alone. |
 
 ## Checked by hand on a phone
 
@@ -48,3 +48,11 @@ each item is met. "Test" names a test that fails if the item regresses.
       button is easy to reach with a thumb.
 - [ ] Sideways on a phone with a notch, the help card is clear of the notch.
 - [ ] After closing the help sheet with a tap, no tooltip stays over the title bar.
+- [ ] With the density layer on, the three peaks of the Gore Range (a ridge in
+      the southwest, a peak in the northeast, a smaller one in the northwest)
+      can be told apart at arm's length.
+- [ ] With the layer on, the rust point is as easy to follow during a drag as
+      with it off.
+- [ ] The density button is easy to press with a thumb, beside the readout,
+      and a press never moves the sun.
+- [ ] The key is readable and does not touch the rim.

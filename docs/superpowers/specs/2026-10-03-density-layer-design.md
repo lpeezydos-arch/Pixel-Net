@@ -330,8 +330,10 @@ button is easy to press beside the readout.
 - `README.md`: what the layer shows and how it is counted.
 - This is built in its own worktree off `main`.
 - `src/help/howTo.ts`: one line on both kinds of device, before the line
-  about the `i`: "The layers button on the net shows where pixels crowd
-  together."
+  about the `i`: "The layers button on the net shows density." The sentence first written
+  here, "The layers button on the net shows where pixels crowd together.",
+  took two lines on a 320px screen and pushed the help sheet off a 320 × 480
+  screen, so it was shortened.
 - `src/help/news.json`: entry 5, "A button on the net shows where pixels crowd
   together.", dated the day it ships. `CHANGELOG.md` is written from the list
   by `npm run changelog`, and the dot on the help button then marks it unseen.

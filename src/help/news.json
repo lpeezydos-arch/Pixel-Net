@@ -18,5 +18,10 @@
     "id": 4,
     "date": "2026-10-03",
     "text": "The help button shows how to use the app and what has changed."
+  },
+  {
+    "id": 5,
+    "date": "2026-10-03",
+    "text": "A button on the net shows where pixels crowd together."
   }
 ]
