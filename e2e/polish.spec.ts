@@ -166,6 +166,12 @@ test('touch targets are at least 44px', async ({ page }, testInfo) => {
   for (const [dx, dy] of [[21, 0], [-21, 0], [0, 21], [0, -21]]) {
     expect(await hitAt(button, dx, dy), `info dot at ${dx},${dy}`).toBe(true);
   }
+
+  // The density button is 28px with an invisible 44px target around it.
+  const density = page.getByTestId('density-toggle');
+  for (const [dx, dy] of [[21, 0], [-21, 0], [0, 21], [0, -21]]) {
+    expect(await hitAt(density, dx, dy), `density button at ${dx},${dy}`).toBe(true);
+  }
 });
 
 test('the info dot is help for the net, not a tab stop', async ({ page }) => {
@@ -202,12 +208,12 @@ test('every control can be reached by keyboard, in reading order, and shows a fo
   const shareName = 'Share this view';
   const helpName = "Help and what's new, new changes";
   // Tab follows the eye: the title bar first, then the net above the terrain
-  // on a phone and to the right of it on a desktop. The info dot is help,
-  // not a stop.
+  // on a phone and to the right of it on a desktop. The info dot is help, not a stop;
+  // the density button is a control, and is one.
   const expected =
     testInfo.project.name === 'phone'
-      ? ['Gore Range', 'Second', shareName, helpName, sunName, terrainName]
-      : ['Gore Range', 'Second', shareName, helpName, terrainName, sunName];
+      ? ['Gore Range', 'Second', shareName, helpName, 'Density', sunName, terrainName]
+      : ['Gore Range', 'Second', shareName, helpName, terrainName, 'Density', sunName];
 
   const focused = () =>
     page.evaluate(() => {

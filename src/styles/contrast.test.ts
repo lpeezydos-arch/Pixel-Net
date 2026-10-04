@@ -65,6 +65,7 @@ describe('token contrast', () => {
     ['ink-700', 'sunken'],
     ['ink-500', 'paper'],
     ['ink-500', 'surface'],
+    ['viz-1', 'paper'],
     ['accent', 'paper'],
     ['accent-strong', 'paper'],
     ['paper', 'ink-900'],
@@ -75,7 +76,24 @@ describe('token contrast', () => {
   it.each([
     ['ink-400', 'paper'],
     ['accent', 'surface'],
+    ['viz-1', 'sunken'],
+    ['ink-500', 'paper'],
   ])('a control in --%s on --%s reaches 3:1', (mark, ground) => {
     expect(contrast(mark, ground)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('density layer', () => {
+  it.each([
+    ['the layer', /\.net__density \{[^}]*color: var\(--viz-1\)/],
+    ['the key', /\.net \.net__key \{[^}]*color: var\(--viz-1\)/],
+    ['the pressed button', /\.net \.net__toggle\[aria-pressed='true'\] \{[^}]*color: var\(--viz-1\)/],
+  ])('draws %s in --viz-1', (_, rule) => {
+    expect(appCss).toMatch(rule);
+  });
+
+  it('writes no color of its own', () => {
+    const block = appCss.slice(appCss.indexOf('/* ---------- Density layer ---------- */'));
+    expect(block.slice(0, block.indexOf('/* ---------- Readout ---------- */'))).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 });

@@ -150,6 +150,8 @@ export function App() {
       selection={selection}
       sunAzimuth={sunAzimuth}
       sunAltitude={sunAltitude}
+      density={density}
+      onDensityChange={setDensity}
     />
   );
   const terrainColumn = (

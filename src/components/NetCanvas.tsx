@@ -10,7 +10,7 @@ interface NetCanvasProps {
 }
 
 /** The element's text color as red, green and blue, 0 to 255. */
-function inkOf(element: Element): [number, number, number] {
+export function inkOf(element: Element): [number, number, number] {
   const parts = getComputedStyle(element).color.match(/[\d.]+/g) ?? [];
   return [Number(parts[0] ?? 0), Number(parts[1] ?? 0), Number(parts[2] ?? 0)];
 }

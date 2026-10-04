@@ -1,7 +1,10 @@
 import type { MotionValue } from 'motion/react';
 import type { CSSProperties } from 'react';
 import type { Layout } from '../layout';
+import { densityKey, densityOf, densitySentence, knownDensity } from '../terrain/density';
 import type { Dem, Surface } from '../terrain/types';
+import { DensityCanvas } from './DensityCanvas';
+import { DensityToggle } from './DensityToggle';
 import { InfoTip } from './InfoTip';
 import { NetCanvas } from './NetCanvas';
 import { NetFrame, NetLabels } from './NetFrame';
@@ -23,6 +26,9 @@ interface NetCardProps {
   selection: MotionValue<number>;
   sunAzimuth: MotionValue<number>;
   sunAltitude: MotionValue<number>;
+  /** Whether the density layer is on. */
+  density: boolean;
+  onDensityChange: (on: boolean) => void;
 }
 
 export function NetCard({
@@ -33,7 +39,13 @@ export function NetCard({
   selection,
   sunAzimuth,
   sunAltitude,
+  density,
+  onDensityChange,
 }: NetCardProps) {
+  // The layer is counted the first time it is shown. Once counted it is kept,
+  // so the key still has its words while the layer fades out.
+  const field = surface ? (density ? densityOf(surface) : knownDensity(surface)) : null;
+  const help = density && field ? `${NET_HELP} ${densitySentence(field)}` : NET_HELP;
   const style = {
     width: layout.netCardWidth,
     height: layout.netCardHeight,
@@ -55,19 +67,29 @@ export function NetCard({
       >
         <NetFrame size={layout.netSize} />
         {surface ? (
-          <NetCanvas surface={surface} size={layout.netSize} />
+          <>
+            <NetCanvas surface={surface} size={layout.netSize} />
+            <DensityCanvas surface={surface} size={layout.netSize} on={density} />
+          </>
         ) : loading ? (
           <div className="skeleton net__skeleton" aria-busy="true" />
         ) : null}
         <NetLabels size={layout.netSize} />
         {/* Below, so it never covers the app name on a phone. */}
-        <InfoTip className="net__info" label="How to read the net" text={NET_HELP} side="bottom" />
+        <InfoTip className="net__info" label="How to read the net" text={help} side="bottom" />
+        {/* Before the sun, so Tab reaches it first; over the sun, so it can always be pressed. */}
+        {surface && <DensityToggle on={density} onChange={onDensityChange} />}
+        {field && (
+          <p className="net__key" data-testid="density-key" data-on={density} aria-hidden={!density}>
+            {densityKey(field)}
+          </p>
+        )}
         {surface && <SunHandle size={layout.netSize} azimuth={sunAzimuth} altitude={sunAltitude} />}
         {surface && <NetMarker surface={surface} size={layout.netSize} selection={selection} />}
       </div>
       <Readout dem={dem} surface={surface} selection={selection} />
       <p id="net-help" className="visually-hidden">
-        {NET_HELP}
+        {help}
       </p>
     </section>
   );

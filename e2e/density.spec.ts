@@ -1,0 +1,231 @@
+import { type Page, expect, test } from '@playwright/test';
+import { NET_HELP, fingerprint, inkedPixels, netCloud, openApp, openLink, serveTwoDems, stage } from './helpers';
+
+/** The rim's radius as a share of half the net's square, as in `src/terrain/cloud.ts`. */
+const NET_RIM = 0.9375;
+const SAVED = 'pixel-net:view';
+const SENTENCE =
+  'Blue shading shows where pixels crowd together, counted in circles covering 1% of the net. The outer line is 2 times an even spread, and each line inward adds 1 more.';
+const GORE_KEY = '2× to 6× even';
+// The second DEM is one uniform slope, so nearly every pixel falls in one circle.
+const SECOND_KEY = '20× to 80× even';
+
+const toggle = (page: Page) => page.getByTestId('density-toggle');
+const layer = (page: Page) => page.getByTestId('density-layer');
+const drawing = (page: Page) => page.getByTestId('net-density');
+const key = (page: Page) => page.getByTestId('density-key');
+const fragment = (page: Page) => page.evaluate(() => window.location.hash);
+const saved = (page: Page) => page.evaluate((name) => window.localStorage.getItem(name), SAVED);
+
+test('the density button turns the layer on and off', async ({ page }) => {
+  await openApp(page);
+  const cloud = await fingerprint(netCloud(page));
+  await expect(toggle(page)).toHaveAccessibleName('Density');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(layer(page)).toHaveAttribute('data-on', 'false');
+  expect(await inkedPixels(drawing(page))).toBe(0);
+  await expect(key(page)).toHaveCount(0);
+
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(layer(page)).toHaveAttribute('data-on', 'true');
+  await expect(layer(page)).toHaveCSS('opacity', '1');
+  expect(await inkedPixels(drawing(page))).toBeGreaterThan(1000);
+  await expect(key(page)).toHaveText(GORE_KEY);
+  await expect(key(page)).toHaveCSS('opacity', '1');
+  // The cloud is not redrawn: the layer is a sheet over it.
+  expect(await fingerprint(netCloud(page))).toBe(cloud);
+
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(layer(page)).toHaveCSS('opacity', '0');
+  await expect(key(page)).toHaveCSS('opacity', '0');
+  await expect(key(page)).toHaveAttribute('aria-hidden', 'true');
+});
+
+test('the layer is drawn in the blue of the tokens, the size of the cloud', async ({ page }) => {
+  await openApp(page);
+  await toggle(page).click();
+  await expect(layer(page)).toHaveCSS('opacity', '1');
+  // A line is nearly opaque, so its color survives the canvas's rounding.
+  const [red, green, blue] = await drawing(page).evaluate((element) => {
+    const canvas = element as HTMLCanvasElement;
+    const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let i = 3; i < data.length; i += 4) if (data[i] > 200) return [data[i - 3], data[i - 2], data[i - 1]];
+    return [-1, -1, -1];
+  });
+  expect(red).toBeLessThanOrEqual(3);
+  expect(Math.abs(green - 114)).toBeLessThanOrEqual(3);
+  expect(Math.abs(blue - 178)).toBeLessThanOrEqual(3);
+  const cloudWidth = await netCloud(page).evaluate((element) => (element as HTMLCanvasElement).width);
+  await expect(drawing(page)).toHaveJSProperty('width', cloudWidth);
+  await expect(drawing(page)).toHaveJSProperty('height', cloudWidth);
+});
+
+test('the net’s explanation says what the layer shows while it is on', async ({ page }) => {
+  await openApp(page);
+  const net = page.getByRole('region', { name: 'Net' });
+  await expect(net).toHaveAccessibleDescription(NET_HELP);
+  await toggle(page).click();
+  await page.mouse.move(0, 0); // off the button, so its own tooltip is not the one that shows
+  await expect(net).toHaveAccessibleDescription(`${NET_HELP} ${SENTENCE}`);
+  await page.getByRole('button', { name: 'How to read the net' }).focus();
+  await expect(page.locator('.tooltip')).toHaveText(`${NET_HELP} ${SENTENCE}`);
+  await page.keyboard.press('Escape');
+  await toggle(page).click();
+  await expect(net).toHaveAccessibleDescription(NET_HELP);
+});
+
+test('the layer is remembered, in the address and on the device', async ({ page }) => {
+  await openApp(page);
+  await toggle(page).click();
+  await expect.poll(() => fragment(page)).toBe('#dem=gore&density=1');
+  await expect.poll(() => saved(page)).toBe('dem=gore&density=1');
+
+  await page.reload();
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(layer(page)).toHaveCSS('opacity', '1');
+  await expect(key(page)).toHaveText(GORE_KEY);
+
+  await toggle(page).click();
+  await expect.poll(() => fragment(page)).toBe('');
+  await expect.poll(() => saved(page)).toBeNull();
+});
+
+test('a link with density=1 opens with the layer on', async ({ page }) => {
+  await openLink(page, 'dem=gore&density=1');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(layer(page)).toHaveAttribute('data-on', 'true');
+  await expect.poll(() => inkedPixels(drawing(page))).toBeGreaterThan(1000);
+  await expect(key(page)).toHaveText(GORE_KEY);
+});
+
+test('a link without it opens with the layer off', async ({ page }) => {
+  await openLink(page, 'dem=gore&px=150,210&sun=120,35');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(layer(page)).toHaveAttribute('data-on', 'false');
+});
+
+test('the layer stays on when the DEM changes, and shows the new DEM', async ({ page }) => {
+  await serveTwoDems(page);
+  await openApp(page);
+  await toggle(page).click();
+  await expect(key(page)).toHaveText(GORE_KEY);
+  const gore = await fingerprint(drawing(page));
+
+  await page.getByRole('tab', { name: 'Second' }).click();
+  await expect(stage(page)).toHaveAttribute('data-dem', 'second');
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(key(page)).toHaveText(SECOND_KEY);
+  await expect.poll(() => fingerprint(drawing(page))).not.toBe(gore);
+  await expect.poll(() => fragment(page)).toBe('#dem=second&density=1');
+});
+
+test('a layer turned on after the DEM changed shows the new DEM, never the old', async ({ page }) => {
+  await serveTwoDems(page);
+  await openApp(page);
+  await toggle(page).click();
+  await expect(key(page)).toHaveText(GORE_KEY);
+  const gore = await fingerprint(drawing(page));
+  await toggle(page).click();
+  await expect(layer(page)).toHaveCSS('opacity', '0');
+
+  await page.getByRole('tab', { name: 'Second' }).click();
+  await expect(stage(page)).toHaveAttribute('data-dem', 'second');
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  // The second DEM has not been counted, so the key has nothing to say yet.
+  await expect(key(page)).toHaveCount(0);
+
+  await toggle(page).click();
+  await expect(key(page)).toHaveText(SECOND_KEY);
+  expect(await fingerprint(drawing(page))).not.toBe(gore);
+});
+
+test('the layer is redrawn at the cloud’s size when the window changes', async ({ page }) => {
+  await openApp(page);
+  await toggle(page).click();
+  await expect(layer(page)).toHaveCSS('opacity', '1');
+  const before = await drawing(page).evaluate((element) => (element as HTMLCanvasElement).width);
+
+  await page.setViewportSize({ width: 320, height: 480 });
+  await expect
+    .poll(() => netCloud(page).evaluate((element) => (element as HTMLCanvasElement).width))
+    .not.toBe(before);
+  const cloudWidth = await netCloud(page).evaluate((element) => (element as HTMLCanvasElement).width);
+  await expect(drawing(page)).toHaveJSProperty('width', cloudWidth);
+  expect(await inkedPixels(drawing(page))).toBeGreaterThan(500);
+});
+
+test('the button and the key sit in the net’s corners, clear of the rim', async ({ page }) => {
+  await openApp(page);
+  await toggle(page).click();
+  await expect(key(page)).toHaveCSS('opacity', '1');
+  const net = (await page.getByTestId('net').boundingBox())!;
+  const centerX = net.x + net.width / 2;
+  const centerY = net.y + net.height / 2;
+  const rim = (net.width / 2) * NET_RIM;
+  const inside = (box: { x: number; y: number; width: number; height: number }) => {
+    expect(box.x).toBeGreaterThanOrEqual(net.x - 0.5);
+    expect(box.y).toBeGreaterThanOrEqual(net.y - 0.5);
+    expect(box.x + box.width).toBeLessThanOrEqual(net.x + net.width + 0.5);
+    expect(box.y + box.height).toBeLessThanOrEqual(net.y + net.height + 0.5);
+  };
+
+  // The button is in the top-right corner: its nearest point to the center is its bottom-left.
+  const button = (await toggle(page).boundingBox())!;
+  inside(button);
+  expect(Math.round(button.x + button.width)).toBe(Math.round(net.x + net.width));
+  expect(Math.round(button.y)).toBe(Math.round(net.y));
+  expect(Math.hypot(button.x - centerX, button.y + button.height - centerY)).toBeGreaterThan(rim);
+
+  // The key is in the bottom-left corner: its nearest point to the center is its top-right.
+  const words = (await key(page).boundingBox())!;
+  inside(words);
+  expect(Math.round(words.x)).toBe(Math.round(net.x));
+  expect(Math.round(words.y + words.height)).toBe(Math.round(net.y + net.height));
+  expect(Math.hypot(words.x + words.width - centerX, words.y - centerY)).toBeGreaterThan(rim);
+});
+
+test('the button can be pressed on a small net with the sun low in the northeast', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 480 });
+  await openLink(page, 'dem=gore&sun=45,10');
+  // The sun's 44px target reaches the button's corner here. A click that the sun took would fail.
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('the button works from the keyboard', async ({ page }) => {
+  await openApp(page);
+  await toggle(page).focus();
+  await page.keyboard.press('Space');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Enter');
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('the button is named by its tooltip', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'phone', 'a touch screen has no hover');
+  await openApp(page);
+  await toggle(page).hover();
+  await expect(page.locator('.tooltip')).toHaveText('Density');
+});
+
+test('with reduced motion the layer appears at once', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openApp(page);
+  await toggle(page).click();
+  expect(await layer(page).evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
+  expect(await layer(page).evaluate((element) => getComputedStyle(element).transitionDuration)).toBe('0s');
+});
+
+test('there is no density button on the error card', async ({ page }) => {
+  await page.route('**/dems/gore.tif', (route) => route.fulfill({ status: 404 }));
+  await page.goto('/#dem=gore&density=1');
+  await expect(stage(page)).toHaveAttribute('data-status', 'error');
+  await expect(toggle(page)).toHaveCount(0);
+  await expect(layer(page)).toHaveCount(0);
+});
