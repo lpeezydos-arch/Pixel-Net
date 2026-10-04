@@ -1,5 +1,5 @@
 import { type Page, expect, test } from '@playwright/test';
-import { GORE, fingerprint, netCloud, openApp, serveTwoDems, stage, terrainImage } from './helpers';
+import { GORE, chooseDem, fingerprint, netCloud, openApp, serveTwoDems, stage, terrainImage } from './helpers';
 
 const NET_RIM = 0.9375;
 /** Distance of the sun from the center of the net, as a share of the rim, at 45° high. */
@@ -240,7 +240,7 @@ test('the sun keeps its place when the DEM changes', async ({ page }) => {
   for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
   await expect(label(page)).toHaveText('330° NW · 45° high');
 
-  await page.getByRole('tab', { name: 'Second' }).click();
+  await chooseDem(page, 'Second');
   await expect(terrainImage(page)).toHaveJSProperty('width', 60);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   await expect(label(page)).toHaveText('330° NW · 45° high');

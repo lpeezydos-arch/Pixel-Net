@@ -5,12 +5,15 @@ import {
   GORE,
   SECOND,
   caption,
+  chooseDem,
+  demButton,
   fingerprint,
   firstFacts,
   hint,
   inkedPixels,
   netCloud,
   openApp,
+  serveOneDem,
   serveTwoDems,
   stage,
   terrainImage,
@@ -61,9 +64,10 @@ test('the readout columns hold still while the values change', async ({ page }) 
 });
 
 test('names the only DEM in the title bar quietly, without a picker', async ({ page }) => {
+  await serveOneDem(page);
   await openApp(page);
   await expect(page.getByRole('banner')).toContainText('Gore Range');
-  await expect(page.getByRole('tablist')).toHaveCount(0);
+  await expect(demButton(page)).toHaveCount(0);
   // Plain text, not something that looks like a control.
   expect(await page.locator('.titlebar__dem').evaluate((e) => getComputedStyle(e).fontWeight)).toBe('400');
 });
@@ -154,28 +158,27 @@ test('explains why a DEM in degrees cannot be used', async ({ page }) => {
 test('switches DEMs from the picker', async ({ page }) => {
   await serveTwoDems(page);
   await openApp(page);
-  const second = page.getByRole('tab', { name: 'Second' });
-  await expect(page.getByRole('tab', { name: 'Gore Range' })).toHaveAttribute('aria-selected', 'true');
+  await expect(demButton(page)).toHaveText('Gore Range');
 
-  await second.click();
-  await expect(second).toHaveAttribute('aria-selected', 'true');
+  await chooseDem(page, 'Second');
+  await expect(demButton(page)).toHaveText('Second');
   await expect(terrainImage(page)).toHaveJSProperty('width', SECOND.width);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   expect(await inkedPixels(netCloud(page))).toBeGreaterThan(0);
 });
 
 test('keeps the DEM chosen last when an earlier choice loads slowly', async ({ page }) => {
-  await serveTwoDems(page, 600);
+  await serveTwoDems(page, 3000);
   await openApp(page);
 
-  await page.getByRole('tab', { name: 'Second' }).click();
-  await page.getByRole('tab', { name: 'Gore Range' }).click();
-  await page.waitForTimeout(1000);
+  await chooseDem(page, 'Second');
+  await chooseDem(page, 'Gore Range');
+  await page.waitForTimeout(3500);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
 });
 
-test('the selected DEM tab shows a focus ring', async ({ page }) => {
+test('the DEM button shows a focus ring', async ({ page }) => {
   await serveTwoDems(page);
   await openApp(page);
   await page.keyboard.press('Tab');
@@ -185,7 +188,7 @@ test('the selected DEM tab shows a focus ring', async ({ page }) => {
       return { name: element.textContent, shadow: getComputedStyle(element).boxShadow };
     });
   expect((await focused()).name).toBe('Gore Range');
-  // The ring is a 3px spread with no offset or blur; the tab's resting shadow
-  // is not. The shadow animates to the ring, so wait for it to arrive.
+  // The ring is a 3px spread with no offset or blur. The shadow animates to
+  // the ring, so wait for it to arrive.
   await expect.poll(async () => (await focused()).shadow).toMatch(/0px 0px 0px 3px/);
 });

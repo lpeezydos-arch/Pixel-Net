@@ -6,6 +6,7 @@ import {
   NODATA_BLOCK,
   SECOND,
   caption,
+  chooseDem,
   firstFacts,
   hint,
   openApp,
@@ -327,7 +328,7 @@ test('switching DEMs clears the selection', async ({ page }, testInfo) => {
   await page.mouse.up();
   await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
 
-  await page.getByRole('tab', { name: 'Second' }).click();
+  await chooseDem(page, 'Second');
   await expect(terrainImage(page)).toHaveJSProperty('width', 60);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   await expect(slope(page)).toHaveText('–');
@@ -357,7 +358,7 @@ test('choosing the DEM that is already shown changes nothing', async ({ page }) 
     (window as unknown as Record<string, string[]>)[sink] = [];
   }, '__statuses');
 
-  await page.getByRole('tab', { name: 'Gore Range' }).click();
+  await chooseDem(page, 'Gore Range');
   await page.waitForTimeout(300);
   statuses.push(...(await page.evaluate(() => (window as unknown as Record<string, string[]>).__statuses)));
   expect(statuses).toEqual([]);
@@ -371,7 +372,7 @@ test('choosing the DEM that is already shown changes nothing', async ({ page }) 
 test('a pixel with no data reads "No data", has no point and is transparent', async ({ page }) => {
   await serveTwoDems(page, 0, true);
   await openApp(page);
-  await page.getByRole('tab', { name: 'Second' }).click();
+  await chooseDem(page, 'Second');
   await expect(terrainImage(page)).toHaveJSProperty('width', 60);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
 
@@ -399,7 +400,7 @@ test('the net point pulses again on the first selection after a DEM switch', asy
   await page.mouse.up();
   await expect(marker(page)).toHaveAttribute('data-pulse', 'true');
 
-  await page.getByRole('tab', { name: 'Second' }).click();
+  await chooseDem(page, 'Second');
   await expect(terrainImage(page)).toHaveJSProperty('width', 60);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   // Clearing the selection re-arms the pulse.
