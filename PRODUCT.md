@@ -181,7 +181,7 @@ Undecided:
   Kamb figure is not the reference for the density layer, which is counted
   another way.
 - `screenshots/`, twenty captures of the current build at phone and desktop
-  sizes, the last four with the density layer on (untracked; retaken
+  sizes, the last four with the density layer on (retaken and first tracked
   2026-10-04).
 - Automated tests in `src/**/*.test.ts` and `e2e/*.spec.ts`.
 - `docs/polish-pass.md`: twenty items with evidence, plus hand checks on a
