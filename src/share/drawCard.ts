@@ -1,4 +1,5 @@
 import { NET_RIM, cloudAlpha } from '../terrain/cloud';
+import { type DensityField, densityAlpha, densityCaption, densityLevels, densityOf } from '../terrain/density';
 import { readoutFor } from '../terrain/format';
 import { shade } from '../terrain/hillshade';
 import { RING_30, RING_60, sunToNet, toNet } from '../terrain/net';
@@ -23,6 +24,8 @@ export interface CardPalette {
   line: string;
   lineStrong: string;
   accent: string;
+  /** The density layer's color. */
+  density: string;
 }
 
 export interface CardInput {
@@ -31,6 +34,8 @@ export interface CardInput {
   sun: Sun;
   /** Index of the selected pixel, or −1. */
   selection: number;
+  /** The density layer's field, or null when the layer is off. */
+  density: DensityField | null;
   caption: CaptionLine[];
   palette: CardPalette;
   /** The page's font stack, as CSS writes it. */
@@ -50,6 +55,7 @@ export function readPalette(): CardPalette {
     line: token('--line'),
     lineStrong: token('--line-strong'),
     accent: token('--accent'),
+    density: token('--viz-1'),
   };
 }
 
@@ -79,6 +85,18 @@ function scratch(width: number, height: number): [HTMLCanvasElement, Context] {
   return [canvas, context];
 }
 
+/** A square image in one color, as opaque in each cell as `alpha` says. */
+function inked(alpha: Uint8ClampedArray, size: number, color: string): HTMLCanvasElement {
+  const [canvas, context] = scratch(size, size);
+  const image = context.createImageData(size, size);
+  for (let cell = 0, o = 3; cell < alpha.length; cell++, o += 4) image.data[o] = alpha[cell];
+  context.putImageData(image, 0, 0);
+  context.globalCompositeOperation = 'source-in';
+  context.fillStyle = color;
+  context.fillRect(0, 0, size, size);
+  return canvas;
+}
+
 function drawTerrain(context: Context, box: Box, { surface, sun, selection, palette }: CardInput): void {
   // One image pixel per DEM pixel, as on screen, then scaled up smoothly.
   const [source, sourceContext] = scratch(surface.width, surface.height);
@@ -106,7 +124,11 @@ function drawTerrain(context: Context, box: Box, { surface, sun, selection, pale
   band(context, x, y, 6.5 * K, 3 * K, palette.accent);
 }
 
-function drawNet(context: Context, box: Box, { surface, sun, selection, palette, fontFamily }: CardInput): void {
+function drawNet(
+  context: Context,
+  box: Box,
+  { surface, sun, selection, density, palette, fontFamily }: CardInput,
+): void {
   const size = box.width;
   const cx = box.x + size / 2;
   const cy = box.y + size / 2;
@@ -127,15 +149,13 @@ function drawNet(context: Context, box: Box, { surface, sun, selection, palette,
   context.stroke();
 
   // The cloud: its darkness as alpha, then inked.
-  const alpha = cloudAlpha(surface, size);
-  const [cloud, cloudContext] = scratch(size, size);
-  const image = cloudContext.createImageData(size, size);
-  for (let cell = 0, o = 3; cell < alpha.length; cell++, o += 4) image.data[o] = alpha[cell];
-  cloudContext.putImageData(image, 0, 0);
-  cloudContext.globalCompositeOperation = 'source-in';
-  cloudContext.fillStyle = palette.ink900;
-  cloudContext.fillRect(0, 0, size, size);
-  context.drawImage(cloud, box.x, box.y);
+  context.drawImage(inked(cloudAlpha(surface, size), size, palette.ink900), box.x, box.y);
+
+  // The density layer over it, as on screen: the dots show through.
+  if (density) {
+    const layer = densityAlpha(density, densityLevels(density.peak), size);
+    context.drawImage(inked(layer, size, palette.density), box.x, box.y);
+  }
 
   // Compass letters and ring labels, over the cloud. A paper edge keeps a
   // letter readable there, as on screen.
@@ -250,17 +270,31 @@ export interface PictureInput {
   sun: Sun;
   /** Index of the selected pixel, or −1. */
   selection: number;
+  /** Whether the density layer is on. */
+  density: boolean;
 }
 
 /** The picture of a view as a PNG file, or null if this browser cannot make one. */
-export function pictureFile({ mode, appName, demId, place, dem, surface, sun, selection }: PictureInput): File | null {
+export function pictureFile({
+  mode,
+  appName,
+  demId,
+  place,
+  dem,
+  surface,
+  sun,
+  selection,
+  density,
+}: PictureInput): File | null {
   try {
+    const field = density ? densityOf(surface) : null;
     const caption = captionLines({
       place,
       dem,
       readout: readoutFor(dem, surface, selection),
       sun,
       site: siteName(window.location.host, window.location.pathname),
+      density: field ? densityCaption(field) : null,
     });
     const layout = cardLayout({ mode, aspect: dem.width / dem.height, lines: caption.map((line) => line.height) });
     const canvas = drawCard({
@@ -268,6 +302,7 @@ export function pictureFile({ mode, appName, demId, place, dem, surface, sun, se
       surface,
       sun,
       selection,
+      density: field,
       caption,
       palette: readPalette(),
       fontFamily: getComputedStyle(document.body).fontFamily,

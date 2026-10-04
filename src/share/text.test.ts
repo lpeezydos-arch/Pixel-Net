@@ -62,6 +62,21 @@ describe('captionLines', () => {
     const lines = captionLines({ place: PLACE, dem: DEM, readout: EMPTY_READOUT, sun, site: SITE });
     expect(lines[1].text).toBe('Sun overhead · lpeezydos-arch.github.io/Pixel-Net');
   });
+
+  it('ends with the density layer’s line when it is given one', () => {
+    const density = 'Density: lines from 2× to 6× an even spread';
+    const lines = captionLines({ place: PLACE, dem: DEM, readout: WEST, sun: DEFAULT_SUN, site: SITE, density });
+    expect(lines).toHaveLength(4);
+    expect(lines[2].text).toBe('Sun 315° NW · 45° high · lpeezydos-arch.github.io/Pixel-Net');
+    expect(lines[3]).toEqual({ text: density, size: 20, height: 28, weight: 400, ink: 'ink-500' });
+  });
+
+  it('has no density line when the layer is off or empty', () => {
+    for (const density of [undefined, null, '']) {
+      const lines = captionLines({ place: PLACE, dem: DEM, readout: EMPTY_READOUT, sun: DEFAULT_SUN, site: SITE, density });
+      expect(lines.map((line) => line.height)).toEqual([28, 28]);
+    }
+  });
 });
 
 describe('siteName', () => {

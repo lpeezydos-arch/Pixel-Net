@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import { type Page, type TestInfo, expect, test } from '@playwright/test';
 import { type Box, cardLayout } from '../src/share/cardLayout';
 import { fileName } from '../src/share/text';
-import { APP_NAME, GORE, clickPixel, openApp, stage } from './helpers';
+import { APP_NAME, GORE, clickPixel, openApp, openLink, stage } from './helpers';
 
 // A pixel of the bundled Gore Range DEM, and what the share sheet is told about it.
 const WEST_SLOPE = { col: 150, row: 210 };
@@ -301,6 +301,16 @@ const inkRows = (page: Page, box: Box) =>
     return rows;
   }, box);
 
+/** How many pixels in a box of the shared picture are bluer than they are red: the density layer. */
+const blueIn = (page: Page, box: Box) =>
+  page.evaluate((b) => {
+    const canvas = (window as unknown as { __picture: HTMLCanvasElement }).__picture;
+    const data = canvas.getContext('2d')!.getImageData(b.x, b.y, b.width, b.height).data;
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) if (data[i + 2] - data[i] > 20) count++;
+    return count;
+  }, box);
+
 test('with a share sheet that takes files, a press shares a picture of the view', async ({ page }, testInfo) => {
   await withFileShareSheet(page);
   await openApp(page);
@@ -443,4 +453,43 @@ test('where the canvas has no roundRect, the picture is still made', async ({ pa
   const layout = cardLayout({ mode: modeOf(testInfo), aspect: GORE_SHAPE, lines: [28, 28] });
   const [sent] = (await shared(page)) as Array<{ picture: { width: number; height: number } | null }>;
   expect(sent.picture).toMatchObject({ width: layout.width, height: layout.height });
+});
+
+test('with the density layer on, the picture shows it and says what its lines are', async ({ page }, testInfo) => {
+  await withFileShareSheet(page);
+  await openLink(page, 'dem=gore&density=1');
+  await share(page).click();
+  await expect.poll(async () => (await shared(page)).length).toBe(1);
+
+  // Nothing is selected, so the caption is the facts, the sun and the layer's line.
+  const layout = cardLayout({ mode: modeOf(testInfo), aspect: GORE_SHAPE, lines: [28, 28, 28] });
+  const [sent] = (await shared(page)) as Array<{ url: string; picture: { width: number; height: number } }>;
+  expect(sent.url).toBe(`${origin(page)}/#dem=gore&density=1`);
+  expect(sent.picture.width).toBe(layout.width);
+  expect(sent.picture.height).toBe(layout.height);
+
+  expect(await blueIn(page, layout.net)).toBeGreaterThan(1000);
+  expect(await blueIn(page, layout.terrain)).toBe(0);
+  const line = layout.caption.lines[2];
+  expect(
+    await inkIn(page, { x: layout.caption.x, y: line.y, width: layout.caption.width, height: line.height }),
+  ).toBeGreaterThan(0);
+
+  const png = await page.evaluate(() =>
+    (window as unknown as { __picture: HTMLCanvasElement }).__picture.toDataURL('image/png').split(',')[1],
+  );
+  const path = testInfo.outputPath('share-picture-density.png');
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, Buffer.from(png, 'base64'));
+});
+
+test('with the density layer off, nothing in the picture is blue', async ({ page }, testInfo) => {
+  await withFileShareSheet(page);
+  await openApp(page);
+  await share(page).click();
+  await expect.poll(async () => (await shared(page)).length).toBe(1);
+  const layout = cardLayout({ mode: modeOf(testInfo), aspect: GORE_SHAPE, lines: [28, 28] });
+  const [sent] = (await shared(page)) as Array<{ picture: { width: number; height: number } }>;
+  expect(sent.picture.height).toBe(layout.height);
+  expect(await blueIn(page, layout.net)).toBe(0);
 });

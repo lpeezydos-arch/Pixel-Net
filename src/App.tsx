@@ -135,10 +135,11 @@ export function App() {
           surface: state.surface,
           sun: { azimuth: sunAzimuth.get(), altitude: sunAltitude.get() },
           selection: index,
+          density,
         })
       : null;
     return shareView(words, file);
-  }, [state, active, selection, sunAzimuth, sunAltitude, viewText, layout.mode]);
+  }, [state, active, selection, sunAzimuth, sunAltitude, density, viewText, layout.mode]);
 
   const netCard = (
     <NetCard

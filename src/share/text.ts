@@ -29,14 +29,17 @@ interface CaptionInput {
   sun: Sun;
   /** The page's host and path, from `siteName`. */
   site: string;
+  /** The density layer's line, from `densityCaption`; nothing when the layer is off or empty. */
+  density?: string | null;
 }
 
 /**
  * The picture's caption: the readout if a pixel is selected, the DEM's
  * facts, then the sun and where the picture came from, so a picture pasted
- * into a report still says what it is.
+ * into a report still says what it is. With the density layer on, a last
+ * line says what its lines mean.
  */
-export function captionLines({ place, dem, readout, sun, site }: CaptionInput): CaptionLine[] {
+export function captionLines({ place, dem, readout, sun, site, density }: CaptionInput): CaptionLine[] {
   const lines: CaptionLine[] = [];
   if (readout === NO_DATA) {
     lines.push({ ...READOUT_LINE, text: 'No data at this pixel' });
@@ -49,6 +52,7 @@ export function captionLines({ place, dem, readout, sun, site }: CaptionInput): 
   lines.push({ ...SMALL_LINE, text: demFacts(place, dem) });
   const light = formatSun(sun);
   lines.push({ ...SMALL_LINE, text: `${light === 'Overhead' ? 'Sun overhead' : `Sun ${light}`} · ${site}` });
+  if (density) lines.push({ ...SMALL_LINE, text: density });
   return lines;
 }
 
