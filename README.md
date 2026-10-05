@@ -29,6 +29,7 @@ npm run dev        # http://localhost:5173
 | `npm run preview` | Serve `dist/` at http://localhost:4173 |
 | `npm run icons` | Redraw the app icons in `public/icons/` |
 | `npm run preview-image` | Redraw the link-preview image, `public/preview.png`; needs Chromium |
+| `npm run thumbs` | Write each DEM's thumbnail for the picker, `public/dems/<id>.png`; needs Chromium |
 | `npm run changelog` | Rewrite `CHANGELOG.md` from the news list, `src/help/news.json` |
 
 ### Browser tests need Chromium's system libraries
@@ -77,8 +78,9 @@ export LD_LIBRARY_PATH=~/.cache/pixel-net-libs/root/usr/lib/x86_64-linux-gnu
    }
    ```
 
-   `width` and `height` are the DEM's pixel dimensions and `cell` is its pixel
-   size in meters. With the dimensions the screen does not shift when the DEM
+   `region`, `width`, `height` and `cell` are all optional. `width` and
+   `height` are the DEM's pixel dimensions and `cell` is its pixel size in
+   meters. With the dimensions the screen does not shift when the DEM
    finishes loading; `region` and `cell` make the line under the DEM's name in
    the picker. `npm test` fails if any of the three differs from the file.
 

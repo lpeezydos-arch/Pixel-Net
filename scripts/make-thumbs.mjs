@@ -9,9 +9,12 @@ import { build, preview } from 'vite';
 
 const SHORT_SIDE = 360; // twice the largest tile
 const FOLDER = 'public/dems/';
-const entries = JSON.parse(readFileSync(`${FOLDER}dems.json`, 'utf8'));
+// The app shows only the first four entries (MAX_DEMS in src/state/useDems.ts);
+// a fifth would make this wait for a DEM the app never opens.
+const entries = JSON.parse(readFileSync(`${FOLDER}dems.json`, 'utf8')).slice(0, 4);
 
 await build({ logLevel: 'warn' });
+// 4178 is beside make-preview.mjs's 4179 and clear of the tests' 4173.
 const server = await preview({ logLevel: 'warn', preview: { port: 4178, strictPort: true } });
 const browser = await chromium.launch();
 try {

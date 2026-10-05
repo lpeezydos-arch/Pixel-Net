@@ -60,6 +60,7 @@ export function DemSheet({ entries, activeId, onChoose }: DemSheetProps) {
                       src={`${DEM_FOLDER}${entry.id}.png`}
                       alt=""
                       draggable={false}
+                      decoding="async"
                       // A DEM with no thumbnail keeps its plain square.
                       onError={(event) => {
                         event.currentTarget.hidden = true;

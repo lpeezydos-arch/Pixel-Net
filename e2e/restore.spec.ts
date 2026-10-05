@@ -106,6 +106,7 @@ test('a pixel waiting for its DEM is dropped when another DEM is chosen first', 
   await serveTwoDems(page, 3000);
   await page.goto('/#dem=second&px=30,20');
   // The second DEM is still on its way; the picker is already there.
+  await expect(stage(page)).toHaveAttribute('data-status', 'loading');
   await chooseDem(page, 'Gore Range');
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');

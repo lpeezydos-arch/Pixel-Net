@@ -102,8 +102,9 @@ Confirmed functionality (spec §2–3):
   (`docs/superpowers/specs/2026-10-04-second-dem-and-picker-design.md`).
 - States: loading (skeletons), ready, selected, flat, no-data, and a DEM error
   card with "Try again".
-- Offline: the shell, font, manifest and every `.tif` are precached (25 MB per
-  file); new versions apply on the next open with no prompt.
+- Offline: the shell, font, manifest, every `.tif` and the picker's thumbnails
+  (`public/dems/*.png`) are precached (25 MB per file); new versions apply on
+  the next open with no prompt.
 - View: the DEM, the selected pixel, the sun and whether the density layer is
   on are written into the address
   (`#dem=gore&px=150,210&sun=120,35&density=1`, with an unselected pixel, a
@@ -132,6 +133,12 @@ Technical constraints:
 - Slope and aspect by Horn's 3×3 method; the net is the equal-area (Schmidt)
   projection of the upward normal; no cast shadows. Aspect is the downhill
   direction.
+- With three or four DEMs the picker's sheet, which does not scroll, is taller
+  than a short window. Upright it needs the window's width plus about 121px of
+  height (441px at 320 wide, 533px at 412, 641px at 520), and as a card it
+  needs 533px. Phones held upright have that; a short split-screen or desktop
+  window may not, and there the top of the sheet is cut off. Two DEMs, which
+  is what the app ships, fit everywhere.
 
 Out of scope by decision (spec §2); do not reintroduce without a new decision:
 aspect rose, patch or area selection; user-supplied or fetched DEMs; zoom or
@@ -184,8 +191,8 @@ Undecided:
   another way.
 - `data/MASS/MASS_DEM_100m.tif`, the source of the second DEM;
   `public/dems/massanutten.tif` is a copy of it. Beside it are the same four
-  reference figures as Gore's. `MASS_hillshade.png` is titled "Gore Range 05m"
-  by mistake; its data is Massanutten's.
+  reference figures as Gore's. All four are titled "Gore Range 05m" by
+  mistake; their data is Massanutten's.
 - `screenshots/`, twenty-three captures at phone and desktop sizes. Numbers 09
   and 21–23 show the picker and were taken 2026-10-04 after it was built; the
   rest were taken earlier that day and show the title bar with one DEM, before

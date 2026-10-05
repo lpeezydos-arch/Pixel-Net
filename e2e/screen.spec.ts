@@ -172,6 +172,7 @@ test('keeps the DEM chosen last when an earlier choice loads slowly', async ({ p
   await openApp(page);
 
   await chooseDem(page, 'Second');
+  await expect(stage(page)).toHaveAttribute('data-status', 'loading');
   await chooseDem(page, 'Gore Range');
   await page.waitForTimeout(3500);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');

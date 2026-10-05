@@ -235,10 +235,17 @@ p {
     box-shadow var(--t-fast) var(--ease-out);
 }
 
-.dem-btn:hover,
 .dem-btn[data-state='open'] {
   background: var(--sunken);
   color: var(--ink-900);
+}
+
+/* Only where something can hover, so a tap leaves no shade behind. */
+@media (hover: hover) {
+  .dem-btn:hover {
+    background: var(--sunken);
+    color: var(--ink-900);
+  }
 }
 
 .dem-btn__name {
@@ -252,8 +259,9 @@ p {
   flex: none;
 }
 
-/* The narrowest phones: the button gives up its side padding so an
-   eleven-letter name stays whole beside the app's name. */
+/* The narrowest phones: the title bar closes its gap to --sp-2, and the
+   button gives up its side padding, so an eleven-letter name stays whole
+   beside the app's name. */
 @media (max-width: 359px) {
   .titlebar {
     gap: var(--sp-2);
@@ -1106,11 +1114,14 @@ p {
   color: var(--ink-500);
 }
 
-/* The rings go round the picture, with a gap of paper, not round the whole tile. */
-.dem-tile:hover .dem-tile__picture {
-  box-shadow:
-    0 0 0 2px var(--paper),
-    0 0 0 4px var(--line-strong);
+/* The rings go round the picture, with a gap of paper, not round the whole tile.
+   The hover ring is only where something can hover, so a tap leaves none behind. */
+@media (hover: hover) {
+  .dem-tile:hover .dem-tile__picture {
+    box-shadow:
+      0 0 0 2px var(--paper),
+      0 0 0 4px var(--line-strong);
+  }
 }
 
 .dem-tile[aria-current='true'] .dem-tile__picture {

@@ -60,7 +60,9 @@ In scope:
 Out of scope:
 
 - More than four DEMs. The first four in the list are shown, as now.
-- A sheet that scrolls. Four tiles fit every supported screen (section 4).
+- A sheet that scrolls. Two tiles fit every supported screen; three or four
+  can be taller than a short window (section 4, and the known limit in
+  `PRODUCT.md`).
 - Thumbnails that follow the sun. They are drawn once, at the default sun.
 - Thumbnails drawn in the browser. That would load every DEM each time the
   sheet opens.
@@ -144,7 +146,10 @@ wider than the screen less `--sp-4` each side; four tiles shrink equally to
 fit a screen too narrow for them.
 
 The sheet never scrolls. Four tiles upright on a phone 320px wide and 568px
-tall take about 440px, and fit.
+tall take about 440px, and fit there. Three or four tiles are taller than a
+short window: upright the sheet needs the window's width plus about 121px of
+height, and as a card it needs 533px. Two DEMs, which is what the app ships,
+fit everywhere. The known limit is in `PRODUCT.md`.
 
 ## 5. Data
 
@@ -186,7 +191,7 @@ Gore Range stays first, so it is still what a new visitor sees.
 
 The folder `data/MASS/` is tracked, as `data/GORE/` is: the source DEM and its
 four reference figures. `data/MASS.zip` is not tracked. The figure
-`MASS_hillshade.png` is titled "Gore Range 05m" by mistake; its data is
+All four figures are titled "Gore Range 05m" by mistake; their data is
 Massanutten's. `PRODUCT.md` records this.
 
 ### The new fields
@@ -201,7 +206,7 @@ The caption under the terrain still takes the pixel size from the file.
 
 A thumbnail is `public/dems/<id>.png`: the DEM's hillshade at the default sun
 (azimuth 315°, height 45°), scaled so its shorter side is 360px. That is twice
-the largest tile.
+a tile in the desktop card (180px), and still more than a tile at any size.
 
 `npm run thumbs` runs a new script, `scripts/make-thumbs.mjs`. Like
 `scripts/make-preview.mjs`, it builds the app and opens it in Playwright's

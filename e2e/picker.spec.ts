@@ -91,6 +91,7 @@ test('Escape, the close button and a press outside close the sheet with no chang
   await demButton(page).click();
   await demSheet(page).getByRole('button', { name: 'Close' }).click();
   await expect(demSheet(page)).toBeHidden();
+  await expect(demButton(page)).toBeFocused();
 
   await demButton(page).click();
   await expect(demSheet(page)).toBeVisible();
@@ -98,6 +99,7 @@ test('Escape, the close button and a press outside close the sheet with no chang
   // The top left corner is the dimmed view at every size.
   await page.mouse.click(8, 100);
   await expect(demSheet(page)).toBeHidden();
+  await expect(demButton(page)).toBeFocused();
 
   await expect(stage(page)).toHaveAttribute('data-dem', 'gore');
   await expect(demButton(page)).toHaveText('Gore Range');
@@ -111,6 +113,7 @@ test('the keyboard opens the sheet, moves between tiles and chooses one', async 
   await expect(demTile(page, 'Gore Range')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(demTile(page, 'Second')).toBeFocused();
+  await expect(demTile(page, 'Second').locator('.dem-tile__picture')).toHaveCSS('box-shadow', /0px 0px 0px 3px/);
   await page.keyboard.press('Enter');
   await expect(demSheet(page)).toBeHidden();
   await expect(stage(page)).toHaveAttribute('data-dem', 'second');
@@ -238,6 +241,11 @@ test('the DEM button and the tiles are 44px targets on a touch screen', async ({
   const close = (await demSheet(page).getByRole('button', { name: 'Close' }).boundingBox())!;
   expect(Math.round(close.width)).toBeGreaterThanOrEqual(44);
   expect(Math.round(close.height)).toBeGreaterThanOrEqual(44);
+  for (const name of ['Gore Range', 'Second']) {
+    const tile = (await demTile(page, name).boundingBox())!;
+    expect(Math.round(tile.width)).toBeGreaterThanOrEqual(44);
+    expect(Math.round(tile.height)).toBeGreaterThanOrEqual(44);
+  }
 });
 
 test('the current tile has the accent ring and the others have none', async ({ page }) => {
