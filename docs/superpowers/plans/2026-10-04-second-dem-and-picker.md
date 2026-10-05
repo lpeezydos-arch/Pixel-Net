@@ -16,7 +16,7 @@
 - Colors, sizes, radii, shadows and durations come from `src/styles/tokens.css`. Do not edit that file.
 - Touch targets are at least 44px on a touch screen (`@media (pointer: coarse)`, `--touch`).
 - The sheet never scrolls. At most four DEMs are shown (`MAX_DEMS` in `src/state/useDems.ts` stays 4).
-- Copy is plain, one sentence at a time. Exact strings: the dialog is named `DEM`; the button is named `DEM: <name>`; the help line is `Press the DEM's name to switch DEM.`; the news entry is `A second landscape, Massanutten Mountain in Virginia. Press the DEM's name to switch.`
+- Copy is plain, one sentence at a time. Exact strings: the dialog is named `DEM`; the button is named `DEM: <name>`; the news entry is `A second landscape, Massanutten Mountain in Virginia. Press the DEM's name to switch.`
 - A tile's line is `<region> · <cell> m`, as in `Virginia · 100 m`. A part the entry does not give is left out.
 - A thumbnail is `public/dems/<id>.png`, shorter side 360px, at the default sun (azimuth 315°, height 45°).
 - Comments say why, in plain sentences, as the surrounding code does. No comment restates the code.
@@ -41,7 +41,6 @@
 | `src/components/DemSheet.tsx` | create | The sheet's contents: heading, close button, tiles. |
 | `src/components/TitleBar.tsx` | modify | Shows `DemPicker` in place of the segmented control. |
 | `src/app.css` | modify | `.dem-btn`, `.dem-tiles`, `.dem-tile`, `.sheet--dems`; `.segmented` removed. |
-| `src/help/howTo.ts`, `HelpButton.tsx`, `HelpSheet.tsx` | modify | One more line when there are several DEMs. |
 | `scripts/make-thumbs.mjs` | create | Writes `public/dems/<id>.png` for each DEM in the list. |
 | `src/state/manifest.test.ts` | create | Holds `dems.json` to the files it names. |
 | `public/dems/` | modify | `massanutten.tif`, `gore.png`, `massanutten.png`, `dems.json`. |
@@ -904,150 +903,12 @@ Claude-Session: https://claude.ai/code/session_01HWQbiQgX3NUxBSmC3SRion"
 
 ---
 
-### Task 3: The line in Help
+### Task 3: The line in Help — dropped
 
-**Files:**
-- Modify: `src/help/howTo.ts`, `src/components/HelpSheet.tsx`, `src/components/HelpButton.tsx`, `src/components/TitleBar.tsx`
-- Test: `src/help/howTo.test.ts`, `e2e/help.spec.ts`
-
-**Interfaces:**
-- Consumes: `serveOneDem` (Task 2) and `serveTwoDems` in `e2e/helpers.ts`.
-- Produces: `howToLines(coarse: boolean, severalDems?: boolean): string[]`; `<HelpButton severalDems={boolean} />`; `HelpSheet` prop `severalDems: boolean`.
-
-- [ ] **Step 1: Write the failing unit tests**
-
-In `src/help/howTo.test.ts`, add inside the `describe`:
-
-```ts
-  it('says how to switch DEM only when there are several', () => {
-    const line = "Press the DEM's name to switch DEM.";
-    expect(howToLines(true)).not.toContain(line);
-    expect(howToLines(false, false)).not.toContain(line);
-    // It sits with the other title bar line, before it, as the name is before the button.
-    for (const coarse of [true, false]) {
-      const lines = howToLines(coarse, true);
-      expect(lines.indexOf(line)).toBe(lines.indexOf('The share button sends a link to this view.') - 1);
-      expect(lines).toHaveLength(howToLines(coarse).length + 1);
-    }
-  });
-```
-
-- [ ] **Step 2: Run them and see them fail**
-
-Run: `npx vitest run src/help/howTo.test.ts`
-Expected: FAIL, the line is not in the list.
-
-- [ ] **Step 3: Implement**
-
-In `src/help/howTo.ts`, add after the `SUN` constant:
-
-```ts
-const DEMS = "Press the DEM's name to switch DEM.";
-```
-
-Change the doc comment's last sentence and the function to:
-
-```ts
-/**
- * How to use the screen, one sentence a line. Like the caption's hint, the
- * lines name the gestures the device has. How to read the net is left to the
- * net's own tooltip, which the last line points to. The line about the DEM's
- * name is there only when there is more than one DEM to switch between.
- */
-export function howToLines(coarse: boolean, severalDems = false): string[] {
-  const titleBar = severalDems ? [DEMS, SHARE] : [SHARE];
-  return coarse
-    ? [
-        'Drag on the terrain to inspect a pixel.',
-        'Double-tap the terrain to clear it.',
-        SUN,
-        'Double-tap the sun to put it back.',
-        ...titleBar,
-        DENSITY,
-        NET,
-      ]
-    : [
-        'Click or drag on the terrain to inspect a pixel.',
-        'Arrow keys move one pixel, and Shift moves ten; Escape clears it.',
-        SUN,
-        'Double-click the sun to put it back.',
-        ...titleBar,
-        DENSITY,
-        NET,
-      ];
-}
-```
-
-In `src/components/HelpSheet.tsx`: add to `HelpSheetProps`, after `coarse`:
-
-```ts
-  /** True when there is more than one DEM, and so a picker to explain. */
-  severalDems: boolean;
-```
-
-add `severalDems` to the destructured props, and change `howToLines(coarse)` to `howToLines(coarse, severalDems)`.
-
-In `src/components/HelpButton.tsx`: change the signature to
-
-```tsx
-export function HelpButton({ severalDems }: { severalDems: boolean }) {
-```
-
-and pass `severalDems={severalDems}` to `<HelpSheet … />`.
-
-In `src/components/TitleBar.tsx`: change `<HelpButton />` to `<HelpButton severalDems={entries.length > 1} />`.
-
-- [ ] **Step 4: Run the unit tests and the type check**
-
-Run: `npx vitest run src/help && npx tsc --noEmit`
-Expected: PASS.
-
-- [ ] **Step 5: Write the browser test**
-
-In `e2e/help.spec.ts`, add `serveOneDem` and `serveTwoDems` to the import from `./helpers`, and add after the existing loop of `the sheet fits a … screen` tests:
-
-```ts
-// With several DEMs the sheet has one more line, and still cannot scroll.
-for (const size of [
-  { width: 360, height: 640 },
-  { width: 320, height: 480 },
-  { width: 667, height: 319 },
-]) {
-  test(`with two DEMs the sheet says how to switch and fits a ${size.width} × ${size.height} screen`, async ({ page }) => {
-    await page.setViewportSize(size);
-    await serveTwoDems(page);
-    await openApp(page);
-    await expectSheetFits(page);
-    await expect(page.getByTestId('help-how')).toContainText("Press the DEM's name to switch DEM.");
-  });
-}
-
-test('with one DEM the sheet does not mention switching', async ({ page }) => {
-  await serveOneDem(page);
-  await openApp(page);
-  await page.getByTestId('help').click();
-  await expect(page.getByTestId('help-how')).toBeVisible();
-  await expect(page.getByTestId('help-how')).not.toContainText('switch DEM');
-});
-```
-
-`expectSheetFits` is already defined near the top of `e2e/help.spec.ts`; read it first, and if it does not open the sheet itself, add `await page.getByTestId('help').click();` before the call in the new loop.
-
-- [ ] **Step 6: Run the Help tests**
-
-Run: `npx playwright test e2e/help.spec.ts`
-Expected: PASS.
-
-If a "fits" test fails at 320 × 480 or 667 × 319, the extra line does not fit a sheet that cannot scroll. **Stop and report to the user**, with a screenshot of the sheet at that size (`await page.screenshot({ path: … })` in a scratch test). The spec leaves this to be settled when it is seen (section 9); do not change the sheet's spacing or drop the line without their decision.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add src/help src/components/HelpSheet.tsx src/components/HelpButton.tsx src/components/TitleBar.tsx e2e/help.spec.ts
-git commit -m "Say in Help how to switch DEM when there is more than one
-
-Claude-Session: https://claude.ai/code/session_01HWQbiQgX3NUxBSmC3SRion"
-```
+Dropped on 2026-10-04 by the owner's decision. With the line, the Help sheet,
+which cannot scroll, ran off a 320 × 480 screen with two DEMs: 4px over on a
+touch screen and 23px over with a mouse. Help is left as it was. Nothing from
+this task was committed.
 
 ---
 

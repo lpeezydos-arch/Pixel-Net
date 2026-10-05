@@ -234,8 +234,10 @@ live site.
 - `DemEntry` in `src/state/useDems.ts`: gains `region?` and `cell?`.
 - `src/terrain/format.ts`: gains a function that writes a tile's line from an
   entry.
-- `src/help/howTo.ts`: `howToLines` gains one line, "Press the DEM's name to
-  switch DEM.", shown only when there are two or more DEMs.
+- Help gains no line about the picker. One was planned, "Press the DEM's name
+  to switch DEM.", and was dropped on 2026-10-04: with it the Help sheet, which
+  cannot scroll, ran off a 320 × 480 screen. The arrow beside the name and the
+  news entry say enough.
 
 `useDems`, the view in the address and the saved view do not change.
 
@@ -261,7 +263,6 @@ Unit tests:
 
 - The tile's line: both parts, one part, neither, a pixel size with a
   fraction.
-- `howToLines` with one DEM and with several.
 - The list against the files (section 5).
 
 Browser tests, at phone and desktop sizes:
@@ -293,7 +294,4 @@ By eye:
 - Massanutten at 100 m has gentle slopes. Its hillshade is paler than Gore's
   and its cloud sits near the center of the net. This is what the file says,
   and is left as it is.
-- The Help sheet never scrolls, and gains a line. If the line does not fit a
-  phone on its side, the browser tests of Help will say so, and the line's
-  wording or the sheet's spacing is settled then.
 - `npm run thumbs` needs Playwright's Chromium, as the browser tests do.
