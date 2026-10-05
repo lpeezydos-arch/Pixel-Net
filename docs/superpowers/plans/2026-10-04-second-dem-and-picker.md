@@ -16,7 +16,7 @@
 - Colors, sizes, radii, shadows and durations come from `src/styles/tokens.css`. Do not edit that file.
 - Touch targets are at least 44px on a touch screen (`@media (pointer: coarse)`, `--touch`).
 - The sheet never scrolls. At most four DEMs are shown (`MAX_DEMS` in `src/state/useDems.ts` stays 4).
-- Copy is plain, one sentence at a time. Exact strings: the dialog is named `DEM`; the button is named `DEM: <name>`; the news entry is `A second landscape, Massanutten Mountain in Virginia. Press the DEM's name to switch.`
+- Copy is plain, one sentence at a time. Exact strings: the dialog is named `DEM`; the button is named `DEM: <name>`; the news entry is `A second landscape, Massanutten Mountain. Press the DEM's name to switch.`
 - A tile's line is `<region> · <cell> m`, as in `Virginia · 100 m`. A part the entry does not give is left out.
 - A thumbnail is `public/dems/<id>.png`, shorter side 360px, at the default sun (azimuth 315°, height 45°).
 - Comments say why, in plain sentences, as the surrounding code does. No comment restates the code.
@@ -1164,7 +1164,7 @@ In `src/help/news.json`, add after the entry with `"id": 6` (with a comma after 
   {
     "id": 7,
     "date": "2026-10-04",
-    "text": "A second landscape, Massanutten Mountain in Virginia. Press the DEM's name to switch."
+    "text": "A second landscape, Massanutten Mountain. Press the DEM's name to switch."
   }
 ```
 

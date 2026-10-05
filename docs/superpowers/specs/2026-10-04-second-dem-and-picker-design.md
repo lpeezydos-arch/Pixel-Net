@@ -1,7 +1,8 @@
 # A second DEM and a new picker — design
 
 Date: 2026-10-04
-Status: design approved in conversation 2026-10-04; this document awaits review
+Status: approved 2026-10-04. The implementation plan is
+`docs/superpowers/plans/2026-10-04-second-dem-and-picker.md`
 
 This extends `2026-10-01-pixel-net-design.md`, called "the first spec" below,
 and follows `2026-10-03-help-and-news-design.md`. Section numbers here are
@@ -250,9 +251,8 @@ live site.
 - `PRODUCT.md`: the picker, the DEMs the app ships with, the evidence in
   `data/MASS/`, and the list of what is undecided. The known limit on the
   title bar is removed.
-- `src/help/news.json`: one entry, "A second landscape, Massanutten Mountain
-  in Virginia. Press the DEM's name to switch." `CHANGELOG.md` is written out
-  from it.
+- `src/help/news.json`: one entry, "A second landscape, Massanutten Mountain.
+  Press the DEM's name to switch." `CHANGELOG.md` is written out from it.
 - `.gitignore`: `data/*.zip` in place of `data/GORE.zip`.
 - `screenshots/`: `09-phone-two-dems.png` is retaken, and captures of the open
   sheet are added at phone, sideways and desktop sizes.
