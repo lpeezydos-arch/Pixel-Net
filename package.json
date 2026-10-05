@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "icons": "node scripts/make-icons.mjs",
     "preview-image": "node scripts/make-preview.mjs",
+    "thumbs": "node scripts/make-thumbs.mjs",
     "changelog": "node scripts/make-changelog.mjs"
   },
   "dependencies": {

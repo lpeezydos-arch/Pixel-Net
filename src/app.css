@@ -59,7 +59,7 @@ p {
   white-space: nowrap;
 }
 
-/* The only DEM's name: a fact, not a control, so it does not dress like the picker. */
+/* The only DEM's name: a fact, not a control, so it does not dress like the picker's button. */
 .titlebar__dem {
   font-size: var(--fs-sm);
   color: var(--ink-500);
@@ -212,21 +212,16 @@ p {
 
 /* ---------- Recipes from lauren-frontend-design ---------- */
 
-.segmented {
-  display: inline-flex;
-  min-width: 0;
-  padding: var(--sp-1);
-  background: var(--sunken);
-  border-radius: var(--r-pill);
-}
-
-.segmented__seg {
+/* The picker's button: the DEM's name and an arrow, with no box until it is
+   pointed at. The name gives way before the arrow does. */
+.dem-btn {
   flex: 0 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
   min-width: 0;
-  padding: var(--sp-1) var(--sp-4);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  height: 40px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
   border: 0;
   border-radius: var(--r-pill);
   background: transparent;
@@ -235,19 +230,46 @@ p {
   font-weight: 600;
   cursor: pointer;
   transition:
-    background var(--t-base) var(--ease-out),
-    color var(--t-base) var(--ease-out),
-    box-shadow var(--t-base) var(--ease-out);
+    background var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out);
 }
 
-.segmented__seg[aria-selected='true'] {
-  background: var(--paper);
+.dem-btn[data-state='open'] {
+  background: var(--sunken);
   color: var(--ink-900);
-  box-shadow: var(--shadow-1);
 }
 
-.segmented__seg:focus-visible {
-  box-shadow: var(--ring);
+/* Only where something can hover, so a tap leaves no shade behind. */
+@media (hover: hover) {
+  .dem-btn:hover {
+    background: var(--sunken);
+    color: var(--ink-900);
+  }
+}
+
+.dem-btn__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dem-btn svg {
+  flex: none;
+}
+
+/* The narrowest phones: the title bar closes its gap to --sp-2, and the
+   button gives up its side padding, so an eleven-letter name stays whole
+   beside the app's name. */
+@media (max-width: 359px) {
+  .titlebar {
+    gap: var(--sp-2);
+  }
+
+  .dem-btn {
+    padding: 0 var(--sp-1) 0 var(--sp-2);
+  }
 }
 
 .btn {
@@ -350,8 +372,8 @@ p {
 
 /* Touch layouts: 44px targets. */
 @media (pointer: coarse) {
-  .segmented__seg {
-    min-height: var(--touch);
+  .dem-btn {
+    height: var(--touch);
   }
 
   .btn {
@@ -1026,6 +1048,103 @@ p {
   background: var(--accent);
 }
 
+/* The picker's tiles, two across: a picture, a name and a line of facts. */
+.dem-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dem-tile {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Square whatever the DEM's shape; the plain ground shows until the picture
+   arrives, and stays if there is none. */
+.dem-tile__picture {
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--sunken);
+  transition: box-shadow var(--t-fast) var(--ease-out);
+}
+
+.dem-tile__picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The display above would otherwise win over the hidden attribute a failed
+   picture is given. */
+.dem-tile__picture img[hidden] {
+  display: none;
+}
+
+.dem-tile__name,
+.dem-tile__line {
+  display: block;
+  overflow: hidden;
+  line-height: var(--lh-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dem-tile__name {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.dem-tile__line {
+  font-size: var(--fs-xs);
+  color: var(--ink-500);
+}
+
+/* The rings go round the picture, with a gap of paper, not round the whole tile.
+   The hover ring is only where something can hover, so a tap leaves none behind. */
+@media (hover: hover) {
+  .dem-tile:hover .dem-tile__picture {
+    box-shadow:
+      0 0 0 2px var(--paper),
+      0 0 0 4px var(--line-strong);
+  }
+}
+
+.dem-tile[aria-current='true'] .dem-tile__picture {
+  box-shadow:
+    0 0 0 2px var(--paper),
+    0 0 0 4px var(--accent);
+}
+
+.dem-tile:focus-visible {
+  box-shadow: none;
+}
+
+.dem-tile:focus-visible .dem-tile__picture {
+  box-shadow: var(--ring);
+}
+
+.dem-tile[aria-current='true']:focus-visible .dem-tile__picture {
+  box-shadow:
+    0 0 0 2px var(--paper),
+    0 0 0 4px var(--accent),
+    0 0 0 7px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
 /* Wider than a phone held upright: a card in the middle of the window. */
 @media (min-width: 521px) {
   .sheet {
@@ -1049,6 +1168,17 @@ p {
   .sheet {
     width: min(680px, calc(100vw - 2 * var(--sp-4)));
     padding: var(--sp-4) var(--sp-5);
+  }
+
+  /* The picker's card is as wide as its tiles, which sit in one row and
+     shrink together on a screen too narrow for four. */
+  .sheet--dems {
+    width: fit-content;
+    max-width: calc(100vw - 2 * var(--sp-4));
+  }
+
+  .sheet--dems .dem-tiles {
+    grid-template-columns: repeat(var(--tiles), minmax(0, 150px));
   }
 
   /* The card's padding is smaller here, so the button is centered on the

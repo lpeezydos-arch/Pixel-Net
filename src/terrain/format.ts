@@ -39,9 +39,27 @@ export function describeSun(sun: Sun): string {
   return text === 'Overhead' ? 'Sun overhead' : `Sun ${text.replace(' · ', ', ')}`;
 }
 
+/** A length in meters, to two decimals at most. */
+function meters(length: number): string {
+  return `${Number(length.toFixed(2))} m`;
+}
+
 /** The DEM's pixel size, as the caption writes it. */
 export function pixelSize(dem: Dem): string {
-  return `${Number(dem.cellSize.toFixed(2))} m pixels`;
+  return `${meters(dem.cellSize)} pixels`;
+}
+
+/**
+ * The line under a DEM's name in the picker: its region and its pixel size.
+ * The list is written by hand, so a part that is missing or unusable is left out.
+ */
+export function tileLine(entry: { region?: unknown; cell?: unknown }): string {
+  const parts: string[] = [];
+  if (typeof entry.region === 'string' && entry.region.trim()) parts.push(entry.region.trim());
+  if (typeof entry.cell === 'number' && Number.isFinite(entry.cell) && entry.cell > 0) {
+    parts.push(meters(entry.cell));
+  }
+  return parts.join(' · ');
 }
 
 /** The DEM's facts, as the caption writes them. */

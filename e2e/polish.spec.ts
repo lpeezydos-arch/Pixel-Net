@@ -1,5 +1,5 @@
 import { type Locator, type Page, expect, test } from '@playwright/test';
-import { NET_HELP, openApp, serveTwoDems, stage } from './helpers';
+import { NET_HELP, demButton, openApp, serveTwoDems, stage } from './helpers';
 
 const net = (page: Page) => page.getByRole('region', { name: 'Net' });
 const terrain = (page: Page) => page.getByRole('region', { name: 'Terrain' });
@@ -88,13 +88,10 @@ test('four DEMs with two-word names stay inside a phone screen', async ({ page }
 
   const width = 360;
   expect(Math.round((await page.getByRole('banner').boundingBox())!.width)).toBeLessThanOrEqual(width);
-  const tabs = await page.getByRole('tab').all();
-  expect(tabs).toHaveLength(4);
-  for (const tab of tabs) {
-    const box = (await tab.boundingBox())!;
-    expect(box.x + box.width).toBeLessThanOrEqual(width);
-    if (testInfo.project.name === 'phone') expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
-  }
+  const button = (await demButton(page).boundingBox())!;
+  expect(button.x).toBeGreaterThanOrEqual(0);
+  expect(button.x + button.width).toBeLessThanOrEqual(width);
+  if (testInfo.project.name === 'phone') expect(Math.round(button.height)).toBeGreaterThanOrEqual(44);
   const shareBox = (await page.getByTestId('share').boundingBox())!;
   expect(shareBox.x).toBeGreaterThanOrEqual(0);
   expect(shareBox.x + shareBox.width).toBeLessThanOrEqual(width);
@@ -148,9 +145,7 @@ test('touch targets are at least 44px', async ({ page }, testInfo) => {
   await serveTwoDems(page);
   await openApp(page);
 
-  for (const tab of await page.getByRole('tab').all()) {
-    expect(Math.round((await tab.boundingBox())!.height)).toBeGreaterThanOrEqual(44);
-  }
+  expect(Math.round((await demButton(page).boundingBox())!.height)).toBeGreaterThanOrEqual(44);
   const sun = (await page.getByTestId('sun').boundingBox())!;
   expect(Math.round(sun.width)).toBeGreaterThanOrEqual(44);
   expect(Math.round(sun.height)).toBeGreaterThanOrEqual(44);
@@ -214,8 +209,8 @@ test('every control can be reached by keyboard, in reading order, and shows a fo
   // the density button is a control, and is one.
   const expected =
     testInfo.project.name === 'phone'
-      ? ['Gore Range', 'Second', shareName, helpName, 'Density', sunName, terrainName]
-      : ['Gore Range', 'Second', shareName, helpName, terrainName, 'Density', sunName];
+      ? ['DEM: Gore Range', shareName, helpName, 'Density', sunName, terrainName]
+      : ['DEM: Gore Range', shareName, helpName, terrainName, 'Density', sunName];
 
   const focused = () =>
     page.evaluate(() => {

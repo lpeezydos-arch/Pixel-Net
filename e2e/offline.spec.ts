@@ -19,12 +19,13 @@ test('opens and works with no network after one visit', async ({ page, context }
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(isCached, 'dems.json')).toBe(true);
   // Every DEM in the list must be stored, whatever its size.
-  const entries: Array<{ file: string }> = await page.evaluate(() =>
+  const entries: Array<{ id: string; file: string }> = await page.evaluate(() =>
     fetch('dems/dems.json').then((response) => response.json()),
   );
   expect(entries.length).toBeGreaterThan(0);
   for (const entry of entries) {
     await expect.poll(() => page.evaluate(isCached, entry.file), `${entry.file} is stored`).toBe(true);
+    await expect.poll(() => page.evaluate(isCached, `dems/${entry.id}.png`), `${entry.id}.png is stored`).toBe(true);
   }
   await expect.poll(() => page.evaluate(isCached, '.woff2')).toBe(true);
   // The link-preview image is for other sites to read; the app never shows it.

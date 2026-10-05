@@ -56,9 +56,10 @@ finger.
 - Phones held upright or sideways, and desktop browsers. The screen never
   scrolls; both cards scale to the viewport.
 - DEMs are bundled, not uploaded. Adding one is a GeoTIFF in `public/dems/`
-  plus an entry in `public/dems/dems.json`, usually after a `gdalwarp` step
-  (README, "Add a DEM"). The app ships with one: Gore Range, Colorado, 288 × 294
-  pixels at 5 m.
+  plus an entry in `public/dems/dems.json` and a thumbnail from
+  `npm run thumbs`, usually after a `gdalwarp` step (README, "Add a DEM"). The
+  app ships with two: Gore Range, Colorado, 288 × 294 pixels at 5 m, and
+  Massanutten Mountain, Virginia, 390 × 390 pixels at 100 m.
 - Deployed to GitHub Pages at https://lpeezydos-arch.github.io/Pixel-Net/ on
   every push to `main` (`.github/workflows/deploy.yml`); unit tests gate the
   deploy. Any static HTTPS host works with `BASE_PATH` set and
@@ -93,12 +94,17 @@ Confirmed functionality (spec §2–3):
   readout beside the net. The net's tooltip says how it is counted. Off by
   default; kept across a DEM switch
   (`docs/superpowers/specs/2026-10-03-density-layer-design.md`).
-- DEM picker: a segmented control for two to four DEMs, plain text for one.
-  More than four is unsupported.
+- DEM picker: with two to four DEMs, the DEM's name in the title bar is a
+  button with a small arrow. It opens a sheet of tiles, two across: a
+  hillshade thumbnail, the name, then the region and the pixel size. The
+  current DEM has a ring in the accent color. The sheet is the one Help uses
+  and never scrolls. One DEM is plain text. More than four is unsupported
+  (`docs/superpowers/specs/2026-10-04-second-dem-and-picker-design.md`).
 - States: loading (skeletons), ready, selected, flat, no-data, and a DEM error
   card with "Try again".
-- Offline: the shell, font, manifest and every `.tif` are precached (25 MB per
-  file); new versions apply on the next open with no prompt.
+- Offline: the shell, font, manifest, every `.tif` and the picker's thumbnails
+  (`public/dems/*.png`) are precached (25 MB per file); new versions apply on
+  the next open with no prompt.
 - View: the DEM, the selected pixel, the sun and whether the density layer is
   on are written into the address
   (`#dem=gore&px=150,210&sun=120,35&density=1`, with an unselected pixel, a
@@ -127,9 +133,12 @@ Technical constraints:
 - Slope and aspect by Horn's 3×3 method; the net is the equal-area (Schmidt)
   projection of the upward normal; no cast shadows. Aspect is the downhill
   direction.
-- Known limit: with two to four DEMs the picker and the app name truncate on
-  a phone narrower than about 400px; two fit at 412px and wider, and one fits
-  everywhere.
+- With three or four DEMs the picker's sheet, which does not scroll, is taller
+  than a short window. Upright it needs the window's width plus about 121px of
+  height (441px at 320 wide, 533px at 412, 641px at 520), and as a card it
+  needs 533px. Phones held upright have that; a short split-screen or desktop
+  window may not, and there the top of the sheet is cut off. Two DEMs, which
+  is what the app ships, fit everywhere.
 
 Out of scope by decision (spec §2); do not reintroduce without a new decision:
 aspect rose, patch or area selection; user-supplied or fetched DEMs; zoom or
@@ -150,12 +159,12 @@ Terminology: DEM; hillshade; the net (Schmidt net); the cloud (every plotted
 pixel); the point (the highlighted pixel); the density layer (bands over the
 cloud where pixels crowd together); times an even spread (its unit); the key
 (the line that names its levels); slope, aspect, elevation; the sun (azimuth
-and height); loupe; readout; picker; caption.
+and height); loupe; readout; picker (the DEM's name in the title bar and the
+sheet it opens); tile; caption.
 
 Undecided:
 
 - The product's real name. "Pixel Net" is a working title.
-- The second sample DEM.
 
 ## Brand Commitments
 
@@ -180,9 +189,14 @@ Undecided:
   view that is out of scope, and a Kamb-contoured figure of the same data. The
   Kamb figure is not the reference for the density layer, which is counted
   another way.
-- `screenshots/`, twenty captures of the current build at phone and desktop
-  sizes, the last four with the density layer on (retaken and first tracked
-  2026-10-04).
+- `data/MASS/MASS_DEM_100m.tif`, the source of the second DEM;
+  `public/dems/massanutten.tif` is a copy of it. Beside it are the same four
+  reference figures as Gore's. All four are titled "Gore Range 05m" by
+  mistake; their data is Massanutten's.
+- `screenshots/`, twenty-three captures at phone and desktop sizes. Numbers 09
+  and 21–23 show the picker and were taken 2026-10-04 after it was built; the
+  rest were taken earlier that day and show the title bar with one DEM, before
+  its name became a button.
 - Automated tests in `src/**/*.test.ts` and `e2e/*.spec.ts`.
 - `docs/polish-pass.md`: twenty items with evidence, plus hand checks on a
   real phone that are still open (safe areas, drag feel, loupe near the top

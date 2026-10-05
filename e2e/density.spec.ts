@@ -1,5 +1,5 @@
 import { type Page, expect, test } from '@playwright/test';
-import { NET_HELP, clickPixel, fingerprint, inkedPixels, netCloud, openApp, openLink, serveTwoDems, stage } from './helpers';
+import { NET_HELP, chooseDem, clickPixel, fingerprint, inkedPixels, netCloud, openApp, openLink, serveTwoDems, stage } from './helpers';
 
 /** The rim's radius as a share of half the net's square, as in `src/terrain/cloud.ts`. */
 const NET_RIM = 0.9375;
@@ -114,7 +114,7 @@ test('the layer stays on when the DEM changes, and shows the new DEM', async ({ 
   await expect(key(page)).toHaveText(GORE_KEY);
   const gore = await fingerprint(drawing(page));
 
-  await page.getByRole('tab', { name: 'Second' }).click();
+  await chooseDem(page, 'Second');
   await expect(stage(page)).toHaveAttribute('data-dem', 'second');
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
@@ -132,7 +132,7 @@ test('a layer turned on after the DEM changed shows the new DEM, never the old',
   await toggle(page).click();
   await expect(layer(page)).toHaveCSS('opacity', '0');
 
-  await page.getByRole('tab', { name: 'Second' }).click();
+  await chooseDem(page, 'Second');
   await expect(stage(page)).toHaveAttribute('data-dem', 'second');
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   // The second DEM has not been counted, so the key has nothing to say yet.

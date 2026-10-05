@@ -121,7 +121,7 @@ export async function serveTwoDems(page: Page, delay = 0, withNoData = false): P
   await page.route('**/dems/dems.json', (route) =>
     route.fulfill({
       json: [
-        { id: 'gore', name: 'Gore Range', place: 'Gore Range, Colorado', file: 'gore.tif' },
+        { id: 'gore', name: 'Gore Range', place: 'Gore Range, Colorado', region: 'Colorado', file: 'gore.tif', cell: 5 },
         { id: 'second', name: 'Second', place: 'Second place', file: 'second.tif' },
       ],
     }),
@@ -130,4 +130,43 @@ export async function serveTwoDems(page: Page, delay = 0, withNoData = false): P
     if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
     await route.fulfill({ body: Buffer.from(second), contentType: 'image/tiff' });
   });
+}
+
+/** Pins the list to Gore Range alone, for tests of the screen with no picker. */
+export async function serveOneDem(page: Page): Promise<void> {
+  await page.route('**/dems/dems.json', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: 'gore',
+          name: 'Gore Range',
+          place: 'Gore Range, Colorado',
+          region: 'Colorado',
+          file: 'gore.tif',
+          width: GORE.width,
+          height: GORE.height,
+          cell: 5,
+        },
+      ],
+    }),
+  );
+}
+
+/** The DEM's name in the title bar, which opens the picker. */
+export const demButton = (page: Page) => page.getByTestId('dem-button');
+
+/** The picker's sheet. */
+export const demSheet = (page: Page) => page.getByTestId('dem-sheet');
+
+/** A DEM's tile in the open sheet. */
+export const demTile = (page: Page, name: string) => demSheet(page).getByRole('button', { name });
+
+/**
+ * Opens the picker and presses a DEM's tile. It waits for the sheet to go,
+ * because a press at a point on the screen would otherwise land on it.
+ */
+export async function chooseDem(page: Page, name: string): Promise<void> {
+  await demButton(page).click();
+  await demTile(page, name).click();
+  await expect(demSheet(page)).toBeHidden();
 }

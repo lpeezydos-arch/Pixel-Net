@@ -3,7 +3,9 @@ import {
   GORE,
   SECOND,
   caption,
+  chooseDem,
   clickPixel,
+  demButton,
   fingerprint,
   firstFacts,
   hint,
@@ -78,7 +80,7 @@ test('a link to another DEM opens it with its pixel', async ({ page }) => {
   await serveTwoDems(page);
   await openLink(page, 'dem=second&px=30,20');
   await expect(terrainImage(page)).toHaveJSProperty('width', SECOND.width);
-  await expect(page.getByRole('tab', { name: 'Second' })).toHaveAttribute('aria-selected', 'true');
+  await expect(demButton(page)).toHaveText('Second');
   // The second DEM is a uniform slope facing northwest.
   await expect(slope(page)).toHaveText('35.8°');
   await expect(aspect(page)).toHaveText('304° NW');
@@ -101,14 +103,15 @@ test('a pixel outside the DEM is ignored', async ({ page }) => {
 });
 
 test('a pixel waiting for its DEM is dropped when another DEM is chosen first', async ({ page }) => {
-  await serveTwoDems(page, 600);
+  await serveTwoDems(page, 3000);
   await page.goto('/#dem=second&px=30,20');
   // The second DEM is still on its way; the picker is already there.
-  await page.getByRole('tab', { name: 'Gore Range' }).click();
+  await expect(stage(page)).toHaveAttribute('data-status', 'loading');
+  await chooseDem(page, 'Gore Range');
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
   await expect(stage(page)).toHaveAttribute('data-status', 'ready');
   // Long enough for the abandoned DEM to have arrived, had it been waited for.
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(3500);
   await expect(slope(page)).toHaveText('–');
   await expect(ring(page)).toHaveAttribute('data-visible', 'false');
 });
@@ -220,18 +223,18 @@ test('a pasted link to another DEM switches to it', async ({ page }) => {
 });
 
 test('a link pasted while another DEM is loading goes to its own DEM', async ({ page }) => {
-  await serveTwoDems(page, 600);
+  await serveTwoDems(page, 3000);
   await openApp(page);
-  await page.getByRole('tab', { name: 'Second' }).click();
+  await chooseDem(page, 'Second');
   await expect(stage(page)).toHaveAttribute('data-status', 'loading');
   await page.evaluate(() => {
     window.location.hash = 'dem=gore&px=150,210';
   });
   await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
-  await expect(page.getByRole('tab', { name: 'Gore Range' })).toHaveAttribute('aria-selected', 'true');
+  await expect(demButton(page)).toHaveText('Gore Range');
   // Long enough for the abandoned DEM to have arrived, had it been waited for.
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(3500);
   await expect(terrainImage(page)).toHaveJSProperty('width', GORE.width);
   await expect(slope(page)).toHaveText(WEST_SLOPE.slope);
 });

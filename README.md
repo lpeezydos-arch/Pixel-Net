@@ -29,6 +29,7 @@ npm run dev        # http://localhost:5173
 | `npm run preview` | Serve `dist/` at http://localhost:4173 |
 | `npm run icons` | Redraw the app icons in `public/icons/` |
 | `npm run preview-image` | Redraw the link-preview image, `public/preview.png`; needs Chromium |
+| `npm run thumbs` | Write each DEM's thumbnail for the picker, `public/dems/<id>.png`; needs Chromium |
 | `npm run changelog` | Rewrite `CHANGELOG.md` from the news list, `src/help/news.json` |
 
 ### Browser tests need Chromium's system libraries
@@ -69,21 +70,35 @@ export LD_LIBRARY_PATH=~/.cache/pixel-net-libs/root/usr/lib/x86_64-linux-gnu
      "id": "short-id",
      "name": "Name in the picker",
      "place": "Place shown under the terrain",
+     "region": "Short place name on the picker's tile",
      "file": "your.tif",
      "width": 288,
-     "height": 294
+     "height": 294,
+     "cell": 5
    }
    ```
 
-   `width` and `height` are the DEM's pixel dimensions. They are optional, but
-   with them the screen does not shift when the DEM finishes loading.
+   `region`, `width`, `height` and `cell` are all optional. `width` and
+   `height` are the DEM's pixel dimensions and `cell` is its pixel size in
+   meters. With the dimensions the screen does not shift when the DEM
+   finishes loading; `region` and `cell` make the line under the DEM's name in
+   the picker. `npm test` fails if any of the three differs from the file.
+
+4. Make its thumbnail for the picker:
+
+   ```bash
+   npm run thumbs
+   ```
+
+   This writes `public/dems/short-id.png` for every DEM in the list. It needs
+   Playwright's Chromium, as the browser tests do.
 
 A DEM that does not meet the requirements shows an error card in the app
 rather than a wrong net.
 
-Limits: the picker shows the first four DEMs in the list. The app is built for
-DEMs up to about two million pixels; a much larger one will make dragging the
-sun feel slow.
+Limits: the picker shows the first four DEMs in the list, as tiles in a sheet
+that does not scroll. The app is built for DEMs up to about two million pixels;
+a much larger one will make dragging the sun feel slow.
 
 ## Rename the app
 

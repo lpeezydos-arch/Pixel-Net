@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_READOUT, demFacts, describeReadout, describeSun, pixelSize, readoutFor } from './format';
+import { EMPTY_READOUT, demFacts, describeReadout, describeSun, pixelSize, readoutFor, tileLine } from './format';
 import { computeSurface } from './surface';
 import { demFrom, tiltedPlane } from './testing';
 
@@ -91,5 +91,31 @@ describe('demFacts', () => {
     expect(pixelSize(demFrom(2, 2, 4.99712, () => 0))).toBe('5 m pixels');
     expect(pixelSize(demFrom(2, 2, 0.5, () => 0))).toBe('0.5 m pixels');
     expect(pixelSize(demFrom(2, 2, 9.144, () => 0))).toBe('9.14 m pixels');
+  });
+});
+
+describe('tileLine', () => {
+  it('writes the region and the pixel size', () => {
+    expect(tileLine({ region: 'Virginia', cell: 100 })).toBe('Virginia · 100 m');
+  });
+
+  it('writes the pixel size as the caption does, without the word', () => {
+    expect(tileLine({ region: 'Colorado', cell: 4.99712 })).toBe('Colorado · 5 m');
+    expect(tileLine({ cell: 2.5 })).toBe('2.5 m');
+  });
+
+  it('leaves out a part the entry does not give', () => {
+    expect(tileLine({ region: 'Colorado' })).toBe('Colorado');
+    expect(tileLine({ cell: 5 })).toBe('5 m');
+    expect(tileLine({})).toBe('');
+  });
+
+  // The list is written by hand, so a value may be of the wrong kind.
+  it('leaves out a part that is not usable', () => {
+    expect(tileLine({ region: '  ', cell: 5 })).toBe('5 m');
+    expect(tileLine({ region: 7, cell: 5 })).toBe('5 m');
+    for (const cell of ['5', 0, -1, Number.NaN, Number.POSITIVE_INFINITY, null]) {
+      expect(tileLine({ region: 'Colorado', cell })).toBe('Colorado');
+    }
   });
 });

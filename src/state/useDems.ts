@@ -9,9 +9,13 @@ export interface DemEntry {
   name: string;
   place: string;
   file: string;
+  /** Optional short name for where the DEM is, for its tile in the picker. */
+  region?: string;
   /** Optional pixel dimensions. They let the layout settle before the file loads. */
   width?: number;
   height?: number;
+  /** Optional pixel size in meters, for its tile in the picker. */
+  cell?: number;
 }
 
 export interface LoadedDem {
