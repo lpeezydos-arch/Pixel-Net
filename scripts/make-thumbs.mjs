@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import { build, preview } from 'vite';
 
-const SHORT_SIDE = 360; // twice the largest tile
+const SHORT_SIDE = 360; // twice a tile in the desktop card, and more than a tile at any size
 const FOLDER = 'public/dems/';
 // The app shows only the first four entries (MAX_DEMS in src/state/useDems.ts);
 // a fifth would make this wait for a DEM the app never opens.

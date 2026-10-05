@@ -190,8 +190,8 @@ It is copied to `public/dems/massanutten.tif`. The list becomes:
 Gore Range stays first, so it is still what a new visitor sees.
 
 The folder `data/MASS/` is tracked, as `data/GORE/` is: the source DEM and its
-four reference figures. `data/MASS.zip` is not tracked. The figure
-All four figures are titled "Gore Range 05m" by mistake; their data is
+four reference figures. `data/MASS.zip` is not tracked. All four figures are
+titled "Gore Range 05m" by mistake; their data is
 Massanutten's. `PRODUCT.md` records this.
 
 ### The new fields
