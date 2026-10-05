@@ -3,8 +3,20 @@
     "id": "gore",
     "name": "Gore Range",
     "place": "Gore Range, Colorado",
+    "region": "Colorado",
     "file": "gore.tif",
     "width": 288,
-    "height": 294
+    "height": 294,
+    "cell": 5
+  },
+  {
+    "id": "massanutten",
+    "name": "Massanutten",
+    "place": "Massanutten Mountain, Virginia",
+    "region": "Virginia",
+    "file": "massanutten.tif",
+    "width": 390,
+    "height": 390,
+    "cell": 100
   }
 ]

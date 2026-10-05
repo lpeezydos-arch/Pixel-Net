@@ -6,7 +6,7 @@ playwright-report/
 .superpowers/
 *:Zone.Identifier
 __MACOSX/
-data/GORE.zip
+data/*.zip
 
 # Impeccable live-mode state; only the config is project settings
 .impeccable/live/*

@@ -250,3 +250,25 @@ test('the current tile has the accent ring and the others have none', async ({ p
   await page.mouse.move(2, 2);
   await expect(demTile(page, 'Second').locator('.dem-tile__picture')).toHaveCSS('box-shadow', 'none');
 });
+
+test('the app ships two DEMs, each with its thumbnail and its facts', async ({ page }) => {
+  await openApp(page);
+  await expect(demButton(page)).toHaveText('Gore Range');
+  await demButton(page).click();
+  await expect(demTile(page, 'Gore Range')).toHaveText('Gore RangeColorado · 5 m');
+  await expect(demTile(page, 'Massanutten')).toHaveText('MassanuttenVirginia · 100 m');
+  for (const name of ['Gore Range', 'Massanutten']) {
+    const picture = demTile(page, name).locator('img');
+    await expect(picture).toBeVisible();
+    await expect.poll(() => picture.evaluate((img: HTMLImageElement) => Math.min(img.naturalWidth, img.naturalHeight))).toBe(360);
+  }
+
+  await demTile(page, 'Massanutten').click();
+  await expect(stage(page)).toHaveAttribute('data-dem', 'massanutten');
+  await expect(stage(page)).toHaveAttribute('data-status', 'ready');
+  await expect(terrainImage(page)).toHaveJSProperty('width', 390);
+  await expect(terrainImage(page)).toHaveJSProperty('height', 390);
+  await expect(demButton(page)).toHaveText('Massanutten');
+  // The address names the DEM, so the view can be shared and reopened.
+  await expect.poll(() => page.evaluate(() => window.location.hash)).toContain('dem=massanutten');
+});
