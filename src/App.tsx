@@ -1,6 +1,8 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { useMotionValue } from 'motion/react';
-import { type CSSProperties, useCallback, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { analytics } from './analytics';
+import { arrivalSource } from './analytics/arrival';
 import { NetCard } from './components/NetCard';
 import { TerrainCard } from './components/TerrainCard';
 import { TitleBar } from './components/TitleBar';
@@ -31,6 +33,7 @@ export function App() {
     const fragment = readFragment();
     return decodeView(namesView(fragment) ? fragment : readSaved());
   });
+  const [arrival] = useState(() => arrivalSource(readFragment(), readSaved()));
   const { entries, active, state, select, retry } = useDems(start.dem);
   const stageRef = useRef<HTMLElement>(null);
   const stage = useElementSize(stageRef);
@@ -62,6 +65,14 @@ export function App() {
   const hint = terrainFocused ? KEYBOARD_HINT : coarse ? TOUCH_HINT : POINTER_HINT;
   const caption = !ready ? '' : hasSelection ? (coarse && !clearedOnce ? factsWithClearHint : facts) : hint;
 
+  // Every event names the DEM on screen. The first DEM to arrive marks the app as opened.
+  const activeId = active?.id ?? null;
+  useEffect(() => {
+    if (!activeId) return;
+    analytics.setContext({ dem: activeId });
+    analytics.once('app_open', { source: arrival });
+  }, [activeId, arrival]);
+
   const selectDem = useCallback(
     (id: string) => {
       if (id === active?.id) return;
@@ -73,11 +84,28 @@ export function App() {
     [active?.id, selection, select],
   );
 
+  // The title bar's switch is the user's; the one a link makes is not counted.
+  const pickDem = useCallback(
+    (id: string) => {
+      if (id !== active?.id) analytics.event('switch_dem', { dem: id });
+      selectDem(id);
+    },
+    [active?.id, selectDem],
+  );
+
+  // Likewise the net's button, as against a restored view that has the layer on.
+  const toggleDensity = useCallback((on: boolean) => {
+    if (on) analytics.once('density_on');
+    setDensity(on);
+  }, []);
+
   const handlePress = useCallback(() => setHasSelection(true), []);
 
   // Announce where a drag ended or a key press landed, not every pixel on the way.
   const handleSettle = useCallback(() => {
     setHasSelection(true);
+    analytics.once('select_pixel');
+    analytics.count('selections');
     if (state.status === 'ready') {
       announce(announceRef.current, describeReadout(readoutFor(state.dem, state.surface, selection.get())));
     }
@@ -138,7 +166,10 @@ export function App() {
           density,
         })
       : null;
-    return shareView(words, file);
+    return shareView(words, file).then((outcome) => {
+      analytics.event('share', { outcome });
+      return outcome;
+    });
   }, [state, active, selection, sunAzimuth, sunAltitude, density, viewText, layout.mode]);
 
   const netCard = (
@@ -152,7 +183,7 @@ export function App() {
       sunAzimuth={sunAzimuth}
       sunAltitude={sunAltitude}
       density={density}
-      onDensityChange={setDensity}
+      onDensityChange={toggleDensity}
     />
   );
   const terrainColumn = (
@@ -184,7 +215,7 @@ export function App() {
         <TitleBar
           entries={entries}
           activeId={active?.id ?? null}
-          onSelect={selectDem}
+          onSelect={pickDem}
           shareDisabled={state.status !== 'ready'}
           onShare={handleShare}
         />
