@@ -63,7 +63,9 @@ finger.
   every push to `main` (`.github/workflows/deploy.yml`); unit tests gate the
   deploy. Any static HTTPS host works with `BASE_PATH` set and
   `VITE_SITE_URL` changed to the new address, so the link-preview tags point
-  at it.
+  at it. The deployed build, and only it, loads Google Analytics with a few
+  custom events for who opens the app, how they arrived and what they touch
+  (README, "Analytics").
 - Development: `npm run dev` on :5173. Vitest covers terrain math, layout and
   formatting; Playwright runs at phone and desktop sizes against a production
   build, Chromium only. Safari and Firefox are checked by hand.

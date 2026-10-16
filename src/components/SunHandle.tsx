@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { analytics } from '../analytics';
 import { useCoarsePointer } from '../hooks/useCoarsePointer';
 import { NET_RIM } from '../terrain/cloud';
 import { describeSun } from '../terrain/format';
@@ -223,6 +224,10 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     const moved = Math.hypot(event.clientX - current.startX, event.clientY - current.startY);
     if (event.type === 'pointercancel' || moved > TAP_SLOP) {
       lastTap.current = 0;
+      if (moved > TAP_SLOP) {
+        analytics.once('drag_sun');
+        analytics.count('sun_drags');
+      }
       announceSun();
       return;
     }
@@ -258,6 +263,8 @@ export function SunHandle({ size, azimuth, altitude }: SunHandleProps) {
     } else if (turn || lift) {
       event.preventDefault();
       stopGlide();
+      // A key press moves the sun one step; it counts as using the sun, not as a drag.
+      analytics.once('drag_sun');
       // The instructions have been followed; the label takes over from the tooltip.
       setTipOpen(false);
       azimuth.set((azimuth.get() + turn + 360) % 360);

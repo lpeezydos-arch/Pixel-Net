@@ -30,6 +30,9 @@ jobs:
         env:
           # Pages serves the repo at https://<owner>.github.io/Pixel-Net/
           BASE_PATH: /Pixel-Net/
+          # The Google Analytics measurement ID. Only this build loads the tag;
+          # dev servers and the browser tests never do (README, "Analytics").
+          VITE_GA_ID: G-42F18CF5KR
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

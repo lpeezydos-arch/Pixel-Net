@@ -2,6 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { CircleQuestionMark } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { analytics } from '../analytics';
 import { NEWS, latest, newestId } from '../help/news';
 import { readSeen, writeSeen } from '../help/newsStore';
 import { useCoarsePointer } from '../hooks/useCoarsePointer';
@@ -32,6 +33,7 @@ export function HelpButton() {
   const onOpenChange = (next: boolean) => {
     setOpen(next);
     if (!next) return;
+    analytics.once('open_help');
     // A tooltip that was open under the pointer must not wait behind the sheet
     // and show the moment it closes.
     setTipOpen(false);
