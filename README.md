@@ -177,46 +177,10 @@ dot.
 
 ## Analytics
 
-The deployed build loads Google Analytics, to show who uses the app, when,
-and how far they get. The measurement ID is `VITE_GA_ID`, set only in
-`.github/workflows/deploy.yml`, so a dev server, a local build and the
-browser tests load no tag and send nothing. To try it locally:
-
-```bash
-VITE_GA_ID=G-XXXXXXXXXX npm run build && npm run preview
-```
-
-Beyond what Analytics collects on its own, `src/analytics/` sends:
-
-| What | When | Fields |
-|---|---|---|
-| user properties `display_mode`, `pointer` | at load | `standalone` or `browser`; `coarse` or `fine` |
-| `app_open` | the first DEM is on screen | `source`: `link`, `saved` or `default` |
-| `select_pixel`, `drag_sun`, `density_on`, `open_help` | the first time each happens in a visit | |
-| `switch_dem` | the user picks another DEM | `dem`: the one picked |
-| `share` | the share button has finished | `outcome`: `shared`, `copied`, `cancelled` or `failed` |
-| `session_counts` | the page is hidden or closed | `selections`, `sun_drags`: how many since the last time |
-
-Every event also carries `dem`, the DEM on screen. A view restored from a
-link or from the device counts nothing: `switch_dem` and `density_on` fire
-only from the title bar and the net's button. The counts go out when the
-page is hidden, which on a phone is when the user switches apps, and start
-over when it comes back.
-
-In the Analytics admin, each field must be registered before it shows in a
-report, and nothing from before is backfilled: `dem`, `source` and
-`outcome` as event-scoped custom dimensions, `selections` and `sun_drags`
-as custom metrics, `display_mode` and `pointer` as user properties.
-
-To keep a device out of the numbers, in its browser console on the app:
-
-```js
-localStorage.setItem('pixel-net:no-analytics', '1')
-```
-
-The tag does not load on that device from the next open until the key is
-removed. Hits are only sent while online; an installed app used with no
-signal is invisible.
+The deployed build, and only it, loads Google Analytics with a few custom
+events for who opens the app, how they arrived and what they touch.
+`ANALYTICS.md` says what is sent, how to keep your own devices out, and
+where to read each answer on the Analytics site.
 
 ## Deploy
 
